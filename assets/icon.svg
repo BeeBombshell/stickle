@@ -1,0 +1,7 @@
+<svg width="128" height="128" viewBox="0 0 128 128" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <rect width="128" height="128" rx="28" fill="#1A1A1A"/>
+  <!-- Target Pin Marker -->
+  <circle cx="64" cy="64" r="28" fill="#FFFFFF"/>
+  <circle cx="64" cy="64" r="11" fill="#1A1A1A"/>
+  <circle cx="64" cy="64" r="4" fill="#FFFFFF"/>
+</svg>
