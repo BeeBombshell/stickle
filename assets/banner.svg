@@ -1,0 +1,116 @@
+<svg width="1200" height="460" viewBox="0 0 1200 460" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <!-- Modern drop shadows -->
+    <filter id="card-shadow" x="-5%" y="-5%" width="110%" height="120%" filterUnits="userSpaceOnUse">
+      <feDropShadow dx="0" dy="12" stdDeviation="16" flood-color="#000000" flood-opacity="0.12"/>
+    </filter>
+    <filter id="bubble-shadow" x="-10%" y="-10%" width="120%" height="130%" filterUnits="userSpaceOnUse">
+      <feDropShadow dx="0" dy="8" stdDeviation="12" flood-color="#000000" flood-opacity="0.08"/>
+    </filter>
+  </defs>
+
+  <!-- Banner Ground Canvas (Figma Marketing Pure White Frame) -->
+  <rect width="1200" height="460" rx="24" fill="#FFFFFF" stroke="#E5E5E0" stroke-width="2"/>
+
+  <!-- Signature Pastel Block Lime Container (Left Half Hero Poster) -->
+  <rect x="32" y="32" width="540" height="396" rx="20" fill="#E4F579"/>
+
+  <!-- Left Content: Logo Lockup + Typography -->
+  <!-- Eyebrow -->
+  <text x="68" y="76" font-family="JetBrains Mono, SF Mono, Menlo, monospace" font-size="11" font-weight="600" letter-spacing="1.2" fill="#3D4400" text-transform="uppercase">DOM ANCHORING • LOCAL-FIRST</text>
+
+  <!-- Logo Lockup (Concept 3: Anchor Pin Mark + stickle wordmark) -->
+  <g transform="translate(68, 100)">
+    <rect width="48" height="48" rx="12" fill="#111111"/>
+    <circle cx="34" cy="34" r="10" fill="#FFFFFF"/>
+    <circle cx="34" cy="34" r="4" fill="#111111"/>
+    <text x="62" y="35" font-family="Inter, SF Pro Display, system-ui, sans-serif" font-size="34" font-weight="700" letter-spacing="-1.5" fill="#111111">stickle</text>
+  </g>
+
+  <!-- Hero Display Headline -->
+  <text x="68" y="210" font-family="Inter, SF Pro Display, system-ui, sans-serif" font-size="36" font-weight="700" letter-spacing="-1.2" fill="#111111">
+    <tspan x="68" dy="0">Pin sticky notes</tspan>
+    <tspan x="68" dy="44">to dynamic web content.</tspan>
+  </text>
+
+  <text x="68" y="310" font-family="Inter, SF Pro Display, system-ui, sans-serif" font-size="15" font-weight="400" fill="#2B3000" width="460">
+    <tspan x="68" dy="0">Notes survive DOM shifts, SPA re-renders, and page updates</tspan>
+    <tspan x="68" dy="22">using robust 3-tier fallback DOM anchoring.</tspan>
+  </text>
+
+  <!-- Feature Pills -->
+  <g transform="translate(68, 362)">
+    <rect x="0" y="0" width="136" height="32" rx="16" fill="#111111"/>
+    <text x="68" y="20" font-family="Inter, SF Pro Display, sans-serif" font-size="12" font-weight="600" fill="#FFFFFF" text-anchor="middle">Chrome Extension</text>
+
+    <rect x="146" y="0" width="124" height="32" rx="16" fill="#FFFFFF" stroke="#3D4400" stroke-width="1.5"/>
+    <text x="208" y="20" font-family="Inter, SF Pro Display, sans-serif" font-size="12" font-weight="600" fill="#111111" text-anchor="middle">Manifest V3</text>
+
+    <rect x="280" y="0" width="132" height="32" rx="16" fill="#FFFFFF" stroke="#3D4400" stroke-width="1.5"/>
+    <text x="346" y="20" font-family="Inter, SF Pro Display, sans-serif" font-size="12" font-weight="600" fill="#111111" text-anchor="middle">IndexedDB Sync</text>
+  </g>
+
+  <!-- Right Half: Webpage Preview & Anchored Floating Sticky Notes -->
+  <g transform="translate(604, 32)" filter="url(#card-shadow)">
+    <!-- Browser Mockup Window -->
+    <rect width="564" height="396" rx="16" fill="#FFFFFF" stroke="#E5E5E0" stroke-width="1.5"/>
+    
+    <!-- Browser Titlebar -->
+    <path d="M0 16C0 7.16344 7.16344 0 16 0H548C556.837 0 564 7.16344 564 16V44H0V16Z" fill="#F5F5F3"/>
+    <circle cx="24" cy="22" r="5" fill="#FF5F56"/>
+    <circle cx="40" cy="22" r="5" fill="#FFBD2E"/>
+    <circle cx="56" cy="22" r="5" fill="#27C93F"/>
+    <!-- URL Bar -->
+    <rect x="80" y="10" width="340" height="24" rx="6" fill="#FFFFFF" stroke="#E5E5E0"/>
+    <text x="96" y="26" font-family="JetBrains Mono, monospace" font-size="10" fill="#52514E">https://en.wikipedia.org/wiki/DOM_anchoring</text>
+
+    <!-- Mock Web Content Lines -->
+    <rect x="36" y="68" width="220" height="18" rx="4" fill="#111111"/>
+    <rect x="36" y="98" width="480" height="8" rx="2" fill="#E5E5E0"/>
+    <rect x="36" y="114" width="440" height="8" rx="2" fill="#E5E5E0"/>
+    <rect x="36" y="130" width="380" height="8" rx="2" fill="#E5E5E0"/>
+
+    <!-- Pinned Target Element Highlight -->
+    <rect x="32" y="160" width="320" height="54" rx="8" fill="#E8D5FF" opacity="0.6" stroke="#A855F7" stroke-width="1.5" stroke-dasharray="4 4"/>
+    <rect x="44" y="172" width="200" height="10" rx="2" fill="#6B21A8"/>
+    <rect x="44" y="190" width="280" height="8" rx="2" fill="#9333EA" opacity="0.7"/>
+
+    <rect x="36" y="234" width="490" height="8" rx="2" fill="#E5E5E0"/>
+    <rect x="36" y="250" width="420" height="8" rx="2" fill="#E5E5E0"/>
+    <rect x="36" y="266" width="460" height="8" rx="2" fill="#E5E5E0"/>
+
+    <!-- Anchoring Connection Line with Target Anchor Pin Dot -->
+    <line x1="280" y1="187" x2="360" y2="150" stroke="#111111" stroke-width="2" stroke-dasharray="4 4"/>
+    <circle cx="280" cy="187" r="6" fill="#111111"/>
+    <circle cx="280" cy="187" r="2.5" fill="#FFFFFF"/>
+
+    <!-- Floating Note Bubble 1 (Pastel Cream Sticky Note) -->
+    <g transform="translate(330, 100)" filter="url(#bubble-shadow)">
+      <rect width="210" height="130" rx="10" fill="#FFF7DB" stroke="#E5E5E0" stroke-width="1"/>
+      <!-- Header -->
+      <rect x="12" y="10" width="90" height="14" rx="3" fill="#FEF08A"/>
+      <text x="16" y="21" font-family="JetBrains Mono, monospace" font-size="8" font-weight="700" fill="#854D0E">TIER: SELECTOR</text>
+      <text x="194" y="22" font-family="sans-serif" font-size="10" fill="#A16207" cursor="pointer">✕</text>
+      <!-- Content -->
+      <text x="12" y="44" font-family="Inter, sans-serif" font-size="11" font-weight="500" fill="#111111">
+        <tspan x="12" dy="0">Check mutation observer</tspan>
+        <tspan x="12" dy="16">behavior on React re-render</tspan>
+        <tspan x="12" dy="16">before Phase 2 release!</tspan>
+      </text>
+      <text x="12" y="112" font-family="JetBrains Mono, monospace" font-size="9" fill="#A16207">2 mins ago • Local DB</text>
+    </g>
+
+    <!-- Floating Note Bubble 2 (Pastel Lilac Sticky Note) -->
+    <g transform="translate(180, 260)" filter="url(#bubble-shadow)">
+      <rect width="220" height="106" rx="10" fill="#E8D5FF" stroke="#D8B4FE" stroke-width="1"/>
+      <rect x="12" y="10" width="115" height="14" rx="3" fill="#D8B4FE"/>
+      <text x="16" y="21" font-family="JetBrains Mono, monospace" font-size="8" font-weight="700" fill="#581C87">TIER: TEXT-FRAGMENT</text>
+      <text x="204" y="22" font-family="sans-serif" font-size="10" fill="#6B21A8">✕</text>
+      <text x="12" y="44" font-family="Inter, sans-serif" font-size="11" font-weight="500" fill="#111111">
+        <tspan x="12" dy="0">Export this highlight directly</tspan>
+        <tspan x="12" dy="16">to Notion engineering database.</tspan>
+      </text>
+      <text x="12" y="92" font-family="JetBrains Mono, monospace" font-size="9" fill="#6B21A8">SynctoNotion: Pending</text>
+    </g>
+  </g>
+</svg>

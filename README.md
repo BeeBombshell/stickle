@@ -1,5 +1,7 @@
 # Stickle — DOM-Anchored Web Sticky Notes
 
+![Stickle Header Banner](./assets/banner.svg)
+
 > A local-first Chrome extension that lets you pin floating sticky notes to dynamic web content using robust 3-tier DOM anchoring.
 
 ---
