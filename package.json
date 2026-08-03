@@ -12,6 +12,7 @@
     "zip": "wxt zip",
     "compile": "tsc --noEmit",
     "test": "vitest run",
+    "test:e2e": "playwright test",
     "postinstall": "wxt prepare"
   },
   "dependencies": {
@@ -19,6 +20,7 @@
     "preact": "^10.26.4"
   },
   "devDependencies": {
+    "@playwright/test": "^1.62.1",
     "@preact/preset-vite": "^2.9.4",
     "@types/node": "^22.13.1",
     "fake-indexeddb": "^6.2.5",
