@@ -32,8 +32,8 @@ export function App() {
           {/* Concept 3: Anchor Pin Mark SVG */}
           <svg width="24" height="24" viewBox="0 0 44 44" fill="none" xmlns="http://www.w3.org/2000/svg">
             <rect width="44" height="44" rx="10" fill="#1A1A1A" />
-            <circle cx="22" cy="22" r="9" fill="#FFFFFF" />
-            <circle cx="22" cy="22" r="3.5" fill="#1A1A1A" />
+            <circle cx="31" cy="31" r="9" fill="#FFFFFF" />
+            <circle cx="31" cy="31" r="3.5" fill="#1A1A1A" />
           </svg>
           <span style={popupStyles.wordmark}>stickle</span>
         </div>
