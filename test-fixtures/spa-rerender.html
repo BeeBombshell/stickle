@@ -10,7 +10,7 @@
 <body>
   <h1>Dynamic SPA Page</h1>
   <div id="app-root">
-    <p>Initial render before dynamic state update...</p>
+    <p class="initial-para">Initial render before dynamic state update...</p>
   </div>
   <button id="rerender-btn">Re-render DOM Tree</button>
 
@@ -18,9 +18,9 @@
     document.getElementById('rerender-btn').addEventListener('click', () => {
       document.getElementById('app-root').innerHTML = `
         <div class="dynamic-wrapper">
-          <p class="content-body">
-            Re-rendered paragraph simulating React/Preact DOM mutation.
-          </p>
+          <section class="content-body">
+            Initial render before dynamic state update...
+          </section>
         </div>
       `;
     });

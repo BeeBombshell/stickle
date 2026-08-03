@@ -21,3 +21,20 @@ This log records non-trivial decisions made during the development of Stickle.
 ### 4. Permissions Policy
 - **Decision:** Restricted v1 manifest permissions to `["storage", "activeTab", "scripting"]`.
 - **Rationale:** Minimizes extension permission footprint; avoids requesting `<all_urls>` until required by background sync features.
+
+---
+
+## Phase 2 — Robust DOM Anchoring Strategy
+
+### 5. Fuzzy Match Algorithm & Similarity Threshold
+- **Decision:** Implemented zero-dependency character trigram set matching in `lib/anchoring.ts` with a strict `0.75` acceptance threshold.
+- **Rationale:** Keeps extension payload lightweight (< 100KB) without external heavy NLP packages while effectively catching minor copy edits and typo fixes.
+
+### 6. Progressive Visual Confidence Indicators
+- **Decision:** Styled note bubbles with tier-specific border patterns (solid for Tier 1, dashed indigo for Tier 2, dotted amber for Tier 3, solid red for Tier 4) and distinct eyebrow badges.
+- **Rationale:** Provides transparent UX feedback to users regarding how confident the extension is in the note's anchored position.
+
+### 7. Playwright E2E Test Suite
+- **Decision:** Added `@playwright/test` for E2E verification against HTML test fixtures (`static-page.html`, `spa-rerender.html`, `infinite-scroll.html`).
+- **Rationale:** Validates real browser DOM rendering, layout calculation, and element positioning under dynamic mutations.
+
