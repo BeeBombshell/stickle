@@ -1,14 +1,70 @@
+import { useState, useEffect, useRef } from 'preact/hooks';
 import type { StickleNote, AnchorTier } from '../lib/types';
 
 interface NoteBubbleProps {
   note: StickleNote;
   onSave?: (updatedContent: string) => void;
   onDelete?: () => void;
+  onDragStart?: () => void;
+  onDrag?: (dx: number, dy: number) => void;
+  onDragEnd?: (clientX: number, clientY: number) => void;
 }
 
-export function NoteBubble({ note, onSave, onDelete }: NoteBubbleProps) {
+export function NoteBubble({
+  note,
+  onSave,
+  onDelete,
+  onDragStart,
+  onDrag,
+  onDragEnd,
+}: NoteBubbleProps) {
   const borderStyle = getTierBorderStyle(note.anchor.tier);
   const badgeStyle = getTierBadgeStyle(note.anchor.tier);
+  const [isDragging, setIsDragging] = useState(false);
+  const [content, setContent] = useState(note.content);
+  const dragStartRef = useRef<{ x: number; y: number } | null>(null);
+
+  useEffect(() => {
+    setContent(note.content);
+  }, [note.content]);
+
+  const handleInput = (e: Event) => {
+    const val = (e.target as HTMLTextAreaElement).value;
+    setContent(val);
+    onSave?.(val);
+  };
+
+  const handlePointerDown = (e: PointerEvent) => {
+    if ((e.target as HTMLElement).closest('button') || (e.target as HTMLElement).closest('textarea')) {
+      return;
+    }
+    e.preventDefault();
+    e.stopPropagation();
+
+    const target = e.currentTarget as HTMLElement;
+    target.setPointerCapture(e.pointerId);
+    dragStartRef.current = { x: e.clientX, y: e.clientY };
+    setIsDragging(true);
+    onDragStart?.();
+  };
+
+  const handlePointerMove = (e: PointerEvent) => {
+    if (!isDragging || !dragStartRef.current) return;
+    const dx = e.clientX - dragStartRef.current.x;
+    const dy = e.clientY - dragStartRef.current.y;
+    onDrag?.(dx, dy);
+  };
+
+  const handlePointerUp = (e: PointerEvent) => {
+    if (!isDragging) return;
+    const target = e.currentTarget as HTMLElement;
+    try {
+      target.releasePointerCapture(e.pointerId);
+    } catch {}
+    setIsDragging(false);
+    onDragEnd?.(e.clientX, e.clientY);
+    dragStartRef.current = null;
+  };
 
   return (
     <div
@@ -18,19 +74,51 @@ export function NoteBubble({ note, onSave, onDelete }: NoteBubbleProps) {
         border: borderStyle,
       }}
     >
-      <div style={bubbleStyles.header}>
-        <span className="eyebrow" style={badgeStyle}>
-          {getTierLabel(note.anchor.tier)}
-        </span>
+      <style>{`
+        .stickle-note-bubble {
+          color-scheme: light !important;
+          color: #111111 !important;
+          background-color: #fff7db !important;
+        }
+        .stickle-note-bubble textarea {
+          color-scheme: light !important;
+          color: #111111 !important;
+        }
+        .stickle-note-bubble textarea::placeholder {
+          color: #71717a !important;
+          opacity: 1 !important;
+        }
+      `}</style>
+
+      <div
+        style={{
+          ...bubbleStyles.header,
+          cursor: isDragging ? 'grabbing' : 'grab',
+        }}
+        onPointerDown={handlePointerDown}
+        onPointerMove={handlePointerMove}
+        onPointerUp={handlePointerUp}
+      >
+        <div style={bubbleStyles.headerLeft}>
+          <span style={bubbleStyles.dragGrip} title="Drag to reposition note">
+            ⋮⋮
+          </span>
+          <span className="eyebrow" style={badgeStyle}>
+            {getTierLabel(note.anchor.tier)}
+          </span>
+        </div>
         <button onClick={onDelete} style={bubbleStyles.closeBtn} title="Delete note">
           ✕
         </button>
       </div>
       <textarea
         style={bubbleStyles.textarea}
-        value={note.content}
+        value={content}
         placeholder="Type note content..."
-        onBlur={(e) => onSave?.((e.target as HTMLTextAreaElement).value)}
+        onInput={handleInput}
+        onBlur={handleInput}
+        onKeyDown={(e) => e.stopPropagation()}
+        onKeyUp={(e) => e.stopPropagation()}
       />
     </div>
   );
@@ -39,7 +127,7 @@ export function NoteBubble({ note, onSave, onDelete }: NoteBubbleProps) {
 function getTierBorderStyle(tier: AnchorTier): string {
   switch (tier) {
     case 'selector':
-      return '1px solid var(--color-hairline, #e5e5e0)';
+      return '1px solid #e5e5e0';
     case 'text-fragment':
       return '2px dashed #4f46e5';
     case 'fuzzy':
@@ -85,34 +173,59 @@ function getTierLabel(tier: AnchorTier): string {
 const bubbleStyles = {
   container: {
     width: '240px',
-    backgroundColor: 'var(--color-block-cream, #fff7db)',
-    borderRadius: 'var(--radius-md, 8px)',
+    backgroundColor: '#fff7db',
+    color: '#111111',
+    colorScheme: 'light' as const,
+    borderRadius: '8px',
     padding: '10px',
-    boxShadow: 'var(--shadow-soft, 0 4px 16px rgba(0,0,0,0.06))',
-    fontFamily: 'var(--font-sans)',
+    boxShadow: '0 4px 16px rgba(0, 0, 0, 0.12)',
+    fontFamily: 'Inter, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif',
+    boxSizing: 'border-box' as const,
   },
   header: {
     display: 'flex',
     justifyContent: 'space-between',
     alignItems: 'center',
     marginBottom: '6px',
+    userSelect: 'none' as const,
+    gap: '6px',
+  },
+  headerLeft: {
+    display: 'flex',
+    alignItems: 'center',
+    gap: '4px',
+  },
+  dragGrip: {
+    color: '#71717a',
+    fontSize: '12px',
+    fontWeight: 'bold' as const,
+    letterSpacing: '1px',
+    lineHeight: '1',
+    cursor: 'grab',
   },
   closeBtn: {
     background: 'none',
     border: 'none',
     cursor: 'pointer',
-    fontSize: '12px',
-    color: 'var(--color-ink-muted)',
+    fontSize: '13px',
+    color: '#52514e',
+    padding: '2px 4px',
+    lineHeight: '1',
   },
   textarea: {
     width: '100%',
-    minHeight: '60px',
+    minHeight: '65px',
     border: 'none',
-    background: 'transparent',
+    backgroundColor: 'transparent',
+    color: '#111111',
+    caretColor: '#111111',
+    colorScheme: 'light' as const,
     resize: 'vertical' as const,
-    fontFamily: 'inherit',
+    fontFamily: 'Inter, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif',
     fontSize: '13px',
+    lineHeight: '1.4',
     outline: 'none',
+    padding: '4px',
+    boxSizing: 'border-box' as const,
   },
 };
-
