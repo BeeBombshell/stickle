@@ -292,9 +292,9 @@ stickle/
 3. Continuously sync notes to local data file `~/.stickle/notes.json` for MCP server access.
 
 **Acceptance criteria:**
-- [ ] Exporting produces a clean, valid `stickle_export_YYYY-MM-DD.json` file containing all note anchors, colors, tags, and timestamps
-- [ ] Importing a JSON export restores all notes without duplicate conflicts
-- [ ] Writes notes to `~/.stickle/notes.json`
+- [x] Exporting produces a clean, valid `stickle_export_YYYY-MM-DD.json` file containing all note anchors, colors, tags, and timestamps
+- [x] Importing a JSON export restores all notes without duplicate conflicts
+- [x] Writes notes to `~/.stickle/notes.json`
 
 ---
 

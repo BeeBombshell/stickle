@@ -134,9 +134,22 @@ This log records non-trivial decisions made during the development of Stickle.
 - **Decision:** Implemented inline tag input editor in `NoteBubble.tsx` converting tag inputs to lowercase, stripping leading `#` symbols, and handling `Enter`/`Comma` key events to create tag chips.
 - **Rationale:** Ensures clean, normalized tag strings without duplicate or malformed entries.
 
-### 27. Popup Sidebar Tag Filter Carousel & Substring Match Overload
-- **Decision:** Built a horizontal tag filter bar (`#all`, `#research`, `#todo`) in `NoteSidebar.tsx` and extended `filterNotes` to match search queries against tag arrays as well as note content and page titles.
-- **Rationale:** Allows fast multi-dimensional discovery of saved notes across sites by category or workflow tag.
+---
+
+## Phase 9 — Sharable Notes (Import & Export JSON)
+
+### 28. Standardized Export Package Schema (`stickle_export_YYYY-MM-DD.json`)
+- **Decision:** Designed versioned export package wrapper (`version: 1`, `exportedAt`, `notesCount`, `notes`) and `generateExportFilename` helper producing `stickle_export_YYYY-MM-DD.json`.
+- **Rationale:** Ensures backward/forward schema compatibility and clean automated file downloads in browser environments.
+
+### 29. Smart Duplicate Resolution & Timestamp-Based Merge
+- **Decision:** Implemented `importNotesFromJson` validating schema structure, creating new notes, and updating existing notes (`id` match) only if the imported note has a strictly newer `updatedAt` timestamp.
+- **Rationale:** Prevents data duplication during backup restoration while avoiding accidental overwrites of newer local edits.
+
+### 30. Dual-Environment Local Disk Sync Helper
+- **Decision:** Created `syncNotesToLocalDisk` and `formatLocalSyncJson` writing to `~/.stickle/notes.json` when running in Node/MCP environments while remaining safe in browser MV3 contexts.
+- **Rationale:** Lays the foundation for Phase 11 MCP server file access without breaking extension sandbox boundaries.
+
 
 
 
