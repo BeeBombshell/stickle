@@ -26,17 +26,39 @@ export function filterNotes(
   notes: StickleNote[],
   searchQuery: string,
   dateFilter: DateFilter,
-  referenceTime: number = Date.now()
+  tagFilterOrRefTime?: string | number,
+  referenceTimeParam?: number
 ): StickleNote[] {
+  let tagFilter = 'all';
+  let referenceTime = Date.now();
+
+  if (typeof tagFilterOrRefTime === 'number') {
+    referenceTime = tagFilterOrRefTime;
+  } else if (typeof tagFilterOrRefTime === 'string') {
+    tagFilter = tagFilterOrRefTime;
+  }
+
+  if (typeof referenceTimeParam === 'number') {
+    referenceTime = referenceTimeParam;
+  }
+
   const query = searchQuery.trim().toLowerCase();
 
   return notes.filter((note) => {
-    // Substring match on content, title, or url
+    // Tag filter
+    if (tagFilter !== 'all') {
+      if (!note.tags || !note.tags.includes(tagFilter)) {
+        return false;
+      }
+    }
+
+    // Substring match on content, title, url, OR tags
     const matchesSearch =
       !query ||
       note.content.toLowerCase().includes(query) ||
       note.pageTitle.toLowerCase().includes(query) ||
-      note.url.toLowerCase().includes(query);
+      note.url.toLowerCase().includes(query) ||
+      (note.tags && note.tags.some((t) => t.toLowerCase().includes(query)));
 
     if (!matchesSearch) return false;
 
@@ -97,13 +119,15 @@ export function navigateToNote(note: StickleNote) {
 export function NoteSidebar({ notes, onNoteChange, onSelectNote }: NoteSidebarProps) {
   const [searchQuery, setSearchQuery] = useState('');
   const [dateFilter, setDateFilter] = useState<DateFilter>('all');
+  const [selectedTag, setSelectedTag] = useState<string>('all');
   const [editingId, setEditingId] = useState<string | null>(null);
   const [editContent, setEditContent] = useState('');
   const [exportingId, setExportingId] = useState<string | null>(null);
   const [isBatchExporting, setIsBatchExporting] = useState(false);
   const [syncStatusMsg, setSyncStatusMsg] = useState<string | null>(null);
 
-  const filtered = filterNotes(notes, searchQuery, dateFilter);
+  const allTags = Array.from(new Set(notes.flatMap((n) => n.tags || []))).sort();
+  const filtered = filterNotes(notes, searchQuery, dateFilter, selectedTag);
   const grouped = groupNotesByDomain(filtered);
   const unsyncedCount = notes.filter((n) => !n.syncedToNotion).length;
 
@@ -190,15 +214,35 @@ export function NoteSidebar({ notes, onNoteChange, onSelectNote }: NoteSidebarPr
 
   return (
     <div style={sidebarStyles.container}>
-      {/* Controls Bar: Search, Date Filters & Batch Notion Action */}
+      {/* Controls Bar: Search, Date Filters, Tag Filters & Batch Notion Action */}
       <div style={sidebarStyles.controlsBar}>
         <input
           type="text"
-          placeholder="Search notes or pages..."
+          placeholder="Search notes, pages, or #tags..."
           value={searchQuery}
           onInput={(e) => setSearchQuery((e.target as HTMLInputElement).value)}
           style={sidebarStyles.searchInput}
         />
+
+        {allTags.length > 0 && (
+          <div style={sidebarStyles.tagFilterBar}>
+            <button
+              style={selectedTag === 'all' ? sidebarStyles.tagPillActive : sidebarStyles.tagPill}
+              onClick={() => setSelectedTag('all')}
+            >
+              #all
+            </button>
+            {allTags.map((tag) => (
+              <button
+                key={tag}
+                style={selectedTag === tag ? sidebarStyles.tagPillActive : sidebarStyles.tagPill}
+                onClick={() => setSelectedTag(tag)}
+              >
+                #{tag}
+              </button>
+            ))}
+          </div>
+        )}
 
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: '6px' }}>
           <div style={sidebarStyles.filterGroup}>
@@ -324,7 +368,18 @@ export function NoteSidebar({ notes, onNoteChange, onSelectNote }: NoteSidebarPr
                           </div>
                         </div>
                       ) : (
-                        <p style={sidebarStyles.content}>{note.content || '(Empty Note)'}</p>
+                        <>
+                          <p style={sidebarStyles.content}>{note.content || '(Empty Note)'}</p>
+                          {note.tags && note.tags.length > 0 && (
+                            <div style={sidebarStyles.cardTags}>
+                              {note.tags.map((tag) => (
+                                <span key={tag} style={sidebarStyles.cardTagBadge}>
+                                  #{tag}
+                                </span>
+                              ))}
+                            </div>
+                          )}
+                        </>
                       )}
 
                       <div style={sidebarStyles.cardFooter}>
@@ -412,6 +467,35 @@ const sidebarStyles = {
     fontSize: '13px',
     boxSizing: 'border-box' as const,
     outline: 'none',
+  },
+  tagFilterBar: {
+    display: 'flex',
+    gap: '4px',
+    overflowX: 'auto' as const,
+    paddingBottom: '2px',
+  },
+  tagPill: {
+    padding: '2px 8px',
+    borderRadius: '12px',
+    border: '1px solid var(--color-hairline)',
+    backgroundColor: 'var(--color-canvas)',
+    fontSize: '10px',
+    fontFamily: 'var(--font-mono, monospace)',
+    color: 'var(--color-ink-muted)',
+    cursor: 'pointer',
+    whiteSpace: 'nowrap' as const,
+  },
+  tagPillActive: {
+    padding: '2px 8px',
+    borderRadius: '12px',
+    border: '1px solid var(--color-primary)',
+    backgroundColor: 'var(--color-primary)',
+    fontSize: '10px',
+    fontFamily: 'var(--font-mono, monospace)',
+    color: 'var(--color-on-primary)',
+    fontWeight: '600' as const,
+    cursor: 'pointer',
+    whiteSpace: 'nowrap' as const,
   },
   filterGroup: {
     display: 'flex',
@@ -509,6 +593,21 @@ const sidebarStyles = {
     margin: '0 0 8px 0',
     lineHeight: '1.4',
     wordBreak: 'break-word' as const,
+  },
+  cardTags: {
+    display: 'flex',
+    flexWrap: 'wrap' as const,
+    gap: '4px',
+    marginBottom: '8px',
+  },
+  cardTagBadge: {
+    fontSize: '9px',
+    fontFamily: 'var(--font-mono, monospace)',
+    fontWeight: '600' as const,
+    padding: '1px 6px',
+    borderRadius: '8px',
+    backgroundColor: 'var(--color-surface-soft)',
+    color: 'var(--color-ink-muted)',
   },
   editContainer: {
     marginBottom: '8px',

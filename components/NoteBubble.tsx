@@ -18,6 +18,7 @@ interface NoteBubbleProps {
   onExportNotion?: () => void;
   onColorChange?: (color: NoteColorBlock) => void;
   onToggleCollapse?: (collapsed: boolean) => void;
+  onTagsChange?: (tags: string[]) => void;
   onDragStart?: () => void;
   onDrag?: (dx: number, dy: number) => void;
   onDragEnd?: (clientX: number, clientY: number) => void;
@@ -30,6 +31,7 @@ export function NoteBubble({
   onExportNotion,
   onColorChange,
   onToggleCollapse,
+  onTagsChange,
   onDragStart,
   onDrag,
   onDragEnd,
@@ -39,6 +41,8 @@ export function NoteBubble({
   const [content, setContent] = useState(note.content);
   const [showPalette, setShowPalette] = useState(false);
   const [confirmDelete, setConfirmDelete] = useState(false);
+  const [tagInput, setTagInput] = useState('');
+  const [tags, setTags] = useState<string[]>(note.tags || []);
   const dragStartRef = useRef<{ x: number; y: number } | null>(null);
   const hasDraggedRef = useRef(false);
 
@@ -49,6 +53,38 @@ export function NoteBubble({
     setContent(note.content);
   }, [note.content]);
 
+  useEffect(() => {
+    setTags(note.tags || []);
+  }, [note.tags]);
+
+  const addTag = (rawTag: string) => {
+    const clean = rawTag.trim().toLowerCase().replace(/^#+/, '');
+    if (!clean || tags.includes(clean)) {
+      setTagInput('');
+      return;
+    }
+    const nextTags = [...tags, clean];
+    setTags(nextTags);
+    setTagInput('');
+    onTagsChange?.(nextTags);
+  };
+
+  const removeTag = (tagToRemove: string) => {
+    const nextTags = tags.filter((t) => t !== tagToRemove);
+    setTags(nextTags);
+    onTagsChange?.(nextTags);
+  };
+
+  const handleTagKeyDown = (e: any) => {
+    e.stopPropagation();
+    if (e.key === 'Enter' || e.key === ',') {
+      e.preventDefault();
+      addTag(tagInput);
+    } else if (e.key === 'Backspace' && !tagInput && tags.length > 0) {
+      removeTag(tags[tags.length - 1]);
+    }
+  };
+
   const handleInput = (e: Event) => {
     const val = (e.target as HTMLTextAreaElement).value;
     setContent(val);
@@ -56,7 +92,7 @@ export function NoteBubble({
   };
 
   const handlePointerDown = (e: PointerEvent) => {
-    if ((e.target as HTMLElement).closest('button') || (e.target as HTMLElement).closest('textarea')) {
+    if ((e.target as HTMLElement).closest('button') || (e.target as HTMLElement).closest('textarea') || (e.target as HTMLElement).closest('input')) {
       return;
     }
     e.preventDefault();
@@ -135,6 +171,11 @@ export function NoteBubble({
           <path d="M6 14a6 6 0 0 0 12 0" />
         </svg>
         <span style={{ ...chipStyles.snippetText, color: theme.text }}>{snippet}</span>
+        {tags.length > 0 && (
+          <span style={{ fontSize: '10px', opacity: 0.8, fontFamily: 'monospace' }}>
+            #{tags[0]}
+          </span>
+        )}
         {note.syncedToNotion && (
           <span style={chipStyles.notionDot} title="Synced to Notion" />
         )}
@@ -291,6 +332,34 @@ export function NoteBubble({
         onKeyDown={(e) => e.stopPropagation()}
         onKeyUp={(e) => e.stopPropagation()}
       />
+
+      <div style={bubbleStyles.tagSection}>
+        {tags.map((tag) => (
+          <span key={tag} style={{ ...bubbleStyles.tagBadge, color: theme.text }}>
+            #{tag}
+            <button
+              type="button"
+              onClick={(e) => {
+                e.stopPropagation();
+                removeTag(tag);
+              }}
+              style={{ ...bubbleStyles.tagRemoveBtn, color: theme.text }}
+              title="Remove tag"
+            >
+              ✕
+            </button>
+          </span>
+        ))}
+        <input
+          type="text"
+          placeholder="+ tag"
+          value={tagInput}
+          onInput={(e) => setTagInput((e.target as HTMLInputElement).value)}
+          onKeyDown={handleTagKeyDown}
+          onKeyUp={(e) => e.stopPropagation()}
+          style={{ ...bubbleStyles.tagInput, color: theme.text }}
+        />
+      </div>
     </div>
   );
 }
@@ -480,6 +549,48 @@ const bubbleStyles = {
     outline: 'none',
     padding: '2px 0 0 0',
     boxSizing: 'border-box' as const,
+  },
+  tagSection: {
+    display: 'flex',
+    flexWrap: 'wrap' as const,
+    gap: '4px',
+    alignItems: 'center',
+    marginTop: '6px',
+    paddingTop: '6px',
+    borderTop: '1px dashed rgba(0, 0, 0, 0.12)',
+  },
+  tagBadge: {
+    display: 'inline-flex',
+    alignItems: 'center',
+    gap: '3px',
+    fontSize: '10px',
+    fontFamily: 'var(--font-mono, monospace)',
+    fontWeight: '600' as const,
+    padding: '2px 6px',
+    borderRadius: '10px',
+    backgroundColor: 'rgba(0, 0, 0, 0.07)',
+    userSelect: 'none' as const,
+  },
+  tagRemoveBtn: {
+    background: 'none',
+    border: 'none',
+    cursor: 'pointer',
+    padding: '0',
+    fontSize: '9px',
+    lineHeight: '1',
+    opacity: '0.6',
+    display: 'inline-flex',
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  tagInput: {
+    border: 'none',
+    backgroundColor: 'transparent',
+    fontSize: '11px',
+    fontFamily: 'var(--font-mono, monospace)',
+    outline: 'none',
+    width: '50px',
+    padding: '1px 2px',
   },
 };
 
