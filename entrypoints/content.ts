@@ -6,6 +6,13 @@ import { createNote, getNotesForUrl, updateNote, deleteNote } from '../lib/db';
 import { loadSettings } from '../components/Settings';
 import { pushNoteToNotion } from '../lib/notion';
 import type { StickleNote } from '../lib/types';
+import {
+  serializeRange,
+  applyHighlightOverlay,
+  restoreHighlightOverlay,
+  removeHighlightOverlay,
+} from '../lib/highlighting';
+import '../styles/design-tokens.css';
 
 export default defineContentScript({
   matches: ['<all_urls>'],
@@ -142,6 +149,172 @@ export default defineContentScript({
       true
     );
 
+    // Floating action pill element for text selection highlights
+    let selectionPill: HTMLElement | null = null;
+
+    const hideSelectionPill = () => {
+      if (selectionPill) {
+        selectionPill.remove();
+        selectionPill = null;
+      }
+    };
+
+    const handleSelectionCheck = async () => {
+      if (typeof window === 'undefined') return;
+      const selection = window.getSelection();
+      if (!selection || selection.isCollapsed || selection.rangeCount === 0) {
+        hideSelectionPill();
+        return;
+      }
+
+      const selectedText = selection.toString().trim();
+      if (selectedText.length <= 2) {
+        hideSelectionPill();
+        return;
+      }
+
+      const range = selection.getRangeAt(0);
+      const container = getOrCreateHostContainer();
+      if (container.contains(range.commonAncestorContainer)) {
+        hideSelectionPill();
+        return;
+      }
+
+      const rect = range.getBoundingClientRect();
+      if (rect.width === 0 || rect.height === 0) {
+        hideSelectionPill();
+        return;
+      }
+
+      if (!selectionPill) {
+        selectionPill = document.createElement('button');
+        selectionPill.className = 'stickle-selection-pill';
+        selectionPill.innerHTML = '📌 Highlight & Note';
+        selectionPill.style.position = 'absolute';
+        selectionPill.style.zIndex = '2147483647';
+        selectionPill.style.pointerEvents = 'auto';
+        selectionPill.style.display = 'inline-flex';
+        selectionPill.style.alignItems = 'center';
+        selectionPill.style.gap = '6px';
+        selectionPill.style.padding = '6px 14px';
+        selectionPill.style.backgroundColor = '#111111';
+        selectionPill.style.color = '#ffffff';
+        selectionPill.style.fontSize = '12px';
+        selectionPill.style.fontWeight = '600';
+        selectionPill.style.fontFamily = 'Inter, -apple-system, sans-serif';
+        selectionPill.style.borderRadius = '50px';
+        selectionPill.style.boxShadow = '0 4px 14px rgba(0, 0, 0, 0.2)';
+        selectionPill.style.cursor = 'pointer';
+        selectionPill.style.border = 'none';
+        container.appendChild(selectionPill);
+      }
+
+      const pillLeft = Math.max(10, window.scrollX + rect.left + rect.width / 2 - 65);
+      const pillTop = Math.max(10, window.scrollY + rect.top - 38);
+
+      selectionPill.style.left = `${pillLeft}px`;
+      selectionPill.style.top = `${pillTop}px`;
+
+      selectionPill.onclick = async (e: MouseEvent) => {
+        e.preventDefault();
+        e.stopPropagation();
+
+        const currentSelection = window.getSelection();
+        if (!currentSelection || currentSelection.rangeCount === 0) return;
+        const currentRange = currentSelection.getRangeAt(0);
+        const highlightText = currentRange.toString().trim();
+
+        const highlightRange = serializeRange(currentRange);
+        const targetEl =
+          (currentRange.startContainer.nodeType === Node.ELEMENT_NODE
+            ? (currentRange.startContainer as Element)
+            : currentRange.startContainer.parentElement) || document.body;
+
+        const targetRect = targetEl.getBoundingClientRect();
+        const offsetX = rect.left - targetRect.left;
+        const offsetY = rect.top - targetRect.top;
+
+        const anchor = createAnchor(targetEl, offsetX, offsetY);
+        const settings = await loadSettings();
+        const color = settings.defaultNoteColor || 'cream';
+
+        const newNote: StickleNote = {
+          id: crypto.randomUUID(),
+          url: normalizeUrl(window.location.href),
+          pageTitle: document.title,
+          content: `"${highlightText}"`,
+          anchor,
+          color,
+          collapsed: false,
+          highlightRange,
+          createdAt: Date.now(),
+          updatedAt: Date.now(),
+          syncedToNotion: false,
+        };
+
+        // Wrap DOM selection range in <mark> tag
+        applyHighlightOverlay(currentRange, newNote.id, color);
+        await createNote(newNote);
+
+        hideSelectionPill();
+        currentSelection.removeAllRanges();
+
+        const wrapper = renderNoteWrapper(newNote);
+        setTimeout(() => {
+          const textarea = wrapper?.querySelector('textarea');
+          textarea?.focus();
+        }, 50);
+      };
+    };
+
+    document.addEventListener('mouseup', () => {
+      setTimeout(handleSelectionCheck, 10);
+    });
+
+    document.addEventListener('selectionchange', () => {
+      const selection = window.getSelection();
+      if (!selection || selection.isCollapsed) {
+        hideSelectionPill();
+      }
+    });
+
+    // Delegated click handler on <mark class="stickle-highlight-mark"> elements
+    document.addEventListener('click', async (e: MouseEvent) => {
+      const target = e.target as HTMLElement;
+      if (target && target.classList && target.classList.contains('stickle-highlight-mark')) {
+        const noteId = target.getAttribute('data-stickle-id');
+        if (noteId) {
+          e.stopPropagation();
+
+          // Fetch latest notes for page and expand if collapsed
+          const notes = await getNotesForUrl(normalizeUrl(window.location.href));
+          const targetNote = notes.find((n) => n.id === noteId);
+          if (targetNote && targetNote.collapsed) {
+            targetNote.collapsed = false;
+            await updateNote(noteId, { collapsed: false, updatedAt: Date.now() });
+            renderNoteWrapper(targetNote);
+          }
+
+          const wrapper = mountedNotes.get(noteId);
+          if (wrapper) {
+            wrapper.scrollIntoView({ behavior: 'smooth', block: 'center' });
+            
+            // Add high-visibility pulse animation ring
+            const bubbleEl = (wrapper.firstElementChild as HTMLElement) || wrapper;
+            bubbleEl.classList.remove('stickle-note-pulse');
+            void bubbleEl.offsetWidth; // Force reflow
+            bubbleEl.classList.add('stickle-note-pulse');
+            setTimeout(() => {
+              bubbleEl.classList.remove('stickle-note-pulse');
+            }, 2400);
+
+            const textarea = wrapper.querySelector('textarea');
+            textarea?.focus();
+          }
+        }
+      }
+    });
+
     async function refreshNotes() {
       try {
         const notes = await getNotesForUrl(normalizeUrl(window.location.href));
@@ -152,10 +325,15 @@ export default defineContentScript({
           if (!currentIds.has(id)) {
             wrapper.remove();
             mountedNotes.delete(id);
+            removeHighlightOverlay(id);
           }
         }
 
         for (const note of notes) {
+          if (note.highlightRange) {
+            restoreHighlightOverlay(note.highlightRange, note.id, note.color);
+          }
+
           const resolved = resolveAnchor(note.anchor);
           if (resolved.tier !== note.anchor.tier) {
             note.anchor.tier = resolved.tier;
@@ -205,6 +383,7 @@ export default defineContentScript({
 
       const handleDelete = async () => {
         await deleteNote(note.id);
+        removeHighlightOverlay(note.id);
         wrapper?.remove();
         mountedNotes.delete(note.id);
       };
@@ -213,6 +392,13 @@ export default defineContentScript({
         note.color = color;
         note.updatedAt = Date.now();
         await updateNote(note.id, { color, updatedAt: note.updatedAt });
+
+        // Update mark overlay colors if highlight note
+        const marks = document.querySelectorAll(`mark[data-stickle-id="${note.id}"]`);
+        marks.forEach((m) => {
+          m.className = `stickle-highlight-mark stickle-highlight-${color}`;
+        });
+
         renderNoteWrapper(note, posX, posY);
       };
 
@@ -262,9 +448,18 @@ export default defineContentScript({
         const targetEl = document.elementFromPoint(clientX, clientY) || document.body;
         wrapper.style.visibility = 'visible';
 
-        const rect = targetEl.getBoundingClientRect();
-        const offsetX = clientX - rect.left;
-        const offsetY = clientY - rect.top;
+        const scrollX = window.scrollX || 0;
+        const scrollY = window.scrollY || 0;
+        const bodyRect = (document.body || document.documentElement).getBoundingClientRect();
+        const bodyLeft = scrollX + bodyRect.left;
+        const bodyTop = scrollY + bodyRect.top;
+
+        const targetRect = targetEl.getBoundingClientRect();
+        const targetPageLeft = scrollX + targetRect.left - bodyLeft;
+        const targetPageTop = scrollY + targetRect.top - bodyTop;
+
+        const offsetX = newLeft - targetPageLeft;
+        const offsetY = newTop - targetPageTop;
 
         const newAnchor = createAnchor(targetEl, offsetX, offsetY);
         note.anchor = newAnchor;
