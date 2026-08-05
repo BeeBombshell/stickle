@@ -228,17 +228,114 @@ stickle/
 
 ---
 
-## Stretch phases (do not start until Phase 5 is fully complete and confirmed by the user)
-- **Phase 6:** Auto background sync — outbox queue pattern, idempotency keys, retry-with-backoff, conflict resolution if a note is edited both locally and in Notion
-- **Phase 7:** Firefox support (WXT supports multi-browser builds — mostly a manifest/permissions adaptation)
-- **Phase 8:** Highlight-based note mode (select text → note, Hypothesis-style) as an alternative capture mode alongside click-anywhere
-- **Phase 9:** Multiplayer/shared notes on the same page (would require a backend — out of scope for local-first v1)
+## Phase 6 — Note Customization & Collapsible UI
+
+**Goal:** Allow users to customize note color themes based on Figma pastel blocks and collapse note bubbles into compact floating chips.
+
+**Tasks:**
+1. Update `StickleNote` interface in `lib/types.ts` with `color?: NoteColorBlock` and `collapsed?: boolean`.
+2. Add color block CSS utility classes to `styles/design-tokens.css` (`.stickle-bubble-lime`, `.stickle-bubble-lilac`, `.stickle-bubble-cream`, `.stickle-bubble-mint`, `.stickle-bubble-pink`, `.stickle-bubble-coral`, `.stickle-bubble-navy`).
+3. Add collapse toggle button `–` to `NoteBubble.tsx`. When collapsed, render a compact pastel pill chip (`📌 Note snippet...`) anchored to the DOM node. Click chip to expand back.
+4. Add inline color palette popover (🎨) in `NoteBubble.tsx` header for picking pastel background themes.
+5. Add Default Note Color preference setting in `Settings.tsx`.
+
+**Acceptance criteria:**
+- [ ] Users can toggle note background colors across all 7 Figma pastel color blocks
+- [ ] Notes can be collapsed into compact floating pill chips and expanded back smoothly
+- [ ] Note theme color and collapsed state persist across page reloads in IndexedDB/storage
+
+---
+
+## Phase 7 — Text Selection Highlights (Hypothesis-Style)
+
+**Goal:** Select text on any webpage to trigger a floating "📌 Highlight & Note" action and create anchored DOM text highlight overlays.
+
+**Tasks:**
+1. Define `NoteHighlightRange` in `lib/types.ts` storing `selectedText`, `startContainerPath`, `startOffset`, `endContainerPath`, `endOffset`.
+2. Add text selection listener in `entrypoints/content.ts` (`mouseup`/`selectionchange`) to display a floating action pill near the selection cursor when text (>2 chars) is selected.
+3. Clicking "📌 Highlight & Note" wraps the DOM text range in a `<mark class="stickle-highlight-mark">` pastel overlay and attaches the stickle.
+4. On page load, resolve saved highlights and apply DOM `<mark>` overlays.
+
+**Acceptance criteria:**
+- [ ] Selecting text on any webpage shows floating "📌 Highlight & Note" action chip
+- [ ] Clicking creates a sticky note tied to the highlighted text range with visual DOM highlight overlay
+- [ ] Text highlights persist and re-render accurately on page reload
+
+---
+
+## Phase 8 — Tags & Tag-Based Filtering
+
+**Goal:** Tag notes directly in the bubble and filter by tags in the popup sidebar.
+
+**Tasks:**
+1. Add `tags?: string[]` field to `StickleNote` interface in `lib/types.ts`.
+2. Add inline tag editor & chip badges to `NoteBubble.tsx` (`#research`, `#todo`, `#important`).
+3. Build interactive horizontal tag filter bar (`#all`, `#research`, `#todo`, etc.) in `NoteSidebar.tsx`.
+4. Update `getNotesForUrl` and `getAllNotes` search filtering in `lib/db.ts` to support multi-tag filtering.
+
+**Acceptance criteria:**
+- [ ] Users can add, edit, and remove tags on notes in the floating bubble UI
+- [ ] NoteSidebar/Popup displays active tag chips and filters notes by selected tag
+- [ ] Substring search matches tag names as well as note content
+
+---
+
+## Phase 9 — Sharable Notes (Import & Export JSON)
+
+**Goal:** Export notes to a portable JSON format and import JSON notes into Stickle.
+
+**Tasks:**
+1. Build `lib/export-import.ts`:
+   - `exportNotesToJson(notes: StickleNote[], filename?: string)`
+   - `importNotesFromJson(jsonString: string)` with schema version validation and duplicate merge logic.
+2. Add "Export Notes (.json)" and "Import Notes (.json)" buttons in `NoteSidebar.tsx` and `Settings.tsx`.
+3. Continuously sync notes to local data file `~/.stickle/notes.json` for MCP server access.
+
+**Acceptance criteria:**
+- [ ] Exporting produces a clean, valid `stickle_export_YYYY-MM-DD.json` file containing all note anchors, colors, tags, and timestamps
+- [ ] Importing a JSON export restores all notes without duplicate conflicts
+- [ ] Writes notes to `~/.stickle/notes.json`
+
+---
+
+## Phase 10 — Grouped Notion Sync Restructuring
+
+**Goal:** Group all notes for the same Web Page URL into a single Notion Page, eliminating duplicate Notion page entries.
+
+**Tasks:**
+1. Update `lib/notion.ts` to query Notion database for an existing page matching the web page `URL`.
+2. If page exists, append a formatted Callout block / Toggle block inside that single Notion page instead of creating a new page.
+3. If page does not exist, create 1 master Notion page for the web URL and append the note block inside it.
+4. Update `tests/notion.test.ts` to verify page grouping behavior.
+
+**Acceptance criteria:**
+- [ ] Multiple notes on the same URL export into 1 single Notion page with nested callouts
+- [ ] Re-exporting or batch exporting does not create duplicate Notion database pages
+
+---
+
+## Phase 11 — Model Context Protocol (MCP) Server Integration
+
+**Goal:** Enable AI agents (Claude Desktop, Antigravity, Cursor) to query, search, create, and summarize browser notes via Model Context Protocol.
+
+**Tasks:**
+1. Create `mcp-server/index.ts` using `@modelcontextprotocol/sdk` with STDIO transport.
+2. Implement MCP tools:
+   - `list_stickle_notes`: List notes filtered by `domain`, `tag`, or `limit`.
+   - `search_stickle_notes`: Keyword & tag search.
+   - `get_notes_for_url`: Notes pinned to a specific URL.
+   - `add_stickle_note`: Create new web note.
+   - `export_stickle_summary`: Generate Markdown synthesis report of web notes grouped by site.
+3. Add `"mcp": "ts-node mcp-server/index.ts"` script to `package.json`.
+
+**Acceptance criteria:**
+- [ ] MCP server starts cleanly and responds to standard STDIO RPC requests
+- [ ] AI agents can execute `search_stickle_notes` and `export_stickle_summary` to query browser notes
 
 ---
 
 ## Rules for the agent executing this plan
 1. Work through phases strictly in order. Do not begin a phase whose predecessor's acceptance criteria are unchecked.
-2. Log every non-trivial judgment call (naming, thresholds, library choices not specified here) in `DECISIONS.md` with a one-line rationale.
+2. Log every non-trivial judgment call in `DECISIONS.md` with a one-line rationale.
 3. Do not introduce new external dependencies beyond what's named in this doc without noting the reason in `DECISIONS.md`.
-4. If an acceptance criterion cannot be met, stop and surface the blocker rather than silently weakening the criterion or skipping ahead.
-5. Phase 2 (anchoring) is the project's core value — if time pressure forces cuts anywhere, cut scope from Phase 3/5 polish before cutting corners on Phase 2's fallback tiers or test coverage.
+4. If an acceptance criterion cannot be met, stop and surface the blocker.
