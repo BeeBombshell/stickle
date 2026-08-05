@@ -106,7 +106,7 @@ describe('Notion API Integration', () => {
 
       const result = await testNotionConnection(sampleConfig);
       expect(result.success).toBe(false);
-      expect(result.error).toBe('API token is invalid.');
+      expect(result.error).toBe('Notion Integration Token is invalid or expired. Please check your token in Settings.');
     });
   });
 

@@ -42,9 +42,18 @@ function getStorageNotes(): Promise<StickleNote[]> {
 }
 
 function setStorageNotes(notes: StickleNote[]): Promise<void> {
-  return new Promise((resolve) => {
+  return new Promise((resolve, reject) => {
     chrome.storage.local.set({ [STORAGE_KEY]: notes }, () => {
-      resolve();
+      if (chrome.runtime.lastError) {
+        const errMsg = chrome.runtime.lastError.message || '';
+        if (errMsg.toLowerCase().includes('quota') || errMsg.toLowerCase().includes('exceeded')) {
+          reject(new Error('Storage quota exceeded. Please export or delete older notes.'));
+        } else {
+          reject(new Error(errMsg));
+        }
+      } else {
+        resolve();
+      }
     });
   });
 }

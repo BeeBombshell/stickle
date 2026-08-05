@@ -35,6 +35,19 @@ async function fetchWithRetry(
   throw new Error('Max retries exceeded');
 }
 
+function formatNotionApiError(res: Response, errorData: any): string {
+  if (res.status === 401) {
+    return 'Notion Integration Token is invalid or expired. Please check your token in Settings.';
+  }
+  if (res.status === 403) {
+    return 'Notion Integration Token does not have access to this database. Make sure to share your Notion database with the integration connection.';
+  }
+  if (res.status === 404) {
+    return 'Notion Database not found. Please double-check your Database ID in Settings.';
+  }
+  return errorData?.message || `Notion API returned HTTP ${res.status}`;
+}
+
 export async function testNotionConnectionDirect(
   config: NotionConfig
 ): Promise<{ success: boolean; error?: string }> {
@@ -61,7 +74,7 @@ export async function testNotionConnectionDirect(
     }
 
     const errorData = await res.json().catch(() => ({}));
-    const message = errorData.message || `Notion API returned status ${res.status}`;
+    const message = formatNotionApiError(res, errorData);
     return { success: false, error: message };
   } catch (err: any) {
     return {
@@ -155,7 +168,7 @@ export async function pushNoteToNotionDirect(
 
     if (!res.ok) {
       const errJson = await res.json().catch(() => ({}));
-      throw new Error(errJson.message || `Failed to update Notion page (${res.status})`);
+      throw new Error(formatNotionApiError(res, errJson));
     }
 
     // Append updated content as a new block paragraph to Notion page
@@ -244,7 +257,7 @@ export async function pushNoteToNotionDirect(
 
     if (!res.ok) {
       const errJson = await res.json().catch(() => ({}));
-      throw new Error(errJson.message || `Failed to create Notion page (${res.status})`);
+      throw new Error(formatNotionApiError(res, errJson));
     }
 
     const responseData = await res.json();
