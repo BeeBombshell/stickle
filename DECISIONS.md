@@ -161,6 +161,23 @@ This log records non-trivial decisions made during the development of Stickle.
 - **Decision:** Introduced an in-memory `pageCache: Map<string, string>` across batch export cycles (`exportUnsyncedNotesBatchDirect`).
 - **Rationale:** Ensures multiple unsynced notes sharing the same URL immediately reuse the newly created master Notion page ID during a single batch sync without triggering redundant database query requests or race conditions.
 
+---
+
+## Phase 11 — Model Context Protocol (MCP) Server Integration
+
+### 33. STDIO Transport MCP Server Architecture
+- **Decision:** Built `mcp-server/index.ts` using `@modelcontextprotocol/sdk` configured with `StdioServerTransport` and `"mcp": "tsx mcp-server/index.ts"` script entrypoint.
+- **Rationale:** Provides universal standard I/O communication compatible with AI tools (Claude Desktop, Antigravity, Cursor) without requiring a HTTP listener or network port allocation.
+
+### 34. Decoupled Environment Data Resolution & Storage Fallback
+- **Decision:** Designed `getNotesPath` targeting `~/.stickle/notes.json` with fallback to `STICKLE_NOTES_PATH` environment variable.
+- **Rationale:** Allows unit tests to run isolated temporary directory tests without mutating production browser note storage.
+
+### 35. Structured Domain Synthesis & 5-Tool MCP Suite
+- **Decision:** Implemented `list_stickle_notes`, `search_stickle_notes`, `get_notes_for_url`, `add_stickle_note`, and `export_stickle_summary` returning Markdown reports and JSON data models.
+- **Rationale:** Gives AI agents complete read, search, write, and summary capabilities over browser sticky notes.
+
+
 
 
 

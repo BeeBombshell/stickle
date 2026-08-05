@@ -329,8 +329,8 @@ stickle/
 3. Add `"mcp": "ts-node mcp-server/index.ts"` script to `package.json`.
 
 **Acceptance criteria:**
-- [ ] MCP server starts cleanly and responds to standard STDIO RPC requests
-- [ ] AI agents can execute `search_stickle_notes` and `export_stickle_summary` to query browser notes
+- [x] MCP server starts cleanly and responds to standard STDIO RPC requests
+- [x] AI agents can execute `search_stickle_notes` and `export_stickle_summary` to query browser notes
 
 ---
 

@@ -43,12 +43,55 @@
 
 ---
 
+## 🤖 Model Context Protocol (MCP) Integration
+
+Stickle includes a built-in **Model Context Protocol (MCP)** server that allows AI desktop assistants (Claude Desktop, Antigravity, Cursor, Windsurf) to query, search, create, and summarize your browser notes directly.
+
+### Available MCP Tools
+
+| Tool | Description | Example Arguments |
+| :--- | :--- | :--- |
+| `list_stickle_notes` | List saved notes filtered by domain or tag | `{ "domain": "github.com", "limit": 10 }` |
+| `search_stickle_notes` | Full-text search across content, page titles, URLs & tags | `{ "query": "typescript", "tag": "research" }` |
+| `get_notes_for_url` | Retrieve all notes anchored to a specific webpage URL | `{ "url": "https://wikipedia.org/wiki/React" }` |
+| `add_stickle_note` | Create and attach a new sticky note to a target webpage URL | `{ "url": "https://news.ycombinator.com", "content": "..." }` |
+| `export_stickle_summary` | Generate a structured Markdown report grouped by site domain | `{ "domain": "wikipedia.org" }` |
+
+### Setting Up MCP with AI Assistants
+
+#### Claude Desktop Configuration (`claude_desktop_config.json`)
+Location: `~/Library/Application Support/Claude/claude_desktop_config.json` (macOS)
+
+```json
+{
+  "mcpServers": {
+    "stickle": {
+      "command": "npx",
+      "args": ["tsx", "/absolute/path/to/stickle/mcp-server/index.ts"]
+    }
+  }
+}
+```
+
+#### Antigravity / Cursor / Windsurf MCP Configuration
+- **Server Name**: `stickle`
+- **Transport**: `stdio`
+- **Command**: `npx`
+- **Arguments**: `tsx /absolute/path/to/stickle/mcp-server/index.ts`
+
+### Local Data Sync
+- The MCP server reads and updates notes stored at `~/.stickle/notes.json` *(or custom path set via `STICKLE_NOTES_PATH`)*.
+- Click **Export Notes (.json)** in the extension popup (or Settings) to sync your browser notes to `~/.stickle/notes.json`.
+
+---
+
 ## 🧪 Development & Testing
 
 - `pnpm dev` — Run WXT development server with hot module reloading
 - `pnpm build` — Build production bundle targeting Chrome MV3 (`.output/chrome-mv3`)
 - `pnpm compile` — Execute TypeScript type checking
-- `pnpm test` — Run unit and anchoring test suite via Vitest
+- `pnpm test` — Run unit, anchoring & MCP server test suites via Vitest
+- `pnpm mcp` — Start the Stickle MCP server directly over STDIO
 
 ---
 
