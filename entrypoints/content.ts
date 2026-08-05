@@ -409,6 +409,13 @@ export default defineContentScript({
         renderNoteWrapper(note, posX, posY);
       };
 
+      const handleTagsChange = async (tags: string[]) => {
+        note.tags = tags;
+        note.updatedAt = Date.now();
+        await updateNote(note.id, { tags, updatedAt: note.updatedAt });
+        renderNoteWrapper(note, posX, posY);
+      };
+
       const handleExportNotion = async () => {
         try {
           const config = await loadSettings();
@@ -476,6 +483,7 @@ export default defineContentScript({
           onExportNotion: handleExportNotion,
           onColorChange: handleColorChange,
           onToggleCollapse: handleToggleCollapse,
+          onTagsChange: handleTagsChange,
           onDragStart: handleDragStart,
           onDrag: handleDrag,
           onDragEnd: handleDragEnd,
