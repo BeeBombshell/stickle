@@ -38,6 +38,7 @@ export function NoteBubble({
   const [isDragging, setIsDragging] = useState(false);
   const [content, setContent] = useState(note.content);
   const [showPalette, setShowPalette] = useState(false);
+  const [confirmDelete, setConfirmDelete] = useState(false);
   const dragStartRef = useRef<{ x: number; y: number } | null>(null);
   const hasDraggedRef = useRef(false);
 
@@ -176,11 +177,11 @@ export function NoteBubble({
           </span>
           {note.syncedToNotion && (
             <span
-              style={bubbleStyles.notionSyncedChip}
-              title="Synced to Notion (Click to re-export)"
-              onClick={onExportNotion}
+              style={bubbleStyles.syncedIndicator}
+              title="Synced to Notion"
             >
-              ✦ Notion
+              <span style={bubbleStyles.greenDot} />
+              Synced
             </span>
           )}
         </div>
@@ -202,31 +203,53 @@ export function NoteBubble({
               }}
             />
           </button>
-          {!note.syncedToNotion && onExportNotion && (
-            <button
-              onClick={onExportNotion}
-              style={{ ...bubbleStyles.iconBtn, color: theme.text }}
-              title="Export note to Notion"
-            >
-              <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
-                <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" />
-                <polyline points="17 8 12 3 7 8" />
-                <line x1="12" y1="3" x2="12" y2="15" />
-              </svg>
-            </button>
-          )}
+          <button
+            onClick={() => setConfirmDelete(!confirmDelete)}
+            style={{ ...bubbleStyles.iconBtn, color: confirmDelete ? '#ef4444' : theme.text }}
+            title="Delete note"
+          >
+            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+              <polyline points="3 6 5 6 21 6" />
+              <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2" />
+            </svg>
+          </button>
           <button
             onClick={() => onToggleCollapse?.(true)}
-            style={{ ...bubbleStyles.iconBtn, color: theme.text, fontWeight: 'bold' }}
-            title="Collapse note"
+            style={{ ...bubbleStyles.iconBtn, color: theme.text }}
+            title="Minimize note"
           >
-            –
-          </button>
-          <button onClick={onDelete} style={{ ...bubbleStyles.iconBtn, color: theme.text }} title="Delete note">
             ✕
           </button>
         </div>
       </div>
+
+      {confirmDelete && (
+        <div style={bubbleStyles.deleteConfirmBar}>
+          <span style={{ fontSize: '11px', fontWeight: '600', color: theme.text }}>
+            Delete note?
+          </span>
+          <div style={{ display: 'flex', gap: '4px' }}>
+            <button
+              onClick={(e) => {
+                e.stopPropagation();
+                onDelete?.();
+              }}
+              style={bubbleStyles.deleteConfirmBtn}
+            >
+              Delete
+            </button>
+            <button
+              onClick={(e) => {
+                e.stopPropagation();
+                setConfirmDelete(false);
+              }}
+              style={{ ...bubbleStyles.cancelConfirmBtn, color: theme.text }}
+            >
+              Cancel
+            </button>
+          </div>
+        </div>
+      )}
 
       {showPalette && (
         <div style={bubbleStyles.palettePopover}>
@@ -362,16 +385,25 @@ const bubbleStyles = {
     lineHeight: '1',
     cursor: 'grab',
   },
-  notionSyncedChip: {
-    fontSize: '9px',
-    fontFamily: 'var(--font-mono, monospace)',
-    padding: '2px 6px',
-    borderRadius: '10px',
+  syncedIndicator: {
+    display: 'inline-flex',
+    alignItems: 'center',
+    gap: '4px',
+    fontSize: '10px',
     fontWeight: '600' as const,
-    backgroundColor: '#dcfce7',
     color: '#15803d',
-    cursor: 'pointer',
+    backgroundColor: '#dcfce7',
+    padding: '2px 7px',
+    borderRadius: '10px',
     letterSpacing: '0.2px',
+    userSelect: 'none' as const,
+  },
+  greenDot: {
+    width: '6px',
+    height: '6px',
+    borderRadius: '50%',
+    backgroundColor: '#16a34a',
+    display: 'inline-block',
   },
   colorSwatchBtn: {
     background: 'none',
@@ -406,6 +438,35 @@ const bubbleStyles = {
     borderRadius: '50px',
     boxShadow: '0 4px 12px rgba(0, 0, 0, 0.1)',
     border: '1px solid rgba(0, 0, 0, 0.08)',
+  },
+  deleteConfirmBar: {
+    display: 'flex',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    padding: '5px 8px',
+    marginBottom: '8px',
+    borderRadius: '6px',
+    backgroundColor: 'rgba(239, 68, 68, 0.14)',
+    border: '1px solid rgba(239, 68, 68, 0.35)',
+  },
+  deleteConfirmBtn: {
+    padding: '3px 10px',
+    borderRadius: '50px',
+    backgroundColor: '#ef4444',
+    color: '#ffffff',
+    border: 'none',
+    fontSize: '11px',
+    fontWeight: '600' as const,
+    cursor: 'pointer',
+  },
+  cancelConfirmBtn: {
+    padding: '3px 8px',
+    borderRadius: '50px',
+    backgroundColor: 'transparent',
+    border: 'none',
+    fontSize: '11px',
+    fontWeight: '500' as const,
+    cursor: 'pointer',
   },
   textarea: {
     width: '100%',

@@ -114,6 +114,22 @@ This log records non-trivial decisions made during the development of Stickle.
 - **Decision:** Saved `defaultNoteColor` preference in `chrome.storage.local` with fallback to `localStorage`.
 - **Rationale:** Allows user to configure their preferred default note theme in Settings and automatically applies it to newly created notes on Alt+Click.
 
+---
+
+## Phase 7 — Text Selection Highlights (Hypothesis-Style)
+
+### 23. Range Path Serialization & Text Fallback Strategy
+- **Decision:** Implemented `serializeRange` in `lib/highlighting.ts` storing `startContainerPath`, `startOffset`, `endContainerPath`, `endOffset`, and `selectedText`, backed by a fallback text search (`findTextRangeByContent`) if DOM structure shifts.
+- **Rationale:** Ensures text highlights remain resilient to minor DOM structure alterations or re-renders across page reloads.
+
+### 24. Floating Selection Pill Positioning & Triggering
+- **Decision:** Attached `mouseup` and `selectionchange` event listeners to monitor text selection (>2 chars) outside the extension host container, positioning a floating `📌 Highlight & Note` action pill above the selection center point.
+- **Rationale:** Delivers a seamless Hypothesis-style highlighting workflow without interfering with normal text copying or context menus.
+
+### 25. Bi-Directional Highlight Overlay Interaction
+- **Decision:** Wrapped selected text ranges in `<mark class="stickle-highlight-mark stickle-highlight-[color]" data-stickle-id="[id]">` DOM elements, and added click delegation so clicking any highlight overlay on the page automatically scrolls to and focuses its attached sticky note bubble.
+- **Rationale:** Establishes a visual link between on-page highlighted text and sticky notes while maintaining easy navigation.
+
 
 
 
