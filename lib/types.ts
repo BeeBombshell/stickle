@@ -12,6 +12,14 @@ export interface NoteAnchor {
   tier: AnchorTier;
 }
 
+export interface NoteHighlightRange {
+  selectedText: string;
+  startContainerPath: string;
+  startOffset: number;
+  endContainerPath: string;
+  endOffset: number;
+}
+
 export interface StickleNote {
   id: string;
   url: string;
@@ -24,6 +32,7 @@ export interface StickleNote {
   notionPageId?: string;
   color?: NoteColorBlock;
   collapsed?: boolean;
+  highlightRange?: NoteHighlightRange;
 }
 
 export interface NotionConfig {
