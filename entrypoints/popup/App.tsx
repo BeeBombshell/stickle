@@ -124,9 +124,9 @@ export function App() {
           <span style={popupStyles.statusDot} title={`Background Worker: ${pingStatus}`} />
         </div>
 
-        {/* Header Magenta Promo Action Buttons */}
+        {/* Header Promo Action Buttons */}
         <div style={{ display: 'flex', gap: '5px', alignItems: 'center' }}>
-          <label style={popupStyles.magentaPromoBtn}>
+          <label style={popupStyles.headerPromoBtn}>
             📥 Import
             <input
               type="file"
@@ -135,7 +135,7 @@ export function App() {
               style={{ display: 'none' }}
             />
           </label>
-          <button style={popupStyles.magentaPromoBtn} onClick={handleExportJson} title="Export notes to JSON format">
+          <button style={popupStyles.headerPromoBtn} onClick={handleExportJson} title="Export notes to JSON format">
             📤 Export
           </button>
         </div>
@@ -243,14 +243,14 @@ const popupStyles = {
     backgroundColor: '#10b981',
     display: 'inline-block',
   },
-  magentaPromoBtn: {
+  headerPromoBtn: {
     padding: '3px 9px',
     borderRadius: 'var(--radius-pill)',
-    backgroundColor: 'var(--color-block-pink)',
-    border: '1px solid #f472b6',
+    backgroundColor: 'var(--color-block-lime)',
+    border: '1px solid #d4ee42',
     fontSize: '10px',
     fontWeight: '600' as const,
-    color: '#831843',
+    color: '#2a3000',
     cursor: 'pointer',
     display: 'inline-flex',
     alignItems: 'center',
