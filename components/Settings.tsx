@@ -2,6 +2,8 @@ import { useState, useEffect } from 'preact/hooks';
 import { testNotionConnection } from '../lib/notion';
 import type { NoteColorBlock } from '../lib/types';
 import { COLOR_SWATCHES } from './NoteBubble';
+import { getAllNotes } from '../lib/db';
+import { exportNotesToJson, importNotesFromJson } from '../lib/export-import';
 
 export interface NotionSettings {
   apiKey: string;
@@ -100,6 +102,39 @@ export function Settings() {
     }
   };
 
+  const handleExportAllJson = async () => {
+    const notes = await getAllNotes();
+    if (notes.length === 0) {
+      setStatus({ type: 'error', message: 'No notes available in database to export.' });
+      return;
+    }
+    const { filename } = exportNotesToJson(notes);
+    setStatus({ type: 'success', message: `Exported ${notes.length} notes to ${filename}` });
+  };
+
+  const handleImportJsonFile = async (e: Event) => {
+    const input = e.target as HTMLInputElement;
+    if (!input.files || input.files.length === 0) return;
+    const file = input.files[0];
+
+    const reader = new FileReader();
+    reader.onload = async (evt) => {
+      const text = evt.target?.result as string;
+      if (!text) return;
+      const res = await importNotesFromJson(text);
+      if (res.success) {
+        setStatus({
+          type: 'success',
+          message: `Import complete: ${res.imported} imported, ${res.updated} updated (${res.skipped} skipped).`,
+        });
+      } else {
+        setStatus({ type: 'error', message: `Import failed: ${res.error}` });
+      }
+      input.value = '';
+    };
+    reader.readAsText(file);
+  };
+
   return (
     <div style={settingsStyles.container}>
       <h2 style={settingsStyles.title}>Preferences & Settings</h2>
@@ -164,6 +199,56 @@ export function Settings() {
       >
         {isTesting ? 'Testing Connection...' : 'Save Settings'}
       </button>
+
+      <hr style={{ border: 'none', borderTop: '1px solid var(--color-hairline)', margin: '16px 0' }} />
+
+      <h3 style={{ ...settingsStyles.title, fontSize: '15px' }}>Data Backup & Portability</h3>
+      <p style={settingsStyles.subtitle}>
+        Export your notes to portable JSON files or restore notes from a previous backup.
+      </p>
+
+      <div style={{ display: 'flex', gap: '8px', marginTop: '8px' }}>
+        <button
+          onClick={handleExportAllJson}
+          style={{
+            flex: 1,
+            padding: '8px 12px',
+            borderRadius: 'var(--radius-md)',
+            border: '1px solid var(--color-hairline)',
+            backgroundColor: 'var(--color-surface-soft)',
+            fontSize: '12px',
+            fontWeight: '600',
+            cursor: 'pointer',
+            color: 'var(--color-ink)',
+          }}
+        >
+          📤 Export Notes (.json)
+        </button>
+
+        <label
+          style={{
+            flex: 1,
+            padding: '8px 12px',
+            borderRadius: 'var(--radius-md)',
+            border: '1px solid var(--color-hairline)',
+            backgroundColor: 'var(--color-surface-soft)',
+            fontSize: '12px',
+            fontWeight: '600',
+            cursor: 'pointer',
+            color: 'var(--color-ink)',
+            textAlign: 'center',
+            boxSizing: 'border-box',
+          }}
+        >
+          📥 Import Notes (.json)
+          <input
+            type="file"
+            accept=".json"
+            onChange={handleImportJsonFile}
+            style={{ display: 'none' }}
+          />
+        </label>
+      </div>
 
       {status && (
         <div

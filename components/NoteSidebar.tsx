@@ -3,6 +3,7 @@ import type { StickleNote } from '../lib/types';
 import { updateNote, deleteNote } from '../lib/db';
 import { loadSettings } from './Settings';
 import { pushNoteToNotion, exportUnsyncedNotesBatch } from '../lib/notion';
+import { exportNotesToJson, importNotesFromJson } from '../lib/export-import';
 import { COLOR_SWATCHES } from './NoteBubble';
 
 export type DateFilter = 'all' | 'today' | 'week';
@@ -212,9 +213,41 @@ export function NoteSidebar({ notes, onNoteChange, onSelectNote }: NoteSidebarPr
     navigateToNote(note);
   };
 
+  const handleExportJson = () => {
+    if (notes.length === 0) {
+      setSyncStatusMsg('No notes available to export.');
+      return;
+    }
+    const { filename } = exportNotesToJson(notes);
+    setSyncStatusMsg(`Exported ${notes.length} notes to ${filename}`);
+  };
+
+  const handleImportFileChange = async (e: Event) => {
+    const input = e.target as HTMLInputElement;
+    if (!input.files || input.files.length === 0) return;
+    const file = input.files[0];
+
+    const reader = new FileReader();
+    reader.onload = async (evt) => {
+      const text = evt.target?.result as string;
+      if (!text) return;
+      const res = await importNotesFromJson(text);
+      if (res.success) {
+        setSyncStatusMsg(
+          `Import complete: ${res.imported} imported, ${res.updated} updated (${res.skipped} skipped).`
+        );
+        onNoteChange?.();
+      } else {
+        setSyncStatusMsg(`Import failed: ${res.error}`);
+      }
+      input.value = '';
+    };
+    reader.readAsText(file);
+  };
+
   return (
     <div style={sidebarStyles.container}>
-      {/* Controls Bar: Search, Date Filters, Tag Filters & Batch Notion Action */}
+      {/* Controls Bar: Search, Date Filters, Tag Filters, JSON Backup & Batch Notion Action */}
       <div style={sidebarStyles.controlsBar}>
         <input
           type="text"
@@ -244,37 +277,53 @@ export function NoteSidebar({ notes, onNoteChange, onSelectNote }: NoteSidebarPr
           </div>
         )}
 
-        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: '6px' }}>
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: '6px', flexWrap: 'wrap' }}>
           <div style={sidebarStyles.filterGroup}>
             <button
-              style={dateFilter === 'all' ? sidebarStyles.filterPillActive : sidebarStyles.filterPill}
+              style={dateFilter === 'all' ? sidebarStyles.filterBtnActive : sidebarStyles.filterBtn}
               onClick={() => setDateFilter('all')}
             >
               All
             </button>
             <button
-              style={dateFilter === 'today' ? sidebarStyles.filterPillActive : sidebarStyles.filterPill}
+              style={dateFilter === 'today' ? sidebarStyles.filterBtnActive : sidebarStyles.filterBtn}
               onClick={() => setDateFilter('today')}
             >
               Today
             </button>
             <button
-              style={dateFilter === 'week' ? sidebarStyles.filterPillActive : sidebarStyles.filterPill}
+              style={dateFilter === 'week' ? sidebarStyles.filterBtnActive : sidebarStyles.filterBtn}
               onClick={() => setDateFilter('week')}
             >
               This Week
             </button>
           </div>
 
-          {unsyncedCount > 0 && (
-            <button
-              style={sidebarStyles.batchExportBtn}
-              onClick={handleBatchExport}
-              disabled={isBatchExporting}
-            >
-              {isBatchExporting ? 'Exporting...' : `Export All (${unsyncedCount})`}
+          <div style={{ display: 'flex', gap: '4px', alignItems: 'center' }}>
+            <label style={sidebarStyles.jsonBtn}>
+              📥 Import JSON
+              <input
+                type="file"
+                accept=".json"
+                onChange={handleImportFileChange}
+                style={{ display: 'none' }}
+              />
+            </label>
+            <button style={sidebarStyles.jsonBtn} onClick={handleExportJson} title="Export all notes to portable JSON format">
+              📤 Export JSON
             </button>
-          )}
+            <button
+              style={sidebarStyles.notionBatchBtn}
+              onClick={handleBatchExport}
+              disabled={isBatchExporting || unsyncedCount === 0}
+            >
+              {isBatchExporting
+                ? 'Syncing...'
+                : unsyncedCount > 0
+                ? `Sync ${unsyncedCount} to Notion`
+                : 'All Synced ✓'}
+            </button>
+          </div>
         </div>
 
         {syncStatusMsg && (
@@ -680,7 +729,7 @@ const sidebarStyles = {
     cursor: 'pointer',
     padding: 0,
   },
-  batchExportBtn: {
+  notionBatchBtn: {
     padding: '3px 8px',
     borderRadius: 'var(--radius-pill)',
     backgroundColor: 'var(--color-block-lime)',
@@ -689,6 +738,18 @@ const sidebarStyles = {
     fontWeight: '600' as const,
     color: '#3d4400',
     cursor: 'pointer',
+  },
+  jsonBtn: {
+    padding: '3px 7px',
+    borderRadius: 'var(--radius-pill)',
+    backgroundColor: 'var(--color-surface-soft)',
+    border: '1px solid var(--color-hairline)',
+    fontSize: '10px',
+    fontWeight: '500' as const,
+    color: 'var(--color-ink)',
+    cursor: 'pointer',
+    display: 'inline-flex',
+    alignItems: 'center',
   },
   syncStatusBanner: {
     padding: '6px 10px',
