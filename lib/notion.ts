@@ -71,6 +71,43 @@ export async function testNotionConnectionDirect(
   }
 }
 
+interface DatabaseSchemaInfo {
+  titlePropertyKey: string;
+  urlPropertyKey?: string;
+}
+
+async function getDatabaseSchemaInfo(
+  dbId: string,
+  headers: Record<string, string>
+): Promise<DatabaseSchemaInfo> {
+  try {
+    const res = await fetchWithRetry(`https://api.notion.com/v1/databases/${dbId}`, {
+      method: 'GET',
+      headers: {
+        Authorization: headers.Authorization,
+        'Notion-Version': headers['Notion-Version'],
+      },
+    });
+
+    if (res.ok) {
+      const data = await res.json();
+      const props = data.properties || {};
+      const keys = Object.keys(props);
+
+      const titlePropertyKey =
+        keys.find((k) => props[k].type === 'title') || 'Name';
+
+      const urlPropertyKey =
+        keys.find((k) => props[k].type === 'url') ||
+        keys.find((k) => k.toLowerCase() === 'url' && props[k].type === 'url');
+
+      return { titlePropertyKey, urlPropertyKey };
+    }
+  } catch {}
+
+  return { titlePropertyKey: 'Name' };
+}
+
 export async function pushNoteToNotionDirect(
   note: StickleNote,
   config: NotionConfig
@@ -86,21 +123,28 @@ export async function pushNoteToNotionDirect(
     'Content-Type': 'application/json',
   };
 
-  const formattedDate = new Date(note.createdAt).toISOString();
+  const formattedDate = new Date(note.createdAt).toLocaleString();
   const titleText = note.pageTitle || note.url;
+
+  const schemaInfo = await getDatabaseSchemaInfo(dbId, headers);
+
+  const pageProperties: Record<string, any> = {
+    [schemaInfo.titlePropertyKey]: {
+      title: [{ text: { content: titleText } }],
+    },
+  };
+
+  if (schemaInfo.urlPropertyKey) {
+    pageProperties[schemaInfo.urlPropertyKey] = {
+      url: note.url,
+    };
+  }
 
   if (note.syncedToNotion && note.notionPageId) {
     // Update existing Notion page properties
     const updateUrl = `https://api.notion.com/v1/pages/${note.notionPageId}`;
     const updateBody = {
-      properties: {
-        Name: {
-          title: [{ text: { content: titleText } }],
-        },
-        URL: {
-          url: note.url,
-        },
-      },
+      properties: pageProperties,
     };
 
     const res = await fetchWithRetry(updateUrl, {
@@ -149,14 +193,7 @@ export async function pushNoteToNotionDirect(
     const createUrl = 'https://api.notion.com/v1/pages';
     const createBody = {
       parent: { database_id: dbId },
-      properties: {
-        Name: {
-          title: [{ text: { content: titleText } }],
-        },
-        URL: {
-          url: note.url,
-        },
-      },
+      properties: pageProperties,
       children: [
         {
           object: 'block',
@@ -165,7 +202,7 @@ export async function pushNoteToNotionDirect(
             rich_text: [
               {
                 text: {
-                  content: note.content,
+                  content: note.content || '(Empty note content)',
                 },
               },
             ],
@@ -179,7 +216,18 @@ export async function pushNoteToNotionDirect(
             rich_text: [
               {
                 text: {
-                  content: `Created via Stickle on ${formattedDate} | Anchor: ${note.anchor.tier}`,
+                  content: `Web Page: `,
+                },
+              },
+              {
+                text: {
+                  content: note.url,
+                  link: { url: note.url },
+                },
+              },
+              {
+                text: {
+                  content: `\nCreated via Stickle on ${formattedDate} | Anchor: ${note.anchor.tier}`,
                 },
               },
             ],

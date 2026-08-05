@@ -30,6 +30,19 @@ describe('Notion API Integration', () => {
     syncedToNotion: false,
   };
 
+  const mockDbSchemaResponse = {
+    ok: true,
+    status: 200,
+    json: async () => ({
+      id: sampleConfig.databaseId,
+      object: 'database',
+      properties: {
+        Name: { type: 'title' },
+        URL: { type: 'url' },
+      },
+    }),
+  };
+
   beforeEach(async () => {
     await db.notes.clear();
     await db.notes.put(sampleNote);
@@ -46,7 +59,6 @@ describe('Notion API Integration', () => {
         '32characternotiondatabaseid1234'
       );
     });
-
 
     it('extracts database ID from full Notion database URLs', () => {
       const url =
@@ -99,20 +111,24 @@ describe('Notion API Integration', () => {
   });
 
   describe('pushNoteToNotion', () => {
-    it('creates a new Notion page for unsynced note', async () => {
-      const fetchMock = vi.fn().mockResolvedValue({
-        ok: true,
-        status: 200,
-        json: async () => ({ id: 'notion-page-id-999', object: 'page' }),
-      });
+    it('creates a new Notion page for unsynced note with schema detection', async () => {
+      const fetchMock = vi
+        .fn()
+        .mockResolvedValueOnce(mockDbSchemaResponse)
+        .mockResolvedValueOnce({
+          ok: true,
+          status: 200,
+          json: async () => ({ id: 'notion-page-id-999', object: 'page' }),
+        });
+
       vi.stubGlobal('fetch', fetchMock);
 
       const createdId = await pushNoteToNotion(sampleNote, sampleConfig);
 
       expect(createdId).toBe('notion-page-id-999');
-      expect(fetchMock).toHaveBeenCalledTimes(1);
+      expect(fetchMock).toHaveBeenCalledTimes(2);
 
-      const [urlArg, optionsArg] = fetchMock.mock.calls[0];
+      const [urlArg, optionsArg] = fetchMock.mock.calls[1];
       expect(urlArg).toBe('https://api.notion.com/v1/pages');
       expect(optionsArg.method).toBe('POST');
       expect(optionsArg.headers['Authorization']).toBe(`Bearer ${sampleConfig.apiKey}`);
@@ -130,18 +146,21 @@ describe('Notion API Integration', () => {
         notionPageId: 'notion-page-id-existing',
       };
 
-      const fetchMock = vi.fn().mockResolvedValue({
-        ok: true,
-        status: 200,
-        json: async () => ({ id: 'notion-page-id-existing', object: 'page' }),
-      });
+      const fetchMock = vi
+        .fn()
+        .mockResolvedValueOnce(mockDbSchemaResponse)
+        .mockResolvedValueOnce({
+          ok: true,
+          status: 200,
+          json: async () => ({ id: 'notion-page-id-existing', object: 'page' }),
+        });
+
       vi.stubGlobal('fetch', fetchMock);
 
       const pageId = await pushNoteToNotion(syncedNote, sampleConfig);
       expect(pageId).toBe('notion-page-id-existing');
 
-      // First fetch call is PATCH /v1/pages/:id
-      const [urlArg, optionsArg] = fetchMock.mock.calls[0];
+      const [urlArg, optionsArg] = fetchMock.mock.calls[1];
       expect(urlArg).toBe('https://api.notion.com/v1/pages/notion-page-id-existing');
       expect(optionsArg.method).toBe('PATCH');
     });
@@ -149,6 +168,7 @@ describe('Notion API Integration', () => {
     it('retries on HTTP 429 status (rate limiting) with exponential backoff', async () => {
       const fetchMock = vi
         .fn()
+        .mockResolvedValueOnce(mockDbSchemaResponse)
         .mockResolvedValueOnce({
           ok: false,
           status: 429,
@@ -164,7 +184,7 @@ describe('Notion API Integration', () => {
 
       const resultId = await pushNoteToNotion(sampleNote, sampleConfig);
       expect(resultId).toBe('notion-page-after-retry');
-      expect(fetchMock).toHaveBeenCalledTimes(2);
+      expect(fetchMock).toHaveBeenCalledTimes(3);
     });
   });
 
@@ -181,7 +201,7 @@ describe('Notion API Integration', () => {
         vi.fn().mockResolvedValue({
           ok: true,
           status: 200,
-          json: async () => ({ id: 'notion-batch-id', object: 'page' }),
+          json: async () => ({ id: 'notion-batch-id', object: 'page', properties: {} }),
         })
       );
 

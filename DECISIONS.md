@@ -78,6 +78,11 @@ This log records non-trivial decisions made during the development of Stickle.
 - **Decision:** Added `host_permissions: ['https://api.notion.com/*']` in manifest and routed content script / popup Notion API requests through `entrypoints/background.ts` via message passing.
 - **Rationale:** Browsers block cross-origin `fetch` calls to `api.notion.com` from web page content script origins. Extension background service workers with host permissions execute external API fetches without CORS restrictions.
 
+### 16. Dynamic Notion Database Schema & Property Inspection
+- **Decision:** Inspected target Notion database schema (`GET /v1/databases/:id`) dynamically to auto-detect title property keys and optional `URL` properties before building page creation/update payloads. Always embedded URL as a clickable bookmark link inside the page callout body block.
+- **Rationale:** Resolves `URL is not a property that exists` errors for user Notion databases that do not contain a property named `URL` of type `url`.
+
+
 
 
 
