@@ -13,9 +13,11 @@
     "compile": "tsc --noEmit",
     "test": "vitest run",
     "test:e2e": "playwright test",
+    "mcp": "tsx mcp-server/index.ts",
     "postinstall": "wxt prepare"
   },
   "dependencies": {
+    "@modelcontextprotocol/sdk": "^1.30.0",
     "dexie": "^4.0.10",
     "preact": "^10.26.4"
   },
@@ -25,6 +27,7 @@
     "@types/node": "^22.13.1",
     "fake-indexeddb": "^6.2.5",
     "happy-dom": "^20.11.1",
+    "tsx": "^4.23.8",
     "typescript": "^5.7.3",
     "vitest": "^3.0.5",
     "wxt": "^0.19.26"
