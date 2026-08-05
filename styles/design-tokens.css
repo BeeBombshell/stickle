@@ -161,3 +161,104 @@ body {
   color: #e2e8f0 !important;
 }
 
+/* Floating Text Selection Action Pill */
+.stickle-selection-pill {
+  position: absolute;
+  z-index: 2147483647;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 6px 14px;
+  background-color: var(--color-primary);
+  color: var(--color-on-primary);
+  font-family: var(--font-sans);
+  font-size: 12px;
+  font-weight: 600;
+  border-radius: var(--radius-pill);
+  box-shadow: 0 4px 14px rgba(0, 0, 0, 0.2);
+  cursor: pointer;
+  border: none;
+  user-select: none;
+  transition: transform 0.12s ease, background-color 0.12s ease;
+  animation: stickle-pill-fade 0.15s ease-out;
+}
+
+.stickle-selection-pill:hover {
+  background-color: var(--color-primary-hover);
+  transform: translateY(-1px) scale(1.03);
+}
+
+@keyframes stickle-pill-fade {
+  from {
+    opacity: 0;
+    transform: translateY(4px) scale(0.95);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
+/* Text Highlight Overlays (Hypothesis-Style) */
+.stickle-highlight-mark {
+  border-radius: 3px;
+  padding: 1px 3px;
+  margin: 0 1px;
+  font-weight: inherit;
+  color: inherit;
+  transition: background-color 0.15s ease, box-shadow 0.15s ease;
+  text-decoration: none;
+}
+
+.stickle-highlight-mark:hover {
+  box-shadow: 0 0 0 2px rgba(17, 17, 17, 0.3);
+}
+
+.stickle-highlight-lime {
+  background-color: rgba(228, 245, 121, 0.65) !important;
+}
+
+.stickle-highlight-lilac {
+  background-color: rgba(232, 213, 255, 0.65) !important;
+}
+
+.stickle-highlight-cream {
+  background-color: rgba(255, 247, 219, 0.85) !important;
+}
+
+.stickle-highlight-mint {
+  background-color: rgba(209, 247, 196, 0.65) !important;
+}
+
+.stickle-highlight-pink {
+  background-color: rgba(255, 214, 232, 0.65) !important;
+}
+
+.stickle-highlight-coral {
+  background-color: rgba(255, 219, 204, 0.65) !important;
+}
+
+.stickle-highlight-navy {
+  background-color: rgba(30, 32, 56, 0.3) !important;
+  border-bottom: 2px solid var(--color-block-navy);
+}
+
+/* Linked Note Pulse Glow Animation */
+.stickle-note-pulse {
+  animation: stickle-note-glow 1.2s ease-in-out 2;
+  border-radius: var(--radius-md);
+}
+
+@keyframes stickle-note-glow {
+  0% {
+    box-shadow: 0 0 0 0px rgba(17, 17, 17, 0.4), 0 12px 32px rgba(0, 0, 0, 0.16);
+  }
+  50% {
+    box-shadow: 0 0 0 8px rgba(17, 17, 17, 0.6), 0 16px 40px rgba(0, 0, 0, 0.3);
+  }
+  100% {
+    box-shadow: 0 0 0 0px rgba(17, 17, 17, 0), 0 12px 32px rgba(0, 0, 0, 0.16);
+  }
+}
+
+
