@@ -3,6 +3,7 @@ import type { StickleNote } from '../lib/types';
 import { updateNote, deleteNote } from '../lib/db';
 import { loadSettings } from './Settings';
 import { pushNoteToNotion, exportUnsyncedNotesBatch } from '../lib/notion';
+import { COLOR_SWATCHES } from './NoteBubble';
 
 export type DateFilter = 'all' | 'today' | 'week';
 
@@ -267,6 +268,7 @@ export function NoteSidebar({ notes, onNoteChange, onSelectNote }: NoteSidebarPr
                     hour: '2-digit',
                     minute: '2-digit',
                   });
+                  const colorTheme = COLOR_SWATCHES[note.color || 'cream'] || COLOR_SWATCHES.cream;
 
                   return (
                     <div
@@ -275,8 +277,22 @@ export function NoteSidebar({ notes, onNoteChange, onSelectNote }: NoteSidebarPr
                       onClick={() => handleCardClick(note)}
                     >
                       <div style={sidebarStyles.cardHeader}>
-                        <span style={sidebarStyles.pageTitle}>{note.pageTitle || 'Untitled Page'}</span>
-                        <div style={{ display: 'flex', gap: '4px', alignItems: 'center' }}>
+                        <div style={{ display: 'flex', alignItems: 'center', gap: '6px', overflow: 'hidden' }}>
+                          <span
+                            title={`Color theme: ${colorTheme.name}`}
+                            style={{
+                              display: 'inline-block',
+                              width: '10px',
+                              height: '10px',
+                              borderRadius: '50%',
+                              backgroundColor: colorTheme.bg,
+                              border: '1px solid rgba(0,0,0,0.2)',
+                              flexShrink: 0,
+                            }}
+                          />
+                          <span style={sidebarStyles.pageTitle}>{note.pageTitle || 'Untitled Page'}</span>
+                        </div>
+                        <div style={{ display: 'flex', gap: '4px', alignItems: 'center', flexShrink: 0 }}>
                           {note.syncedToNotion && (
                             <span style={sidebarStyles.syncedTag} title="Synced to Notion">
                               ✓ Notion
@@ -285,6 +301,7 @@ export function NoteSidebar({ notes, onNoteChange, onSelectNote }: NoteSidebarPr
                           <span style={getTierBadgeStyle(note.anchor.tier)}>{note.anchor.tier}</span>
                         </div>
                       </div>
+
 
                       {isEditing ? (
                         <div style={sidebarStyles.editContainer} onClick={(e) => e.stopPropagation()}>

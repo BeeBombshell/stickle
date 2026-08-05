@@ -1,11 +1,23 @@
 import { useState, useEffect, useRef } from 'preact/hooks';
-import type { StickleNote, AnchorTier } from '../lib/types';
+import type { StickleNote, AnchorTier, NoteColorBlock } from '../lib/types';
+
+export const COLOR_SWATCHES: Record<NoteColorBlock, { name: string; bg: string; text: string }> = {
+  lime: { name: 'Lime', bg: '#e4f579', text: '#111111' },
+  lilac: { name: 'Lilac', bg: '#e8d5ff', text: '#111111' },
+  cream: { name: 'Cream', bg: '#fff7db', text: '#111111' },
+  mint: { name: 'Mint', bg: '#d1f7c4', text: '#111111' },
+  pink: { name: 'Pink', bg: '#ffd6e8', text: '#111111' },
+  coral: { name: 'Coral', bg: '#ffdbcc', text: '#111111' },
+  navy: { name: 'Navy', bg: '#1e2038', text: '#ffffff' },
+};
 
 interface NoteBubbleProps {
   note: StickleNote;
   onSave?: (updatedContent: string) => void;
   onDelete?: () => void;
   onExportNotion?: () => void;
+  onColorChange?: (color: NoteColorBlock) => void;
+  onToggleCollapse?: (collapsed: boolean) => void;
   onDragStart?: () => void;
   onDrag?: (dx: number, dy: number) => void;
   onDragEnd?: (clientX: number, clientY: number) => void;
@@ -16,15 +28,21 @@ export function NoteBubble({
   onSave,
   onDelete,
   onExportNotion,
+  onColorChange,
+  onToggleCollapse,
   onDragStart,
   onDrag,
   onDragEnd,
 }: NoteBubbleProps) {
   const borderStyle = getTierBorderStyle(note.anchor.tier);
-  const badgeStyle = getTierBadgeStyle(note.anchor.tier);
   const [isDragging, setIsDragging] = useState(false);
   const [content, setContent] = useState(note.content);
+  const [showPalette, setShowPalette] = useState(false);
   const dragStartRef = useRef<{ x: number; y: number } | null>(null);
+  const hasDraggedRef = useRef(false);
+
+  const noteColor = note.color || 'cream';
+  const theme = COLOR_SWATCHES[noteColor] || COLOR_SWATCHES.cream;
 
   useEffect(() => {
     setContent(note.content);
@@ -42,6 +60,7 @@ export function NoteBubble({
     }
     e.preventDefault();
     e.stopPropagation();
+    hasDraggedRef.current = false;
 
     const target = e.currentTarget as HTMLElement;
     target.setPointerCapture(e.pointerId);
@@ -54,6 +73,9 @@ export function NoteBubble({
     if (!isDragging || !dragStartRef.current) return;
     const dx = e.clientX - dragStartRef.current.x;
     const dy = e.clientY - dragStartRef.current.y;
+    if (Math.abs(dx) > 3 || Math.abs(dy) > 3) {
+      hasDraggedRef.current = true;
+    }
     onDrag?.(dx, dy);
   };
 
@@ -68,30 +90,77 @@ export function NoteBubble({
     dragStartRef.current = null;
   };
 
+  // Collapsed compact pill chip view
+  if (note.collapsed) {
+    const snippet = content.trim()
+      ? content.trim().length > 20
+        ? content.trim().slice(0, 20) + '...'
+        : content.trim()
+      : 'Empty note';
+
+    return (
+      <div
+        className={`stickle-note-chip stickle-bubble-${noteColor}`}
+        style={{
+          ...chipStyles.container,
+          backgroundColor: theme.bg,
+          color: theme.text,
+          border: borderStyle,
+          cursor: isDragging ? 'grabbing' : 'pointer',
+        }}
+        onPointerDown={handlePointerDown}
+        onPointerMove={handlePointerMove}
+        onPointerUp={handlePointerUp}
+        onClick={() => {
+          if (!hasDraggedRef.current) {
+            onToggleCollapse?.(false);
+          }
+        }}
+        title="Click to expand note"
+      >
+        <svg
+          width="12"
+          height="12"
+          viewBox="0 0 24 24"
+          fill="none"
+          stroke="currentColor"
+          strokeWidth="2.5"
+          strokeLinecap="round"
+          strokeLinejoin="round"
+          style={{ flexShrink: 0, opacity: 0.9 }}
+        >
+          <circle cx="12" cy="6" r="3" fill="currentColor" />
+          <line x1="12" y1="9" x2="12" y2="20" />
+          <path d="M6 14a6 6 0 0 0 12 0" />
+        </svg>
+        <span style={{ ...chipStyles.snippetText, color: theme.text }}>{snippet}</span>
+        {note.syncedToNotion && (
+          <span style={chipStyles.notionDot} title="Synced to Notion" />
+        )}
+        <button
+          onClick={(e) => {
+            e.stopPropagation();
+            onToggleCollapse?.(false);
+          }}
+          style={{ ...chipStyles.iconBtn, color: theme.text }}
+          title="Expand note"
+        >
+          +
+        </button>
+      </div>
+    );
+  }
+
   return (
     <div
-      className={`stickle-note-bubble stickle-tier-${note.anchor.tier}`}
+      className={`stickle-note-bubble stickle-bubble-${noteColor}`}
       style={{
         ...bubbleStyles.container,
+        backgroundColor: theme.bg,
+        color: theme.text,
         border: borderStyle,
       }}
     >
-      <style>{`
-        .stickle-note-bubble {
-          color-scheme: light !important;
-          color: #111111 !important;
-          background-color: #fff7db !important;
-        }
-        .stickle-note-bubble textarea {
-          color-scheme: light !important;
-          color: #111111 !important;
-        }
-        .stickle-note-bubble textarea::placeholder {
-          color: #71717a !important;
-          opacity: 1 !important;
-        }
-      `}</style>
-
       <div
         style={{
           ...bubbleStyles.header,
@@ -102,39 +171,96 @@ export function NoteBubble({
         onPointerUp={handlePointerUp}
       >
         <div style={bubbleStyles.headerLeft}>
-          <span style={bubbleStyles.dragGrip} title="Drag to reposition note">
+          <span style={{ ...bubbleStyles.dragGrip, color: noteColor === 'navy' ? '#a1a1aa' : '#71717a' }} title="Drag to reposition note">
             ⋮⋮
           </span>
-          <span className="eyebrow" style={badgeStyle}>
-            {getTierLabel(note.anchor.tier)}
-          </span>
+          {note.syncedToNotion && (
+            <span
+              style={bubbleStyles.notionSyncedChip}
+              title="Synced to Notion (Click to re-export)"
+              onClick={onExportNotion}
+            >
+              ✦ Notion
+            </span>
+          )}
         </div>
         <div style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
-          {onExportNotion && (
+          <button
+            onClick={() => setShowPalette(!showPalette)}
+            style={bubbleStyles.colorSwatchBtn}
+            title="Change background color"
+          >
+            <span
+              style={{
+                display: 'block',
+                width: '12px',
+                height: '12px',
+                borderRadius: '50%',
+                backgroundColor: theme.bg,
+                border: noteColor === 'navy' ? '1.5px solid #ffffff' : '1.5px solid rgba(0,0,0,0.3)',
+                boxSizing: 'border-box',
+              }}
+            />
+          </button>
+          {!note.syncedToNotion && onExportNotion && (
             <button
               onClick={onExportNotion}
-              style={{
-                background: 'none',
-                border: 'none',
-                cursor: 'pointer',
-                fontSize: '11px',
-                color: note.syncedToNotion ? '#15803d' : '#2563eb',
-                padding: '2px 4px',
-                fontWeight: '600',
-              }}
-              title={note.syncedToNotion ? 'Synced to Notion (Click to re-export)' : 'Export note to Notion'}
+              style={{ ...bubbleStyles.iconBtn, color: theme.text }}
+              title="Export note to Notion"
             >
-              {note.syncedToNotion ? '✓ Notion' : '↑ Notion'}
+              <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" />
+                <polyline points="17 8 12 3 7 8" />
+                <line x1="12" y1="3" x2="12" y2="15" />
+              </svg>
             </button>
           )}
-          <button onClick={onDelete} style={bubbleStyles.closeBtn} title="Delete note">
+          <button
+            onClick={() => onToggleCollapse?.(true)}
+            style={{ ...bubbleStyles.iconBtn, color: theme.text, fontWeight: 'bold' }}
+            title="Collapse note"
+          >
+            –
+          </button>
+          <button onClick={onDelete} style={{ ...bubbleStyles.iconBtn, color: theme.text }} title="Delete note">
             ✕
           </button>
         </div>
       </div>
 
+      {showPalette && (
+        <div style={bubbleStyles.palettePopover}>
+          {(Object.keys(COLOR_SWATCHES) as NoteColorBlock[]).map((key) => (
+            <button
+              key={key}
+              onClick={() => {
+                onColorChange?.(key);
+                setShowPalette(false);
+              }}
+              title={COLOR_SWATCHES[key].name}
+              style={{
+                width: '16px',
+                height: '16px',
+                borderRadius: '50%',
+                backgroundColor: COLOR_SWATCHES[key].bg,
+                border: noteColor === key ? '2px solid #111111' : '1px solid rgba(0,0,0,0.15)',
+                transform: noteColor === key ? 'scale(1.2)' : 'scale(1)',
+                transition: 'transform 0.1s ease',
+                cursor: 'pointer',
+                padding: 0,
+                boxSizing: 'border-box',
+              }}
+            />
+          ))}
+        </div>
+      )}
+
       <textarea
-        style={bubbleStyles.textarea}
+        style={{
+          ...bubbleStyles.textarea,
+          color: theme.text,
+          caretColor: theme.text,
+        }}
         value={content}
         placeholder="Type note content..."
         onInput={handleInput}
@@ -149,7 +275,7 @@ export function NoteBubble({
 function getTierBorderStyle(tier: AnchorTier): string {
   switch (tier) {
     case 'selector':
-      return '1px solid #e5e5e0';
+      return '1px solid rgba(0,0,0,0.15)';
     case 'text-fragment':
       return '2px dashed #4f46e5';
     case 'fuzzy':
@@ -159,50 +285,62 @@ function getTierBorderStyle(tier: AnchorTier): string {
   }
 }
 
-function getTierBadgeStyle(tier: AnchorTier) {
-  const base = {
-    fontSize: '9px',
+const chipStyles = {
+  container: {
+    display: 'inline-flex',
+    alignItems: 'center',
+    gap: '6px',
+    padding: '4px 10px',
+    borderRadius: '16px',
+    fontSize: '12px',
+    fontWeight: '500' as const,
+    boxShadow: '0 2px 8px rgba(0,0,0,0.15)',
+    userSelect: 'none' as const,
+    whiteSpace: 'nowrap' as const,
+    boxSizing: 'border-box' as const,
+  },
+  snippetText: {
+    maxWidth: '140px',
+    overflow: 'hidden',
+    textOverflow: 'ellipsis',
+    fontSize: '12px',
+    fontWeight: '500' as const,
+  },
+  notionDot: {
+    width: '6px',
+    height: '6px',
+    borderRadius: '50%',
+    backgroundColor: '#15803d',
+    display: 'inline-block',
+  },
+  expandBtn: {
+    background: 'none',
+    border: 'none',
+    cursor: 'pointer',
+    fontSize: '14px',
+    lineHeight: '1',
+    padding: '0 2px',
     fontWeight: 'bold' as const,
-    padding: '2px 6px',
-    borderRadius: '4px',
-    textTransform: 'uppercase' as const,
-  };
-  switch (tier) {
-    case 'selector':
-      return { ...base, color: '#166534', backgroundColor: '#dcfce7' };
-    case 'text-fragment':
-      return { ...base, color: '#3730a3', backgroundColor: '#e0e7ff' };
-    case 'fuzzy':
-      return { ...base, color: '#92400e', backgroundColor: '#fef3c7' };
-    case 'unanchored':
-      return { ...base, color: '#991b1b', backgroundColor: '#fee2e2' };
-  }
-}
-
-function getTierLabel(tier: AnchorTier): string {
-  switch (tier) {
-    case 'selector':
-      return 'TIER 1: SELECTOR';
-    case 'text-fragment':
-      return 'TIER 2: TEXT-FRAGMENT';
-    case 'fuzzy':
-      return 'TIER 3: FUZZY MATCH';
-    case 'unanchored':
-      return 'TIER 4: ORPHANED';
-  }
-}
+  },
+  iconBtn: {
+    background: 'none',
+    border: 'none',
+    cursor: 'pointer',
+    fontSize: '12px',
+    padding: '2px 3px',
+    lineHeight: '1',
+  },
+};
 
 const bubbleStyles = {
   container: {
     width: '240px',
-    backgroundColor: '#fff7db',
-    color: '#111111',
-    colorScheme: 'light' as const,
     borderRadius: '8px',
-    padding: '10px',
+    padding: '10px 12px',
     boxShadow: '0 4px 16px rgba(0, 0, 0, 0.12)',
     fontFamily: 'Inter, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif',
     boxSizing: 'border-box' as const,
+    position: 'relative' as const,
   },
   header: {
     display: 'flex',
@@ -215,39 +353,73 @@ const bubbleStyles = {
   headerLeft: {
     display: 'flex',
     alignItems: 'center',
-    gap: '4px',
+    gap: '6px',
   },
   dragGrip: {
-    color: '#71717a',
     fontSize: '12px',
     fontWeight: 'bold' as const,
     letterSpacing: '1px',
     lineHeight: '1',
     cursor: 'grab',
   },
-  closeBtn: {
+  notionSyncedChip: {
+    fontSize: '9px',
+    fontFamily: 'var(--font-mono, monospace)',
+    padding: '2px 6px',
+    borderRadius: '10px',
+    fontWeight: '600' as const,
+    backgroundColor: '#dcfce7',
+    color: '#15803d',
+    cursor: 'pointer',
+    letterSpacing: '0.2px',
+  },
+  colorSwatchBtn: {
     background: 'none',
     border: 'none',
     cursor: 'pointer',
-    fontSize: '13px',
-    color: '#52514e',
-    padding: '2px 4px',
+    padding: '2px',
+    display: 'inline-flex',
+    alignItems: 'center',
+    justifyContent: 'center',
     lineHeight: '1',
+  },
+  iconBtn: {
+    background: 'none',
+    border: 'none',
+    cursor: 'pointer',
+    fontSize: '12px',
+    padding: '2px 3px',
+    lineHeight: '1',
+    display: 'inline-flex',
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  palettePopover: {
+    display: 'flex',
+    gap: '6px',
+    alignItems: 'center',
+    justifyContent: 'center',
+    padding: '5px 8px',
+    marginBottom: '8px',
+    backgroundColor: 'rgba(255, 255, 255, 0.92)',
+    backdropFilter: 'blur(8px)',
+    borderRadius: '50px',
+    boxShadow: '0 4px 12px rgba(0, 0, 0, 0.1)',
+    border: '1px solid rgba(0, 0, 0, 0.08)',
   },
   textarea: {
     width: '100%',
     minHeight: '65px',
     border: 'none',
     backgroundColor: 'transparent',
-    color: '#111111',
-    caretColor: '#111111',
-    colorScheme: 'light' as const,
     resize: 'vertical' as const,
     fontFamily: 'Inter, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif',
     fontSize: '13px',
     lineHeight: '1.4',
     outline: 'none',
-    padding: '4px',
+    padding: '2px 0 0 0',
     boxSizing: 'border-box' as const,
   },
 };
+
+
