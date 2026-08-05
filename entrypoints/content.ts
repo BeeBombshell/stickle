@@ -47,12 +47,15 @@ export default defineContentScript({
           const offsetX = Math.max(20, (window.innerWidth || 800) / 2 - rect.left - 100);
           const offsetY = Math.max(20, (window.innerHeight || 600) / 3 - rect.top);
           const anchor = createAnchor(target, offsetX, offsetY);
+          const settings = await loadSettings();
           const newNote: StickleNote = {
             id: crypto.randomUUID(),
             url: normalizeUrl(window.location.href),
             pageTitle: document.title,
             content: '',
             anchor,
+            color: settings.defaultNoteColor || 'cream',
+            collapsed: false,
             createdAt: Date.now(),
             updatedAt: Date.now(),
             syncedToNotion: false,
@@ -67,7 +70,6 @@ export default defineContentScript({
         }
       });
     }
-
 
     // Debounced automatic re-anchoring on DOM mutation (SPA re-renders, dynamic feeds)
     let reanchorTimeout: any = null;
@@ -116,12 +118,15 @@ export default defineContentScript({
         const offsetY = e.clientY - rect.top;
 
         const anchor = createAnchor(target, offsetX, offsetY);
+        const settings = await loadSettings();
         const newNote: StickleNote = {
           id: crypto.randomUUID(),
           url: normalizeUrl(window.location.href),
           pageTitle: document.title,
           content: '',
           anchor,
+          color: settings.defaultNoteColor || 'cream',
+          collapsed: false,
           createdAt: Date.now(),
           updatedAt: Date.now(),
           syncedToNotion: false,
@@ -136,7 +141,6 @@ export default defineContentScript({
       },
       true
     );
-
 
     async function refreshNotes() {
       try {
@@ -205,6 +209,20 @@ export default defineContentScript({
         mountedNotes.delete(note.id);
       };
 
+      const handleColorChange = async (color: any) => {
+        note.color = color;
+        note.updatedAt = Date.now();
+        await updateNote(note.id, { color, updatedAt: note.updatedAt });
+        renderNoteWrapper(note, posX, posY);
+      };
+
+      const handleToggleCollapse = async (collapsed: boolean) => {
+        note.collapsed = collapsed;
+        note.updatedAt = Date.now();
+        await updateNote(note.id, { collapsed, updatedAt: note.updatedAt });
+        renderNoteWrapper(note, posX, posY);
+      };
+
       const handleExportNotion = async () => {
         try {
           const config = await loadSettings();
@@ -261,6 +279,8 @@ export default defineContentScript({
           onSave: handleSave,
           onDelete: handleDelete,
           onExportNotion: handleExportNotion,
+          onColorChange: handleColorChange,
+          onToggleCollapse: handleToggleCollapse,
           onDragStart: handleDragStart,
           onDrag: handleDrag,
           onDragEnd: handleDragEnd,
