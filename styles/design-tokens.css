@@ -111,3 +111,53 @@ body {
 .btn-secondary:hover {
   background-color: var(--color-surface-soft);
 }
+
+/* Signature Color Block Classes */
+.stickle-bubble-lime {
+  background-color: var(--color-block-lime) !important;
+  color: #111111 !important;
+}
+
+.stickle-bubble-lilac {
+  background-color: var(--color-block-lilac) !important;
+  color: #111111 !important;
+}
+
+.stickle-bubble-cream {
+  background-color: var(--color-block-cream) !important;
+  color: #111111 !important;
+}
+
+.stickle-bubble-mint {
+  background-color: var(--color-block-mint) !important;
+  color: #111111 !important;
+}
+
+.stickle-bubble-pink {
+  background-color: var(--color-block-pink) !important;
+  color: #111111 !important;
+}
+
+.stickle-bubble-coral {
+  background-color: var(--color-block-coral) !important;
+  color: #111111 !important;
+}
+
+.stickle-bubble-navy {
+  background-color: var(--color-block-navy) !important;
+  color: #ffffff !important;
+}
+
+.stickle-bubble-navy textarea {
+  color: #ffffff !important;
+  caret-color: #ffffff !important;
+}
+
+.stickle-bubble-navy textarea::placeholder {
+  color: #a1a1aa !important;
+}
+
+.stickle-bubble-navy button {
+  color: #e2e8f0 !important;
+}
+
