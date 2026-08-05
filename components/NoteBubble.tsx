@@ -242,12 +242,17 @@ export function NoteBubble({
             style={{ ...bubbleStyles.iconBtn, color: theme.text }}
             title="Change background color"
           >
-            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-              <circle cx="12" cy="12" r="9" />
-              <circle cx="8" cy="9" r="1.5" fill="currentColor" />
-              <circle cx="12" cy="7" r="1.5" fill="currentColor" />
-              <circle cx="16" cy="9" r="1.5" fill="currentColor" />
-            </svg>
+            <span
+              style={{
+                display: 'block',
+                width: '11px',
+                height: '11px',
+                borderRadius: '50%',
+                backgroundColor: theme.bg,
+                border: noteColor === 'navy' ? '1.5px solid #ffffff' : '1.5px solid rgba(0,0,0,0.35)',
+                boxSizing: 'border-box',
+              }}
+            />
           </button>
           <button
             onClick={() => setConfirmDelete(!confirmDelete)}
