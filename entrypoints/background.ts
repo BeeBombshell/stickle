@@ -8,11 +8,27 @@ import {
 export default defineBackground(() => {
   console.log('[Stickle Background] Service worker initialized.');
 
+  // Create context menu item on install/startup
+  chrome.runtime.onInstalled.addListener(() => {
+    chrome.contextMenus.create({
+      id: 'stickle-add-note',
+      title: '📌 Add Stickle Note Here',
+      contexts: ['all'],
+    });
+  });
+
+  chrome.contextMenus.onClicked.addListener((info, tab) => {
+    if (info.menuItemId === 'stickle-add-note' && tab?.id) {
+      chrome.tabs.sendMessage(tab.id, { type: 'TRIGGER_CREATE_NOTE' });
+    }
+  });
+
   chrome.runtime.onMessage.addListener((message, _sender, sendResponse) => {
     if (message?.type === 'PING') {
       sendResponse({ type: 'PONG', timestamp: Date.now() });
       return true;
     }
+
 
     if (message?.type === 'NOTION_TEST_CONNECTION') {
       testNotionConnectionDirect(message.config)
