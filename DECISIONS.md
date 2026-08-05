@@ -98,6 +98,23 @@ This log records non-trivial decisions made during the development of Stickle.
 - **Decision:** Standardized HTTP status codes (401 invalid token, 403 missing database access, 404 database not found) into clear actionable user messages, and added storage quota exception catching in `lib/db.ts`.
 - **Rationale:** Prevents cryptic API exception dumps and gives users actionable resolution steps in the UI.
 
+---
+
+## Phase 6 — Note Customization & Collapsible UI
+
+### 20. Signature Color Block Swatch Dictionary
+- **Decision:** Defined `COLOR_SWATCHES` in `components/NoteBubble.tsx` mapping `lime`, `lilac`, `cream`, `mint`, `pink`, `coral`, and `navy` to exact hex codes and background/text contrast pairs.
+- **Rationale:** Ensures strict adherence to `DESIGN.md` pastel block specs and guarantees text readability across light pastels and dark navy (`#1e2038`).
+
+### 21. Collapsible Note Chip Pointer Handler
+- **Decision:** Implemented drag vs click detection (`hasDraggedRef`) on compact pill chips.
+- **Rationale:** Allows users to smoothly drag collapsed note chips across the screen to reposition them without accidentally triggering expansion on drop.
+
+### 22. Default Color Preference Persistence
+- **Decision:** Saved `defaultNoteColor` preference in `chrome.storage.local` with fallback to `localStorage`.
+- **Rationale:** Allows user to configure their preferred default note theme in Settings and automatically applies it to newly created notes on Alt+Click.
+
+
 
 
 
