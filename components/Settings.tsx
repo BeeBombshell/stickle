@@ -213,13 +213,14 @@ export function Settings() {
           style={{
             flex: 1,
             padding: '8px 12px',
-            borderRadius: 'var(--radius-md)',
-            border: '1px solid var(--color-hairline)',
-            backgroundColor: 'var(--color-surface-soft)',
+            borderRadius: 'var(--radius-pill)',
+            border: '1px solid #d4ee42',
+            backgroundColor: 'var(--color-block-lime)',
             fontSize: '12px',
             fontWeight: '600',
             cursor: 'pointer',
-            color: 'var(--color-ink)',
+            color: '#2a3000',
+            boxShadow: '0 1px 2px rgba(0,0,0,0.04)',
           }}
         >
           📤 Export Notes (.json)
@@ -229,15 +230,16 @@ export function Settings() {
           style={{
             flex: 1,
             padding: '8px 12px',
-            borderRadius: 'var(--radius-md)',
-            border: '1px solid var(--color-hairline)',
-            backgroundColor: 'var(--color-surface-soft)',
+            borderRadius: 'var(--radius-pill)',
+            border: '1px solid #d4ee42',
+            backgroundColor: 'var(--color-block-lime)',
             fontSize: '12px',
             fontWeight: '600',
             cursor: 'pointer',
-            color: 'var(--color-ink)',
+            color: '#2a3000',
             textAlign: 'center',
             boxSizing: 'border-box',
+            boxShadow: '0 1px 2px rgba(0,0,0,0.04)',
           }}
         >
           📥 Import Notes (.json)

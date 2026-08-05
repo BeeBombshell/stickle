@@ -1,4 +1,4 @@
-import { useState } from 'preact/hooks';
+import { useState, useEffect } from 'preact/hooks';
 import type { StickleNote } from '../lib/types';
 import { updateNote, deleteNote } from '../lib/db';
 import { loadSettings } from './Settings';
@@ -65,13 +65,13 @@ export function filterNotes(
 
     // Date range filter
     if (dateFilter === 'today') {
-      const todayStart = new Date(referenceTime).setHours(0, 0, 0, 0);
-      return note.createdAt >= todayStart;
+      const startOfToday = new Date(referenceTime).setHours(0, 0, 0, 0);
+      return note.createdAt >= startOfToday;
     }
 
     if (dateFilter === 'week') {
-      const sevenDaysAgo = referenceTime - 7 * 24 * 60 * 60 * 1000;
-      return note.createdAt >= sevenDaysAgo;
+      const oneWeekAgo = referenceTime - 7 * 24 * 60 * 60 * 1000;
+      return note.createdAt >= oneWeekAgo;
     }
 
     return true;
@@ -99,14 +99,11 @@ export function groupNotesByDomain(notes: StickleNote[]): { domain: string; note
 
 export function navigateToNote(note: StickleNote) {
   if (typeof chrome !== 'undefined' && chrome.tabs) {
-    chrome.tabs.query({}, (tabs) => {
-      const matchingTab = tabs.find(
-        (tab) => tab.url && (tab.url === note.url || tab.url.startsWith(note.url))
-      );
-      if (matchingTab && matchingTab.id) {
-        chrome.tabs.update(matchingTab.id, { active: true });
-        if (matchingTab.windowId) {
-          chrome.windows.update(matchingTab.windowId, { focused: true });
+    chrome.tabs.query({ url: note.url }, (tabs) => {
+      if (tabs.length > 0 && tabs[0].id) {
+        chrome.tabs.update(tabs[0].id, { active: true });
+        if (tabs[0].windowId) {
+          chrome.windows.update(tabs[0].windowId, { focused: true });
         }
       } else {
         chrome.tabs.create({ url: note.url });
@@ -126,6 +123,13 @@ export function NoteSidebar({ notes, onNoteChange, onSelectNote }: NoteSidebarPr
   const [exportingId, setExportingId] = useState<string | null>(null);
   const [isBatchExporting, setIsBatchExporting] = useState(false);
   const [syncStatusMsg, setSyncStatusMsg] = useState<string | null>(null);
+  const [hasNotionConfig, setHasNotionConfig] = useState(false);
+
+  useEffect(() => {
+    loadSettings().then((s) => {
+      setHasNotionConfig(Boolean(s.apiKey.trim() && s.databaseId.trim()));
+    });
+  }, []);
 
   const allTags = Array.from(new Set(notes.flatMap((n) => n.tags || []))).sort();
   const filtered = filterNotes(notes, searchQuery, dateFilter, selectedTag);
@@ -312,17 +316,19 @@ export function NoteSidebar({ notes, onNoteChange, onSelectNote }: NoteSidebarPr
             <button style={sidebarStyles.jsonBtn} onClick={handleExportJson} title="Export all notes to portable JSON format">
               📤 Export JSON
             </button>
-            <button
-              style={sidebarStyles.notionBatchBtn}
-              onClick={handleBatchExport}
-              disabled={isBatchExporting || unsyncedCount === 0}
-            >
-              {isBatchExporting
-                ? 'Syncing...'
-                : unsyncedCount > 0
-                ? `Sync ${unsyncedCount} to Notion`
-                : 'All Synced ✓'}
-            </button>
+            {hasNotionConfig && (
+              <button
+                style={sidebarStyles.notionBatchBtn}
+                onClick={handleBatchExport}
+                disabled={isBatchExporting || unsyncedCount === 0}
+              >
+                {isBatchExporting
+                  ? 'Syncing...'
+                  : unsyncedCount > 0
+                  ? `Sync ${unsyncedCount} to Notion`
+                  : 'All Synced ✓'}
+              </button>
+            )}
           </div>
         </div>
 
@@ -385,16 +391,14 @@ export function NoteSidebar({ notes, onNoteChange, onSelectNote }: NoteSidebarPr
                           />
                           <span style={sidebarStyles.pageTitle}>{note.pageTitle || 'Untitled Page'}</span>
                         </div>
-                        <div style={{ display: 'flex', gap: '4px', alignItems: 'center', flexShrink: 0 }}>
-                          {note.syncedToNotion && (
+                        {hasNotionConfig && note.syncedToNotion && (
+                          <div style={{ display: 'flex', gap: '4px', alignItems: 'center', flexShrink: 0 }}>
                             <span style={sidebarStyles.syncedTag} title="Synced to Notion">
                               ✓ Notion
                             </span>
-                          )}
-                          <span style={getTierBadgeStyle(note.anchor.tier)}>{note.anchor.tier}</span>
-                        </div>
+                          </div>
+                        )}
                       </div>
-
 
                       {isEditing ? (
                         <div style={sidebarStyles.editContainer} onClick={(e) => e.stopPropagation()}>
@@ -437,13 +441,15 @@ export function NoteSidebar({ notes, onNoteChange, onSelectNote }: NoteSidebarPr
                         <div style={sidebarStyles.actionGroup}>
                           {!isEditing && (
                             <>
-                              <button
-                                style={sidebarStyles.notionExportBtn}
-                                onClick={(e) => handleExportNote(note, e)}
-                                disabled={isExporting}
-                              >
-                                {isExporting ? 'Exporting...' : note.syncedToNotion ? 'Re-sync Notion' : 'Export Notion'}
-                              </button>
+                              {hasNotionConfig && (
+                                <button
+                                  style={sidebarStyles.notionExportBtn}
+                                  onClick={(e) => handleExportNote(note, e)}
+                                  disabled={isExporting}
+                                >
+                                  {isExporting ? 'Exporting...' : note.syncedToNotion ? 'Re-sync Notion' : 'Export Notion'}
+                                </button>
+                              )}
                               <button
                                 style={sidebarStyles.actionBtn}
                                 onClick={(e) => handleStartEdit(note, e)}
@@ -548,26 +554,55 @@ const sidebarStyles = {
   },
   filterGroup: {
     display: 'flex',
-    gap: '6px',
-  },
-  filterPill: {
-    padding: '4px 10px',
+    gap: '2px',
+    backgroundColor: 'var(--color-surface-soft)',
+    padding: '3px',
     borderRadius: 'var(--radius-pill)',
     border: '1px solid var(--color-hairline)',
-    backgroundColor: 'var(--color-canvas)',
-    fontSize: '11px',
+  },
+  filterBtn: {
+    padding: '3px 8px',
+    borderRadius: 'var(--radius-pill)',
+    border: 'none',
+    backgroundColor: 'transparent',
+    fontSize: '10px',
+    fontWeight: '500' as const,
     color: 'var(--color-ink-muted)',
     cursor: 'pointer',
   },
-  filterPillActive: {
-    padding: '4px 10px',
+  filterBtnActive: {
+    padding: '3px 8px',
     borderRadius: 'var(--radius-pill)',
-    border: '1px solid var(--color-primary)',
-    backgroundColor: 'var(--color-primary)',
-    fontSize: '11px',
-    color: 'var(--color-on-primary)',
+    border: 'none',
+    backgroundColor: 'var(--color-canvas)',
+    fontSize: '10px',
     fontWeight: '600' as const,
+    color: 'var(--color-ink)',
+    boxShadow: 'var(--shadow-hairline)',
     cursor: 'pointer',
+  },
+  notionBatchBtn: {
+    padding: '4px 9px',
+    borderRadius: 'var(--radius-pill)',
+    backgroundColor: 'var(--color-surface-soft)',
+    border: '1px solid var(--color-hairline)',
+    fontSize: '10px',
+    fontWeight: '600' as const,
+    color: 'var(--color-ink)',
+    cursor: 'pointer',
+  },
+  jsonBtn: {
+    padding: '4px 9px',
+    borderRadius: 'var(--radius-pill)',
+    backgroundColor: 'var(--color-block-lime)',
+    border: '1px solid #d4ee42',
+    fontSize: '10px',
+    fontWeight: '600' as const,
+    color: '#2a3000',
+    cursor: 'pointer',
+    display: 'inline-flex',
+    alignItems: 'center',
+    boxShadow: '0 1px 2px rgba(0,0,0,0.04)',
   },
   emptyState: {
     padding: '24px 12px',
@@ -728,28 +763,6 @@ const sidebarStyles = {
     background: 'none',
     cursor: 'pointer',
     padding: 0,
-  },
-  notionBatchBtn: {
-    padding: '3px 8px',
-    borderRadius: 'var(--radius-pill)',
-    backgroundColor: 'var(--color-block-lime)',
-    border: '1px solid var(--color-hairline)',
-    fontSize: '10px',
-    fontWeight: '600' as const,
-    color: '#3d4400',
-    cursor: 'pointer',
-  },
-  jsonBtn: {
-    padding: '3px 7px',
-    borderRadius: 'var(--radius-pill)',
-    backgroundColor: 'var(--color-surface-soft)',
-    border: '1px solid var(--color-hairline)',
-    fontSize: '10px',
-    fontWeight: '500' as const,
-    color: 'var(--color-ink)',
-    cursor: 'pointer',
-    display: 'inline-flex',
-    alignItems: 'center',
   },
   syncStatusBanner: {
     padding: '6px 10px',
