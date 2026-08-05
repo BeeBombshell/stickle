@@ -3,6 +3,7 @@ import type { StickleNote } from '../../lib/types';
 import { getAllNotes } from '../../lib/db';
 import { NoteSidebar } from '../../components/NoteSidebar';
 import { Settings } from '../../components/Settings';
+import { exportNotesToJson, importNotesFromJson } from '../../lib/export-import';
 
 export type PopupTab = 'all-notes' | 'active-tab' | 'settings';
 
@@ -12,6 +13,7 @@ export function App() {
   const [activeUrlNotes, setActiveUrlNotes] = useState<StickleNote[]>([]);
   const [currentTabUrl, setCurrentTabUrl] = useState<string>('');
   const [pingStatus, setPingStatus] = useState<string>('Connecting...');
+  const [statusMsg, setStatusMsg] = useState<string | null>(null);
 
   const reloadNotes = async () => {
     try {
@@ -39,13 +41,13 @@ export function App() {
     if (typeof chrome !== 'undefined' && chrome.runtime?.sendMessage) {
       chrome.runtime.sendMessage({ type: 'PING' }, (res) => {
         if (res?.type === 'PONG') {
-          setPingStatus('Ready');
-        } else {
           setPingStatus('Active');
+        } else {
+          setPingStatus('Standby');
         }
       });
     } else {
-      setPingStatus('Dev Mode');
+      setPingStatus('Dev');
     }
 
     reloadNotes();
@@ -74,6 +76,38 @@ export function App() {
     }
   };
 
+  const handleExportJson = () => {
+    if (notes.length === 0) {
+      setStatusMsg('No notes to export.');
+      return;
+    }
+    const { filename } = exportNotesToJson(notes);
+    setStatusMsg(`Exported ${notes.length} notes to ${filename}`);
+  };
+
+  const handleImportFileChange = async (e: Event) => {
+    const input = e.target as HTMLInputElement;
+    if (!input.files || input.files.length === 0) return;
+    const file = input.files[0];
+
+    const reader = new FileReader();
+    reader.onload = async (evt) => {
+      const text = evt.target?.result as string;
+      if (!text) return;
+      const res = await importNotesFromJson(text);
+      if (res.success) {
+        setStatusMsg(
+          `Imported ${res.imported}, updated ${res.updated} (${res.skipped} skipped).`
+        );
+        reloadNotes();
+      } else {
+        setStatusMsg(`Import failed: ${res.error}`);
+      }
+      input.value = '';
+    };
+    reader.readAsText(file);
+  };
+
   return (
     <div style={popupStyles.container}>
       {/* Header Bar */}
@@ -86,13 +120,32 @@ export function App() {
             <circle cx="31" cy="31" r="3.5" fill="#1A1A1A" />
           </svg>
           <span style={popupStyles.wordmark}>stickle</span>
+          {/* Simple Green Dot Status Indicator */}
+          <span style={popupStyles.statusDot} title={`Background Worker: ${pingStatus}`} />
         </div>
 
-        <div style={popupStyles.statusBadge}>
-          <span style={popupStyles.statusDot} />
-          <span>{pingStatus}</span>
+        {/* Header Magenta Promo Action Buttons */}
+        <div style={{ display: 'flex', gap: '5px', alignItems: 'center' }}>
+          <label style={popupStyles.magentaPromoBtn}>
+            📥 Import
+            <input
+              type="file"
+              accept=".json"
+              onChange={handleImportFileChange}
+              style={{ display: 'none' }}
+            />
+          </label>
+          <button style={popupStyles.magentaPromoBtn} onClick={handleExportJson} title="Export notes to JSON format">
+            📤 Export
+          </button>
         </div>
       </header>
+
+      {statusMsg && (
+        <div style={popupStyles.statusToast}>
+          {statusMsg}
+        </div>
+      )}
 
       {/* Navigation Tabs Bar */}
       <nav style={popupStyles.navBar}>
@@ -175,7 +228,7 @@ const popupStyles = {
   logoLockup: {
     display: 'flex',
     alignItems: 'center',
-    gap: '8px',
+    gap: '6px',
   },
   wordmark: {
     fontSize: '20px',
@@ -183,22 +236,34 @@ const popupStyles = {
     letterSpacing: '-0.8px',
     color: 'var(--color-ink)',
   },
-  statusBadge: {
-    display: 'flex',
-    alignItems: 'center',
-    gap: '6px',
-    padding: '3px 8px',
-    borderRadius: 'var(--radius-pill)',
-    backgroundColor: 'var(--color-surface-soft)',
-    fontSize: '10px',
-    color: 'var(--color-ink-muted)',
-    fontFamily: 'var(--font-mono)',
-  },
   statusDot: {
     width: '6px',
     height: '6px',
     borderRadius: '50%',
     backgroundColor: '#10b981',
+    display: 'inline-block',
+  },
+  magentaPromoBtn: {
+    padding: '3px 9px',
+    borderRadius: 'var(--radius-pill)',
+    backgroundColor: 'var(--color-block-pink)',
+    border: '1px solid #f472b6',
+    fontSize: '10px',
+    fontWeight: '600' as const,
+    color: '#831843',
+    cursor: 'pointer',
+    display: 'inline-flex',
+    alignItems: 'center',
+    boxShadow: '0 1px 2px rgba(0,0,0,0.04)',
+  },
+  statusToast: {
+    marginBottom: '8px',
+    padding: '4px 8px',
+    borderRadius: 'var(--radius-md)',
+    backgroundColor: 'var(--color-surface-soft)',
+    fontSize: '10px',
+    color: 'var(--color-ink)',
+    fontFamily: 'var(--font-mono)',
   },
   navBar: {
     display: 'flex',
