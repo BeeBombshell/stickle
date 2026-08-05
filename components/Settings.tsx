@@ -58,6 +58,8 @@ export function Settings() {
   const [defaultNoteColor, setDefaultNoteColor] = useState<NoteColorBlock>('lime');
   const [isTesting, setIsTesting] = useState(false);
   const [status, setStatus] = useState<{ type: 'success' | 'error'; message: string } | null>(null);
+  const [isNotionOpen, setIsNotionOpen] = useState(false);
+  const [isBackupOpen, setIsBackupOpen] = useState(false);
 
   useEffect(() => {
     loadSettings().then((s) => {
@@ -135,6 +137,19 @@ export function Settings() {
     reader.readAsText(file);
   };
 
+  const handleColorSelect = async (key: NoteColorBlock) => {
+    setDefaultNoteColor(key);
+    await saveSettings({
+      apiKey: apiKey.trim(),
+      databaseId: databaseId.trim(),
+      defaultNoteColor: key,
+    });
+    setStatus({
+      type: 'success',
+      message: `Default note theme updated to ${COLOR_SWATCHES[key].name}.`,
+    });
+  };
+
   return (
     <div style={settingsStyles.container}>
       <h2 style={settingsStyles.title}>Preferences & Settings</h2>
@@ -148,7 +163,7 @@ export function Settings() {
           {(Object.keys(COLOR_SWATCHES) as NoteColorBlock[]).map((key) => (
             <button
               key={key}
-              onClick={() => setDefaultNoteColor(key)}
+              onClick={() => handleColorSelect(key)}
               title={COLOR_SWATCHES[key].name}
               style={{
                 width: '24px',
@@ -167,90 +182,193 @@ export function Settings() {
 
       <hr style={{ border: 'none', borderTop: '1px solid var(--color-hairline)', margin: '16px 0' }} />
 
-      <h3 style={{ ...settingsStyles.title, fontSize: '15px' }}>Notion Integration</h3>
-
-      <div style={settingsStyles.formGroup}>
-        <label style={settingsStyles.label}>Internal Integration Token</label>
-        <input
-          type="password"
-          style={settingsStyles.input}
-          placeholder="secret_..."
-          value={apiKey}
-          onInput={(e) => setApiKey((e.target as HTMLInputElement).value)}
-        />
-      </div>
-
-      <div style={settingsStyles.formGroup}>
-        <label style={settingsStyles.label}>Notion Database ID</label>
-        <input
-          type="text"
-          style={settingsStyles.input}
-          placeholder="32-character database ID or database URL"
-          value={databaseId}
-          onInput={(e) => setDatabaseId((e.target as HTMLInputElement).value)}
-        />
-      </div>
-
-      <button
-        className="btn-pill btn-secondary"
-        onClick={handleSaveAndTest}
-        disabled={isTesting}
-        style={{ marginTop: '6px', width: '100%', opacity: isTesting ? 0.7 : 1 }}
+      <div
+        onClick={() => setIsNotionOpen(!isNotionOpen)}
+        style={{
+          display: 'flex',
+          justifyContent: 'space-between',
+          alignItems: 'center',
+          cursor: 'pointer',
+          userSelect: 'none',
+          padding: '4px 0',
+        }}
       >
-        {isTesting ? 'Testing Connection...' : 'Save Settings'}
-      </button>
+        <h3 style={{ ...settingsStyles.title, fontSize: '15px', margin: 0 }}>Notion Integration</h3>
+        <svg
+          width="14"
+          height="14"
+          viewBox="0 0 24 24"
+          fill="none"
+          stroke="currentColor"
+          strokeWidth="2"
+          strokeLinecap="round"
+          strokeLinejoin="round"
+          style={{
+            transform: isNotionOpen ? 'rotate(180deg)' : 'rotate(0deg)',
+            transition: 'transform 0.2s ease',
+            color: 'var(--color-ink-muted)',
+          }}
+        >
+          <path d="M6 9l6 6 6-6" />
+        </svg>
+      </div>
+
+      {isNotionOpen && (
+        <div style={{ marginTop: '12px' }}>
+          <div style={settingsStyles.formGroup}>
+            <label style={settingsStyles.label}>Internal Integration Token</label>
+            <input
+              type="password"
+              style={settingsStyles.input}
+              placeholder="secret_..."
+              value={apiKey}
+              onInput={(e) => setApiKey((e.target as HTMLInputElement).value)}
+            />
+          </div>
+
+          <div style={settingsStyles.formGroup}>
+            <label style={settingsStyles.label}>Notion Database ID</label>
+            <input
+              type="text"
+              style={settingsStyles.input}
+              placeholder="32-character database ID or database URL"
+              value={databaseId}
+              onInput={(e) => setDatabaseId((e.target as HTMLInputElement).value)}
+            />
+          </div>
+
+          <button
+            className="btn-pill btn-secondary"
+            onClick={handleSaveAndTest}
+            disabled={isTesting}
+            style={{ marginTop: '6px', width: '100%', opacity: isTesting ? 0.7 : 1 }}
+          >
+            {isTesting ? 'Testing Connection...' : 'Save Settings'}
+          </button>
+        </div>
+      )}
 
       <hr style={{ border: 'none', borderTop: '1px solid var(--color-hairline)', margin: '16px 0' }} />
 
-      <h3 style={{ ...settingsStyles.title, fontSize: '15px' }}>Data Backup & Portability</h3>
-      <p style={settingsStyles.subtitle}>
-        Export your notes to portable JSON files or restore notes from a previous backup.
-      </p>
-
-      <div style={{ display: 'flex', gap: '8px', marginTop: '8px' }}>
-        <button
-          onClick={handleExportAllJson}
+      <div
+        onClick={() => setIsBackupOpen(!isBackupOpen)}
+        style={{
+          display: 'flex',
+          justifyContent: 'space-between',
+          alignItems: 'center',
+          cursor: 'pointer',
+          userSelect: 'none',
+          padding: '4px 0',
+        }}
+      >
+        <h3 style={{ ...settingsStyles.title, fontSize: '15px', margin: 0 }}>Data Backup & Portability</h3>
+        <svg
+          width="14"
+          height="14"
+          viewBox="0 0 24 24"
+          fill="none"
+          stroke="currentColor"
+          strokeWidth="2"
+          strokeLinecap="round"
+          strokeLinejoin="round"
           style={{
-            flex: 1,
-            padding: '8px 12px',
-            borderRadius: 'var(--radius-pill)',
-            border: '1px solid #d4ee42',
-            backgroundColor: 'var(--color-block-lime)',
-            fontSize: '12px',
-            fontWeight: '600',
-            cursor: 'pointer',
-            color: '#2a3000',
-            boxShadow: '0 1px 2px rgba(0,0,0,0.04)',
+            transform: isBackupOpen ? 'rotate(180deg)' : 'rotate(0deg)',
+            transition: 'transform 0.2s ease',
+            color: 'var(--color-ink-muted)',
           }}
         >
-          📤 Export Notes (.json)
-        </button>
-
-        <label
-          style={{
-            flex: 1,
-            padding: '8px 12px',
-            borderRadius: 'var(--radius-pill)',
-            border: '1px solid #d4ee42',
-            backgroundColor: 'var(--color-block-lime)',
-            fontSize: '12px',
-            fontWeight: '600',
-            cursor: 'pointer',
-            color: '#2a3000',
-            textAlign: 'center',
-            boxSizing: 'border-box',
-            boxShadow: '0 1px 2px rgba(0,0,0,0.04)',
-          }}
-        >
-          📥 Import Notes (.json)
-          <input
-            type="file"
-            accept=".json"
-            onChange={handleImportJsonFile}
-            style={{ display: 'none' }}
-          />
-        </label>
+          <path d="M6 9l6 6 6-6" />
+        </svg>
       </div>
+
+      {isBackupOpen && (
+        <div style={{ marginTop: '12px' }}>
+          <p style={settingsStyles.subtitle}>
+            Export your notes to portable JSON files or restore notes from a previous backup.
+          </p>
+
+          <div style={{ display: 'flex', gap: '8px', marginTop: '8px' }}>
+            <button
+              onClick={handleExportAllJson}
+              style={{
+                flex: 1,
+                padding: '8px 12px',
+                borderRadius: 'var(--radius-pill)',
+                border: '1px solid #d4ee42',
+                backgroundColor: 'var(--color-block-lime)',
+                fontSize: '12px',
+                fontWeight: '600',
+                cursor: 'pointer',
+                color: '#2a3000',
+                boxShadow: '0 1px 2px rgba(0,0,0,0.04)',
+                display: 'inline-flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                gap: '6px',
+              }}
+            >
+              <svg
+                width="14"
+                height="14"
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                strokeWidth="2"
+                strokeLinecap="round"
+                strokeLinejoin="round"
+              >
+                <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" />
+                <polyline points="17 8 12 3 7 8" />
+                <line x1="12" y1="3" x2="12" y2="15" />
+              </svg>
+              Export Notes (.json)
+            </button>
+
+            <label
+              style={{
+                flex: 1,
+                padding: '8px 12px',
+                borderRadius: 'var(--radius-pill)',
+                border: '1px solid #d4ee42',
+                backgroundColor: 'var(--color-block-lime)',
+                fontSize: '12px',
+                fontWeight: '600',
+                cursor: 'pointer',
+                color: '#2a3000',
+                textAlign: 'center',
+                boxSizing: 'border-box',
+                boxShadow: '0 1px 2px rgba(0,0,0,0.04)',
+                display: 'inline-flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                gap: '6px',
+              }}
+            >
+              <svg
+                width="14"
+                height="14"
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                strokeWidth="2"
+                strokeLinecap="round"
+                strokeLinejoin="round"
+              >
+                <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" />
+                <polyline points="7 10 12 15 17 10" />
+                <line x1="12" y1="15" x2="12" y2="3" />
+              </svg>
+              Import Notes (.json)
+              <input
+                type="file"
+                accept=".json"
+                onChange={handleImportJsonFile}
+                style={{ display: 'none' }}
+              />
+            </label>
+          </div>
+        </div>
+      )}
 
       {status && (
         <div
