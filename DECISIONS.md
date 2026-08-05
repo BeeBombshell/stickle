@@ -82,6 +82,23 @@ This log records non-trivial decisions made during the development of Stickle.
 - **Decision:** Inspected target Notion database schema (`GET /v1/databases/:id`) dynamically to auto-detect title property keys and optional `URL` properties before building page creation/update payloads. Always embedded URL as a clickable bookmark link inside the page callout body block.
 - **Rationale:** Resolves `URL is not a property that exists` errors for user Notion databases that do not contain a property named `URL` of type `url`.
 
+---
+
+## Phase 5 — Polish & Packaging
+
+### 17. Interactive Onboarding Sandbox Page
+- **Decision:** Created an onboarding HTML entrypoint (`entrypoints/onboarding/`) that automatically launches via `chrome.tabs.create` on extension install (`details.reason === 'install'`).
+- **Rationale:** Provides immediate visual guidance, interactive practice note creation, and 3-tier anchoring confidence tier explanations for first-time users.
+
+### 18. PNG Icon Generation & Manifest Declaration
+- **Decision:** Created 16x16, 32x32, 48x48, and 128x128 PNG icon assets in `public/icon/` matching the Stickle Anchor Pin logo mark and declared them under `icons` and `action.default_icon` in `wxt.config.ts`.
+- **Rationale:** Ensures clean icon representation across Chrome toolbar, context menus, and extensions manager (`chrome://extensions`).
+
+### 19. Human-Friendly Error State Mapping
+- **Decision:** Standardized HTTP status codes (401 invalid token, 403 missing database access, 404 database not found) into clear actionable user messages, and added storage quota exception catching in `lib/db.ts`.
+- **Rationale:** Prevents cryptic API exception dumps and gives users actionable resolution steps in the UI.
+
+
 
 
 

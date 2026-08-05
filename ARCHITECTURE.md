@@ -107,3 +107,37 @@ To provide transparent feedback on anchor confidence:
 1. **Zero External NLP Overhead:** Fuzzy matching runs entirely via inline trigram set operations, avoiding heavy external NLP packages (keeping extension payload < 100KB).
 2. **DOM Traversal Optimization:** Candidate filtering targets leaf nodes and elements containing text nodes (`nodeType === 3`), bypassing large non-text containers.
 3. **Local First Data Privacy:** All anchor extraction and matching occurs locally within the browser content script context. No DOM text content is transmitted externally.
+
+---
+
+## 6. Background Service Worker Proxying & CORS Architecture
+
+Browsers restrict content scripts from making direct cross-origin HTTP requests to external APIs (`api.notion.com`) due to CORS policies. Stickle overcomes this using an asynchronous **Background Message Proxy Pattern**:
+
+```
+ ┌──────────────────────┐        chrome.runtime.sendMessage        ┌─────────────────────────┐
+ │                      ├─────────────────────────────────────────►│                         │
+ │ Content Script / UI  │                                          │ Background ServiceWorker│
+ │                      │◄─────────────────────────────────────────┤ (Host Permission granted)│
+ └──────────────────────┘        sendResponse({ success })         └────────────┬────────────┘
+                                                                                │
+                                                                       fetch("api.notion.com")
+                                                                                │
+                                                                                ▼
+                                                                       ┌──────────────────┐
+                                                                       │    Notion API    │
+                                                                       └──────────────────┘
+```
+
+1. **CORS Bypass**: Background service workers declare `host_permissions: ["https://api.notion.com/*"]` in Manifest V3, granting origin-unrestricted API access.
+2. **Exponential Backoff Retry Engine**: Wrapped in `fetchWithRetry()` supporting Notion 429 rate limit responses (`Retry-After` header parsing and exponential delay `2^attempt * 500ms`).
+3. **Property Key Inspection**: Automatically discovers Notion database properties (`title`, `url`) dynamically via `GET /v1/databases/:id`, accommodating custom Notion user databases without hardcoded schema assumptions.
+
+---
+
+## 7. Storage & Error Resilience Layer
+
+1. **Dual Persistence System**: Primary persistence via `chrome.storage.local` with automatic fallback to IndexedDB (`Dexie.js`) for non-extension environments.
+2. **Explicit Quota Protection**: `chrome.storage.local.set` catches `chrome.runtime.lastError` and detects storage quota limits (`QuotaExceededError`), preventing silent data loss.
+3. **Restricted Page Injection Handling**: Context menu commands ignore restricted browser internal URLs (`chrome://`, `chrome-extension://`, `about:`) and gracefully handle injection failures.
+
