@@ -121,9 +121,87 @@ async function getDatabaseSchemaInfo(
   return { titlePropertyKey: 'Name' };
 }
 
+export async function findExistingPageForUrl(
+  dbId: string,
+  headers: Record<string, string>,
+  noteUrl: string,
+  titleText: string,
+  schemaInfo: DatabaseSchemaInfo
+): Promise<string | null> {
+  try {
+    const filterProperty = schemaInfo.urlPropertyKey || schemaInfo.titlePropertyKey;
+    const isUrlProp = Boolean(schemaInfo.urlPropertyKey);
+    const filterValue = isUrlProp ? noteUrl : titleText;
+
+    const queryUrl = `https://api.notion.com/v1/databases/${dbId}/query`;
+    const res = await fetchWithRetry(queryUrl, {
+      method: 'POST',
+      headers,
+      body: JSON.stringify({
+        filter: {
+          property: filterProperty,
+          [isUrlProp ? 'url' : 'title']: {
+            equals: filterValue,
+          },
+        },
+        page_size: 1,
+      }),
+    });
+
+    if (res.ok) {
+      const data = await res.json();
+      if (data.results && data.results.length > 0) {
+        return data.results[0].id;
+      }
+    }
+  } catch {}
+  return null;
+}
+
+export function createNoteCalloutBlock(note: StickleNote) {
+  const formattedDate = new Date(note.createdAt).toLocaleString();
+  const tagList =
+    note.tags && note.tags.length > 0
+      ? note.tags.map((t) => (t.startsWith('#') ? t : `#${t}`)).join(' ')
+      : '';
+
+  const metaParts = [
+    `📅 ${formattedDate}`,
+    `Anchor: ${note.anchor.tier}`,
+    tagList ? `Tags: ${tagList}` : '',
+  ].filter(Boolean);
+
+  return {
+    object: 'block',
+    type: 'callout',
+    callout: {
+      icon: { emoji: '📌' },
+      rich_text: [
+        {
+          type: 'text',
+          text: {
+            content: note.content || '(Empty note content)',
+          },
+        },
+        {
+          type: 'text',
+          text: {
+            content: `\n\n${metaParts.join(' | ')}`,
+          },
+          annotations: {
+            italic: true,
+            color: 'gray',
+          },
+        },
+      ],
+    },
+  };
+}
+
 export async function pushNoteToNotionDirect(
   note: StickleNote,
-  config: NotionConfig
+  config: NotionConfig,
+  pageCache?: Map<string, string>
 ): Promise<string> {
   if (!config.apiKey.trim() || !config.databaseId.trim()) {
     throw new Error('Notion settings incomplete. Please set Integration Token and Database ID.');
@@ -136,34 +214,30 @@ export async function pushNoteToNotionDirect(
     'Content-Type': 'application/json',
   };
 
-  const formattedDate = new Date(note.createdAt).toLocaleString();
   const titleText = note.pageTitle || note.url;
-
   const schemaInfo = await getDatabaseSchemaInfo(dbId, headers);
 
-  const pageProperties: Record<string, any> = {
-    [schemaInfo.titlePropertyKey]: {
-      title: [{ text: { content: titleText } }],
-    },
-  };
+  let targetPageId = note.syncedToNotion && note.notionPageId ? note.notionPageId : null;
 
-  if (schemaInfo.urlPropertyKey) {
-    pageProperties[schemaInfo.urlPropertyKey] = {
-      url: note.url,
-    };
+  if (!targetPageId && pageCache?.has(note.url)) {
+    targetPageId = pageCache.get(note.url) || null;
   }
 
-  if (note.syncedToNotion && note.notionPageId) {
-    // Update existing Notion page properties
-    const updateUrl = `https://api.notion.com/v1/pages/${note.notionPageId}`;
-    const updateBody = {
-      properties: pageProperties,
-    };
+  if (!targetPageId) {
+    targetPageId = await findExistingPageForUrl(dbId, headers, note.url, titleText, schemaInfo);
+  }
 
-    const res = await fetchWithRetry(updateUrl, {
+  const calloutBlock = createNoteCalloutBlock(note);
+
+  if (targetPageId) {
+    // Append callout block to existing master Notion page for this URL
+    const appendBlocksUrl = `https://api.notion.com/v1/blocks/${targetPageId}/children`;
+    const res = await fetchWithRetry(appendBlocksUrl, {
       method: 'PATCH',
       headers,
-      body: JSON.stringify(updateBody),
+      body: JSON.stringify({
+        children: [calloutBlock],
+      }),
     });
 
     if (!res.ok) {
@@ -171,82 +245,36 @@ export async function pushNoteToNotionDirect(
       throw new Error(formatNotionApiError(res, errJson));
     }
 
-    // Append updated content as a new block paragraph to Notion page
-    const appendBlocksUrl = `https://api.notion.com/v1/blocks/${note.notionPageId}/children`;
-    await fetchWithRetry(appendBlocksUrl, {
-      method: 'PATCH',
-      headers,
-      body: JSON.stringify({
-        children: [
-          {
-            object: 'block',
-            type: 'paragraph',
-            paragraph: {
-              rich_text: [
-                {
-                  text: {
-                    content: `[Updated Note]: ${note.content}`,
-                  },
-                },
-              ],
-            },
-          },
-        ],
-      }),
-    }).catch(() => {}); // Non-critical block append
+    if (pageCache) {
+      pageCache.set(note.url, targetPageId);
+    }
 
     await updateNote(note.id, {
       syncedToNotion: true,
+      notionPageId: targetPageId,
       updatedAt: Date.now(),
     });
 
-    return note.notionPageId;
+    return targetPageId;
   } else {
-    // Create new Notion page in database
+    // Create new master Notion page for this URL in database
     const createUrl = 'https://api.notion.com/v1/pages';
+    const pageProperties: Record<string, any> = {
+      [schemaInfo.titlePropertyKey]: {
+        title: [{ text: { content: titleText } }],
+      },
+    };
+
+    if (schemaInfo.urlPropertyKey) {
+      pageProperties[schemaInfo.urlPropertyKey] = {
+        url: note.url,
+      };
+    }
+
     const createBody = {
       parent: { database_id: dbId },
       properties: pageProperties,
-      children: [
-        {
-          object: 'block',
-          type: 'paragraph',
-          paragraph: {
-            rich_text: [
-              {
-                text: {
-                  content: note.content || '(Empty note content)',
-                },
-              },
-            ],
-          },
-        },
-        {
-          object: 'block',
-          type: 'callout',
-          callout: {
-            icon: { emoji: '📌' },
-            rich_text: [
-              {
-                text: {
-                  content: `Web Page: `,
-                },
-              },
-              {
-                text: {
-                  content: note.url,
-                  link: { url: note.url },
-                },
-              },
-              {
-                text: {
-                  content: `\nCreated via Stickle on ${formattedDate} | Anchor: ${note.anchor.tier}`,
-                },
-              },
-            ],
-          },
-        },
-      ],
+      children: [calloutBlock],
     };
 
     const res = await fetchWithRetry(createUrl, {
@@ -262,6 +290,10 @@ export async function pushNoteToNotionDirect(
 
     const responseData = await res.json();
     const notionPageId = responseData.id;
+
+    if (pageCache) {
+      pageCache.set(note.url, notionPageId);
+    }
 
     await updateNote(note.id, {
       syncedToNotion: true,
@@ -281,10 +313,11 @@ export async function exportUnsyncedNotesBatchDirect(
   const unsynced = notes.filter((n) => !n.syncedToNotion);
   let successCount = 0;
   let failCount = 0;
+  const pageCache = new Map<string, string>();
 
   for (let i = 0; i < unsynced.length; i++) {
     try {
-      await pushNoteToNotionDirect(unsynced[i], config);
+      await pushNoteToNotionDirect(unsynced[i], config, pageCache);
       successCount++;
     } catch {
       failCount++;

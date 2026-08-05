@@ -111,10 +111,15 @@ describe('Notion API Integration', () => {
   });
 
   describe('pushNoteToNotion', () => {
-    it('creates a new Notion page for unsynced note with schema detection', async () => {
+    it('creates a new master Notion page for unsynced note when no page matches URL', async () => {
       const fetchMock = vi
         .fn()
         .mockResolvedValueOnce(mockDbSchemaResponse)
+        .mockResolvedValueOnce({
+          ok: true,
+          status: 200,
+          json: async () => ({ results: [] }),
+        })
         .mockResolvedValueOnce({
           ok: true,
           status: 200,
@@ -126,9 +131,9 @@ describe('Notion API Integration', () => {
       const createdId = await pushNoteToNotion(sampleNote, sampleConfig);
 
       expect(createdId).toBe('notion-page-id-999');
-      expect(fetchMock).toHaveBeenCalledTimes(2);
+      expect(fetchMock).toHaveBeenCalledTimes(3);
 
-      const [urlArg, optionsArg] = fetchMock.mock.calls[1];
+      const [urlArg, optionsArg] = fetchMock.mock.calls[2];
       expect(urlArg).toBe('https://api.notion.com/v1/pages');
       expect(optionsArg.method).toBe('POST');
       expect(optionsArg.headers['Authorization']).toBe(`Bearer ${sampleConfig.apiKey}`);
@@ -136,39 +141,47 @@ describe('Notion API Integration', () => {
       const body = JSON.parse(optionsArg.body);
       expect(body.parent.database_id).toBe(cleanDatabaseId(sampleConfig.databaseId));
       expect(body.properties.URL.url).toBe(sampleNote.url);
-      expect(body.children[0].paragraph.rich_text[0].text.content).toBe(sampleNote.content);
+      expect(body.children[0].type).toBe('callout');
+      expect(body.children[0].callout.rich_text[0].text.content).toBe(sampleNote.content);
     });
 
-    it('updates existing Notion page when note is already synced', async () => {
-      const syncedNote: StickleNote = {
-        ...sampleNote,
-        syncedToNotion: true,
-        notionPageId: 'notion-page-id-existing',
-      };
-
+    it('appends callout block to existing master Notion page when URL already exists', async () => {
       const fetchMock = vi
         .fn()
         .mockResolvedValueOnce(mockDbSchemaResponse)
         .mockResolvedValueOnce({
           ok: true,
           status: 200,
-          json: async () => ({ id: 'notion-page-id-existing', object: 'page' }),
+          json: async () => ({ results: [{ id: 'notion-page-id-existing' }] }),
+        })
+        .mockResolvedValueOnce({
+          ok: true,
+          status: 200,
+          json: async () => ({ object: 'list', results: [] }),
         });
 
       vi.stubGlobal('fetch', fetchMock);
 
-      const pageId = await pushNoteToNotion(syncedNote, sampleConfig);
+      const pageId = await pushNoteToNotion(sampleNote, sampleConfig);
       expect(pageId).toBe('notion-page-id-existing');
 
-      const [urlArg, optionsArg] = fetchMock.mock.calls[1];
-      expect(urlArg).toBe('https://api.notion.com/v1/pages/notion-page-id-existing');
+      const [urlArg, optionsArg] = fetchMock.mock.calls[2];
+      expect(urlArg).toBe('https://api.notion.com/v1/blocks/notion-page-id-existing/children');
       expect(optionsArg.method).toBe('PATCH');
+
+      const body = JSON.parse(optionsArg.body);
+      expect(body.children[0].type).toBe('callout');
     });
 
     it('retries on HTTP 429 status (rate limiting) with exponential backoff', async () => {
       const fetchMock = vi
         .fn()
         .mockResolvedValueOnce(mockDbSchemaResponse)
+        .mockResolvedValueOnce({
+          ok: true,
+          status: 200,
+          json: async () => ({ results: [] }),
+        })
         .mockResolvedValueOnce({
           ok: false,
           status: 429,
@@ -184,24 +197,43 @@ describe('Notion API Integration', () => {
 
       const resultId = await pushNoteToNotion(sampleNote, sampleConfig);
       expect(resultId).toBe('notion-page-after-retry');
-      expect(fetchMock).toHaveBeenCalledTimes(3);
+      expect(fetchMock).toHaveBeenCalledTimes(4);
     });
   });
 
   describe('exportUnsyncedNotesBatch', () => {
-    it('exports all unsynced notes in batch and reports progress', async () => {
+    it('exports all unsynced notes in batch, grouping notes for same URL into 1 master page', async () => {
       const notesList: StickleNote[] = [
-        { ...sampleNote, id: 'n1', syncedToNotion: false },
-        { ...sampleNote, id: 'n2', syncedToNotion: false },
-        { ...sampleNote, id: 'n3', syncedToNotion: true, notionPageId: 'p3' },
+        { ...sampleNote, id: 'n1', url: 'https://example.com/page1', syncedToNotion: false },
+        { ...sampleNote, id: 'n2', url: 'https://example.com/page1', syncedToNotion: false },
+        { ...sampleNote, id: 'n3', url: 'https://example.com/page2', syncedToNotion: false },
       ];
 
       vi.stubGlobal(
         'fetch',
-        vi.fn().mockResolvedValue({
-          ok: true,
-          status: 200,
-          json: async () => ({ id: 'notion-batch-id', object: 'page', properties: {} }),
+        vi.fn().mockImplementation((url: string) => {
+          if (url.includes('/databases/') && !url.includes('/query')) {
+            return Promise.resolve(mockDbSchemaResponse);
+          }
+          if (url.includes('/query')) {
+            return Promise.resolve({
+              ok: true,
+              status: 200,
+              json: async () => ({ results: [] }),
+            });
+          }
+          if (url.endsWith('/pages')) {
+            return Promise.resolve({
+              ok: true,
+              status: 200,
+              json: async () => ({ id: 'master-page-created', object: 'page' }),
+            });
+          }
+          return Promise.resolve({
+            ok: true,
+            status: 200,
+            json: async () => ({ object: 'list', results: [] }),
+          });
         })
       );
 
@@ -210,9 +242,9 @@ describe('Notion API Integration', () => {
         progressCalls.push(curr);
       });
 
-      expect(result.successCount).toBe(2);
+      expect(result.successCount).toBe(3);
       expect(result.failCount).toBe(0);
-      expect(progressCalls).toEqual([1, 2]);
+      expect(progressCalls).toEqual([1, 2, 3]);
     });
   });
 });
