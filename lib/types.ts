@@ -33,6 +33,7 @@ export interface StickleNote {
   color?: NoteColorBlock;
   collapsed?: boolean;
   highlightRange?: NoteHighlightRange;
+  tags?: string[];
 }
 
 export interface NotionConfig {
