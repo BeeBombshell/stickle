@@ -19,6 +19,15 @@ export default defineContentScript({
     // Expose global re-anchoring helper in content script scope
     (window as any).stickleReanchor = refreshNotes;
 
+    // Listen for storage changes across popup & other contexts
+    if (typeof chrome !== 'undefined' && chrome.storage?.onChanged) {
+      chrome.storage.onChanged.addListener((changes, areaName) => {
+        if (areaName === 'local' && changes.stickle_notes) {
+          refreshNotes();
+        }
+      });
+    }
+
     // Listen for custom DOM events & window messages from page scope
     document.addEventListener('stickle:reanchor', () => refreshNotes());
     window.addEventListener('message', (event) => {
@@ -26,6 +35,31 @@ export default defineContentScript({
         refreshNotes();
       }
     });
+
+    if (typeof chrome !== 'undefined' && chrome.runtime?.onMessage) {
+      chrome.runtime.onMessage.addListener(async (msg) => {
+        if (msg?.type === 'TRIGGER_CREATE_NOTE') {
+          const target = document.body;
+          if (!target) return;
+          const rect = target.getBoundingClientRect();
+          const offsetX = Math.max(20, window.innerWidth / 2 - rect.left - 100);
+          const offsetY = Math.max(20, window.innerHeight / 3 - rect.top);
+          const anchor = createAnchor(target, offsetX, offsetY);
+          const newNote: StickleNote = {
+            id: crypto.randomUUID(),
+            url: normalizeUrl(window.location.href),
+            pageTitle: document.title,
+            content: '',
+            anchor,
+            createdAt: Date.now(),
+            updatedAt: Date.now(),
+            syncedToNotion: false,
+          };
+          await createNote(newNote);
+          renderNoteWrapper(newNote);
+        }
+      });
+    }
 
     // Debounced automatic re-anchoring on DOM mutation (SPA re-renders, dynamic feeds)
     let reanchorTimeout: any = null;
@@ -89,13 +123,27 @@ export default defineContentScript({
     async function refreshNotes() {
       try {
         const notes = await getNotesForUrl(normalizeUrl(window.location.href));
+        const currentIds = new Set(notes.map((n) => n.id));
+
+        // Clean up unmounted notes that were deleted
+        for (const [id, wrapper] of mountedNotes.entries()) {
+          if (!currentIds.has(id)) {
+            wrapper.remove();
+            mountedNotes.delete(id);
+          }
+        }
+
         for (const note of notes) {
           const resolved = resolveAnchor(note.anchor);
           if (resolved.tier !== note.anchor.tier) {
             note.anchor.tier = resolved.tier;
             await updateNote(note.id, { anchor: note.anchor });
           }
-          renderNoteWrapper(note, resolved.x, resolved.y);
+          const wrapper = mountedNotes.get(note.id);
+          const isFocused = wrapper && wrapper.contains(document.activeElement);
+          if (!isFocused) {
+            renderNoteWrapper(note, resolved.x, resolved.y);
+          }
         }
       } catch (err) {
         console.error('[Stickle] Failed to load notes:', err);
@@ -103,24 +151,23 @@ export default defineContentScript({
     }
 
     function renderNoteWrapper(note: StickleNote, initialX?: number, initialY?: number) {
-      if (mountedNotes.has(note.id)) {
-        const existing = mountedNotes.get(note.id);
-        if (existing) existing.remove();
+      let wrapper = mountedNotes.get(note.id);
+      if (!wrapper) {
+        wrapper = document.createElement('div');
+        wrapper.id = `stickle-note-wrapper-${note.id}`;
+        wrapper.style.position = 'absolute';
+        wrapper.style.zIndex = '2147483647';
+        wrapper.style.colorScheme = 'light';
+        hostContainer.appendChild(wrapper);
+        mountedNotes.set(note.id, wrapper);
       }
 
       const resolved = resolveAnchor(note.anchor);
-      const posX = initialX ?? resolved.x;
-      const posY = initialY ?? resolved.y;
+      let posX = initialX ?? resolved.x;
+      let posY = initialY ?? resolved.y;
 
-      const wrapper = document.createElement('div');
-      wrapper.id = `stickle-note-wrapper-${note.id}`;
-      wrapper.style.position = 'absolute';
       wrapper.style.left = `${posX}px`;
       wrapper.style.top = `${posY}px`;
-      wrapper.style.zIndex = '2147483647';
-
-      hostContainer.appendChild(wrapper);
-      mountedNotes.set(note.id, wrapper);
 
       const handleSave = async (content: string) => {
         note.content = content;
@@ -130,8 +177,44 @@ export default defineContentScript({
 
       const handleDelete = async () => {
         await deleteNote(note.id);
-        wrapper.remove();
+        wrapper?.remove();
         mountedNotes.delete(note.id);
+      };
+
+      let dragStartPosX = posX;
+      let dragStartPosY = posY;
+
+      const handleDragStart = () => {
+        dragStartPosX = posX;
+        dragStartPosY = posY;
+      };
+
+      const handleDrag = (dx: number, dy: number) => {
+        if (!wrapper) return;
+        wrapper.style.left = `${dragStartPosX + dx}px`;
+        wrapper.style.top = `${dragStartPosY + dy}px`;
+      };
+
+      const handleDragEnd = async (clientX: number, clientY: number) => {
+        if (!wrapper) return;
+        const newLeft = parseFloat(wrapper.style.left) || posX;
+        const newTop = parseFloat(wrapper.style.top) || posY;
+        posX = newLeft;
+        posY = newTop;
+
+        wrapper.style.visibility = 'hidden';
+        const targetEl = document.elementFromPoint(clientX, clientY) || document.body;
+        wrapper.style.visibility = 'visible';
+
+        const rect = targetEl.getBoundingClientRect();
+        const offsetX = clientX - rect.left;
+        const offsetY = clientY - rect.top;
+
+        const newAnchor = createAnchor(targetEl, offsetX, offsetY);
+        note.anchor = newAnchor;
+        await updateNote(note.id, { anchor: newAnchor, updatedAt: Date.now() });
+
+        renderNoteWrapper(note, posX, posY);
       };
 
       render(
@@ -139,6 +222,9 @@ export default defineContentScript({
           note,
           onSave: handleSave,
           onDelete: handleDelete,
+          onDragStart: handleDragStart,
+          onDrag: handleDrag,
+          onDragEnd: handleDragEnd,
         }),
         wrapper
       );
@@ -166,6 +252,7 @@ function getOrCreateHostContainer(): HTMLElement {
     container.style.width = '100%';
     container.style.pointerEvents = 'auto';
     container.style.zIndex = '2147483646';
+    container.style.colorScheme = 'light';
     document.body.appendChild(container);
   }
   return container;
