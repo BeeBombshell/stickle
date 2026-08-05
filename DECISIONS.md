@@ -38,3 +38,24 @@ This log records non-trivial decisions made during the development of Stickle.
 - **Decision:** Added `@playwright/test` for E2E verification against HTML test fixtures (`static-page.html`, `spa-rerender.html`, `infinite-scroll.html`).
 - **Rationale:** Validates real browser DOM rendering, layout calculation, and element positioning under dynamic mutations.
 
+---
+
+## Phase 3 — Note Management UI
+
+### 8. Popup Navigation & Multi-View Layout
+- **Decision:** Structured popup UI (`App.tsx`) with a pill navigation bar supporting `All Notes`, `Active Tab Notes`, and `Settings` views.
+- **Rationale:** Gives instant visibility into notes attached to the current page while maintaining a domain-grouped global view.
+
+### 9. Substring Search & Relative Date Filtering
+- **Decision:** Implemented zero-dependency substring matching (across `content`, `pageTitle`, and `url`) and date filters (`all`, `today`, `week`) in `NoteSidebar.tsx`.
+- **Rationale:** Enables fast client-side filtering without heavy search dependencies.
+
+### 10. Intelligent Tab Switching Logic
+- **Decision:** Clicking a note card in `NoteSidebar.tsx` checks open tabs via `chrome.tabs.query` and focuses the matching tab/window if open, or creates a new tab if not.
+- **Rationale:** Prevents tab duplication and delivers seamless navigation back to anchored context on any webpage.
+
+### 11. Notion Credentials Storage Pattern
+- **Decision:** Saved Notion integration credentials (`notionApiKey`, `notionDatabaseId`) in `chrome.storage.local` with fallback to `localStorage`.
+- **Rationale:** Prepares credential persistence for Phase 4 Notion export integration.
+
+
