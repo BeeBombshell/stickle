@@ -126,9 +126,17 @@ This log records non-trivial decisions made during the development of Stickle.
 - **Decision:** Attached `mouseup` and `selectionchange` event listeners to monitor text selection (>2 chars) outside the extension host container, positioning a floating `📌 Highlight & Note` action pill above the selection center point.
 - **Rationale:** Delivers a seamless Hypothesis-style highlighting workflow without interfering with normal text copying or context menus.
 
-### 25. Bi-Directional Highlight Overlay Interaction
-- **Decision:** Wrapped selected text ranges in `<mark class="stickle-highlight-mark stickle-highlight-[color]" data-stickle-id="[id]">` DOM elements, and added click delegation so clicking any highlight overlay on the page automatically scrolls to and focuses its attached sticky note bubble.
-- **Rationale:** Establishes a visual link between on-page highlighted text and sticky notes while maintaining easy navigation.
+---
+
+## Phase 8 — Tags & Tag-Based Filtering
+
+### 26. Inline Tag Input Normalization & Chip Management
+- **Decision:** Implemented inline tag input editor in `NoteBubble.tsx` converting tag inputs to lowercase, stripping leading `#` symbols, and handling `Enter`/`Comma` key events to create tag chips.
+- **Rationale:** Ensures clean, normalized tag strings without duplicate or malformed entries.
+
+### 27. Popup Sidebar Tag Filter Carousel & Substring Match Overload
+- **Decision:** Built a horizontal tag filter bar (`#all`, `#research`, `#todo`) in `NoteSidebar.tsx` and extended `filterNotes` to match search queries against tag arrays as well as note content and page titles.
+- **Rationale:** Allows fast multi-dimensional discovery of saved notes across sites by category or workflow tag.
 
 
 
