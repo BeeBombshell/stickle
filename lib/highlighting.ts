@@ -136,7 +136,7 @@ function findTextRangeByContent(searchText: string): Range | null {
 export function applyHighlightOverlay(
   range: Range,
   noteId: string,
-  color: NoteColorBlock = 'cream'
+  color: NoteColorBlock = 'lime'
 ): HTMLElement[] {
   if (range.collapsed || typeof document === 'undefined') return [];
 
@@ -182,7 +182,7 @@ export function applyHighlightOverlay(
 export function restoreHighlightOverlay(
   highlightRange: NoteHighlightRange,
   noteId: string,
-  color: NoteColorBlock = 'cream'
+  color: NoteColorBlock = 'lime'
 ): boolean {
   const range = createDOMRangeFromHighlight(highlightRange);
   if (!range) return false;

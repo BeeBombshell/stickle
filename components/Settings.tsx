@@ -18,14 +18,14 @@ export function loadSettings(): Promise<NotionSettings> {
         resolve({
           apiKey: res.notionApiKey || '',
           databaseId: res.notionDatabaseId || '',
-          defaultNoteColor: (res.defaultNoteColor as NoteColorBlock) || 'cream',
+          defaultNoteColor: (res.defaultNoteColor as NoteColorBlock) || 'lime',
         });
       });
     } else {
       resolve({
         apiKey: localStorage.getItem('stickle_notion_api_key') || '',
         databaseId: localStorage.getItem('stickle_notion_db_id') || '',
-        defaultNoteColor: (localStorage.getItem('stickle_default_note_color') as NoteColorBlock) || 'cream',
+        defaultNoteColor: (localStorage.getItem('stickle_default_note_color') as NoteColorBlock) || 'lime',
       });
     }
   });
@@ -33,7 +33,7 @@ export function loadSettings(): Promise<NotionSettings> {
 
 export function saveSettings(settings: NotionSettings): Promise<void> {
   return new Promise((resolve) => {
-    const color = settings.defaultNoteColor || 'cream';
+    const color = settings.defaultNoteColor || 'lime';
     if (typeof chrome !== 'undefined' && chrome.storage?.local) {
       chrome.storage.local.set(
         {
@@ -55,7 +55,7 @@ export function saveSettings(settings: NotionSettings): Promise<void> {
 export function Settings() {
   const [apiKey, setApiKey] = useState('');
   const [databaseId, setDatabaseId] = useState('');
-  const [defaultNoteColor, setDefaultNoteColor] = useState<NoteColorBlock>('cream');
+  const [defaultNoteColor, setDefaultNoteColor] = useState<NoteColorBlock>('lime');
   const [isTesting, setIsTesting] = useState(false);
   const [status, setStatus] = useState<{ type: 'success' | 'error'; message: string } | null>(null);
 

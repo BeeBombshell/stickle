@@ -61,7 +61,7 @@ export default defineContentScript({
             pageTitle: document.title,
             content: '',
             anchor,
-            color: settings.defaultNoteColor || 'cream',
+            color: settings.defaultNoteColor || 'lime',
             collapsed: false,
             createdAt: Date.now(),
             updatedAt: Date.now(),
@@ -132,7 +132,7 @@ export default defineContentScript({
           pageTitle: document.title,
           content: '',
           anchor,
-          color: settings.defaultNoteColor || 'cream',
+          color: settings.defaultNoteColor || 'lime',
           collapsed: false,
           createdAt: Date.now(),
           updatedAt: Date.now(),
@@ -236,7 +236,7 @@ export default defineContentScript({
 
         const anchor = createAnchor(targetEl, offsetX, offsetY);
         const settings = await loadSettings();
-        const color = settings.defaultNoteColor || 'cream';
+        const color = settings.defaultNoteColor || 'lime';
 
         const newNote: StickleNote = {
           id: crypto.randomUUID(),
