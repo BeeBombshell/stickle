@@ -58,4 +58,21 @@ This log records non-trivial decisions made during the development of Stickle.
 - **Decision:** Saved Notion integration credentials (`notionApiKey`, `notionDatabaseId`) in `chrome.storage.local` with fallback to `localStorage`.
 - **Rationale:** Prepares credential persistence for Phase 4 Notion export integration.
 
+---
+
+## Phase 4 — Notion Sync (Manual Export)
+
+### 12. Notion Integration Token & Database URL Normalization
+- **Decision:** Authenticated Notion requests using Internal Integration Tokens (`secret_...`) and automatically normalized database inputs (raw 32-character hex, UUIDs with hyphens, or full Notion database URLs via regex).
+- **Rationale:** Minimizes user configuration friction when setting up Notion database exports.
+
+### 13. Page Creation vs Patch Property Update Strategy
+- **Decision:** Created new Notion pages via POST `/v1/pages` for unsynced notes, and updated properties via PATCH `/v1/pages/:id` plus block appends for re-synced notes, updating `syncedToNotion` and `notionPageId` in DB upon completion.
+- **Rationale:** Prevents duplicate page generation in Notion databases when notes are re-exported after editing.
+
+### 14. Exponential Backoff for Notion API Rate Limits (429)
+- **Decision:** Wrapped all Notion API calls in `fetchWithRetry` with exponential backoff (`Math.pow(2, attempt) * 500ms`) and `Retry-After` header parsing up to 3 retries.
+- **Rationale:** Ensures resilient batch exporting without failing user requests due to Notion rate limiting.
+
+
 

@@ -5,6 +5,7 @@ interface NoteBubbleProps {
   note: StickleNote;
   onSave?: (updatedContent: string) => void;
   onDelete?: () => void;
+  onExportNotion?: () => void;
   onDragStart?: () => void;
   onDrag?: (dx: number, dy: number) => void;
   onDragEnd?: (clientX: number, clientY: number) => void;
@@ -14,6 +15,7 @@ export function NoteBubble({
   note,
   onSave,
   onDelete,
+  onExportNotion,
   onDragStart,
   onDrag,
   onDragEnd,
@@ -107,10 +109,30 @@ export function NoteBubble({
             {getTierLabel(note.anchor.tier)}
           </span>
         </div>
-        <button onClick={onDelete} style={bubbleStyles.closeBtn} title="Delete note">
-          ✕
-        </button>
+        <div style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
+          {onExportNotion && (
+            <button
+              onClick={onExportNotion}
+              style={{
+                background: 'none',
+                border: 'none',
+                cursor: 'pointer',
+                fontSize: '11px',
+                color: note.syncedToNotion ? '#15803d' : '#2563eb',
+                padding: '2px 4px',
+                fontWeight: '600',
+              }}
+              title={note.syncedToNotion ? 'Synced to Notion (Click to re-export)' : 'Export note to Notion'}
+            >
+              {note.syncedToNotion ? '✓ Notion' : '↑ Notion'}
+            </button>
+          )}
+          <button onClick={onDelete} style={bubbleStyles.closeBtn} title="Delete note">
+            ✕
+          </button>
+        </div>
       </div>
+
       <textarea
         style={bubbleStyles.textarea}
         value={content}

@@ -1,12 +1,237 @@
-import type { StickleNote } from './types';
+import type { StickleNote, NotionConfig } from './types';
+import { updateNote } from './db';
 
-export interface NotionConfig {
-  apiKey: string;
-  databaseId: string;
+const NOTION_VERSION = '2022-06-28';
+
+export function cleanDatabaseId(rawId: string): string {
+  const trimmed = rawId.trim();
+  // If user pasted a full Notion database URL, extract the 32-char ID
+  const urlMatch = trimmed.match(/([a-f0-9]{32})/i) || trimmed.match(/([a-f0-9-]{36})/i);
+  if (urlMatch) {
+    return urlMatch[1].replace(/-/g, '');
+  }
+  return trimmed.replace(/-/g, '');
 }
 
-export async function pushNoteToNotion(note: StickleNote, _config: NotionConfig): Promise<string> {
-  // Stub for Phase 4 Notion integration
-  console.log('[Stickle Notion] Pushing note to Notion:', note.id);
-  return 'notion-page-id-placeholder';
+async function fetchWithRetry(
+  url: string,
+  options: RequestInit,
+  maxRetries = 3
+): Promise<Response> {
+  let attempt = 0;
+  while (attempt <= maxRetries) {
+    const res = await fetch(url, options);
+    if (res.status === 429 && attempt < maxRetries) {
+      const retryAfterHeader = res.headers.get('Retry-After');
+      const delay = retryAfterHeader
+        ? parseInt(retryAfterHeader, 10) * 1000
+        : Math.pow(2, attempt) * 500;
+      await new Promise((resolve) => setTimeout(resolve, delay));
+      attempt++;
+      continue;
+    }
+    return res;
+  }
+  throw new Error('Max retries exceeded');
+}
+
+export async function testNotionConnection(
+  config: NotionConfig
+): Promise<{ success: boolean; error?: string }> {
+  if (!config.apiKey.trim()) {
+    return { success: false, error: 'Integration Token is required.' };
+  }
+  if (!config.databaseId.trim()) {
+    return { success: false, error: 'Database ID is required.' };
+  }
+
+  const dbId = cleanDatabaseId(config.databaseId);
+
+  try {
+    const res = await fetchWithRetry(`https://api.notion.com/v1/databases/${dbId}`, {
+      method: 'GET',
+      headers: {
+        Authorization: `Bearer ${config.apiKey.trim()}`,
+        'Notion-Version': NOTION_VERSION,
+      },
+    });
+
+    if (res.ok) {
+      return { success: true };
+    }
+
+    const errorData = await res.json().catch(() => ({}));
+    const message = errorData.message || `Notion API returned status ${res.status}`;
+    return { success: false, error: message };
+  } catch (err: any) {
+    return {
+      success: false,
+      error: err.message || 'Failed to connect to Notion API. Check your internet connection.',
+    };
+  }
+}
+
+export async function pushNoteToNotion(
+  note: StickleNote,
+  config: NotionConfig
+): Promise<string> {
+  if (!config.apiKey.trim() || !config.databaseId.trim()) {
+    throw new Error('Notion settings incomplete. Please set Integration Token and Database ID.');
+  }
+
+  const dbId = cleanDatabaseId(config.databaseId);
+  const headers = {
+    Authorization: `Bearer ${config.apiKey.trim()}`,
+    'Notion-Version': NOTION_VERSION,
+    'Content-Type': 'application/json',
+  };
+
+  const formattedDate = new Date(note.createdAt).toISOString();
+  const titleText = note.pageTitle || note.url;
+
+  if (note.syncedToNotion && note.notionPageId) {
+    // Update existing Notion page properties
+    const updateUrl = `https://api.notion.com/v1/pages/${note.notionPageId}`;
+    const updateBody = {
+      properties: {
+        Name: {
+          title: [{ text: { content: titleText } }],
+        },
+        URL: {
+          url: note.url,
+        },
+      },
+    };
+
+    const res = await fetchWithRetry(updateUrl, {
+      method: 'PATCH',
+      headers,
+      body: JSON.stringify(updateBody),
+    });
+
+    if (!res.ok) {
+      const errJson = await res.json().catch(() => ({}));
+      throw new Error(errJson.message || `Failed to update Notion page (${res.status})`);
+    }
+
+    // Append updated content as a new block paragraph to Notion page
+    const appendBlocksUrl = `https://api.notion.com/v1/blocks/${note.notionPageId}/children`;
+    await fetchWithRetry(appendBlocksUrl, {
+      method: 'PATCH',
+      headers,
+      body: JSON.stringify({
+        children: [
+          {
+            object: 'block',
+            type: 'paragraph',
+            paragraph: {
+              rich_text: [
+                {
+                  text: {
+                    content: `[Updated Note]: ${note.content}`,
+                  },
+                },
+              ],
+            },
+          },
+        ],
+      }),
+    }).catch(() => {}); // Non-critical block append
+
+    await updateNote(note.id, {
+      syncedToNotion: true,
+      updatedAt: Date.now(),
+    });
+
+    return note.notionPageId;
+  } else {
+    // Create new Notion page in database
+    const createUrl = 'https://api.notion.com/v1/pages';
+    const createBody = {
+      parent: { database_id: dbId },
+      properties: {
+        Name: {
+          title: [{ text: { content: titleText } }],
+        },
+        URL: {
+          url: note.url,
+        },
+      },
+      children: [
+        {
+          object: 'block',
+          type: 'paragraph',
+          paragraph: {
+            rich_text: [
+              {
+                text: {
+                  content: note.content,
+                },
+              },
+            ],
+          },
+        },
+        {
+          object: 'block',
+          type: 'callout',
+          callout: {
+            icon: { emoji: '📌' },
+            rich_text: [
+              {
+                text: {
+                  content: `Created via Stickle on ${formattedDate} | Anchor: ${note.anchor.tier}`,
+                },
+              },
+            ],
+          },
+        },
+      ],
+    };
+
+    const res = await fetchWithRetry(createUrl, {
+      method: 'POST',
+      headers,
+      body: JSON.stringify(createBody),
+    });
+
+    if (!res.ok) {
+      const errJson = await res.json().catch(() => ({}));
+      throw new Error(errJson.message || `Failed to create Notion page (${res.status})`);
+    }
+
+    const responseData = await res.json();
+    const notionPageId = responseData.id;
+
+    await updateNote(note.id, {
+      syncedToNotion: true,
+      notionPageId,
+      updatedAt: Date.now(),
+    });
+
+    return notionPageId;
+  }
+}
+
+export async function exportUnsyncedNotesBatch(
+  notes: StickleNote[],
+  config: NotionConfig,
+  onProgress?: (completed: number, total: number) => void
+): Promise<{ successCount: number; failCount: number }> {
+  const unsynced = notes.filter((n) => !n.syncedToNotion);
+  let successCount = 0;
+  let failCount = 0;
+
+  for (let i = 0; i < unsynced.length; i++) {
+    try {
+      await pushNoteToNotion(unsynced[i], config);
+      successCount++;
+    } catch {
+      failCount++;
+    }
+    if (onProgress) {
+      onProgress(i + 1, unsynced.length);
+    }
+  }
+
+  return { successCount, failCount };
 }

@@ -21,3 +21,9 @@ export interface StickleNote {
   syncedToNotion: boolean;
   notionPageId?: string;
 }
+
+export interface NotionConfig {
+  apiKey: string;
+  databaseId: string;
+}
+

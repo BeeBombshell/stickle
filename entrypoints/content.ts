@@ -3,6 +3,8 @@ import { render, h } from 'preact';
 import { NoteBubble } from '../components/NoteBubble';
 import { createAnchor, resolveAnchor } from '../lib/anchoring';
 import { createNote, getNotesForUrl, updateNote, deleteNote } from '../lib/db';
+import { loadSettings } from '../components/Settings';
+import { pushNoteToNotion } from '../lib/notion';
 import type { StickleNote } from '../lib/types';
 
 export default defineContentScript({
@@ -181,6 +183,20 @@ export default defineContentScript({
         mountedNotes.delete(note.id);
       };
 
+      const handleExportNotion = async () => {
+        try {
+          const config = await loadSettings();
+          if (!config.apiKey || !config.databaseId) {
+            alert('Please configure Notion Integration Token and Database ID in Stickle extension settings.');
+            return;
+          }
+          await pushNoteToNotion(note, config);
+          refreshNotes();
+        } catch (err: any) {
+          alert(`Notion Export Failed: ${err.message}`);
+        }
+      };
+
       let dragStartPosX = posX;
       let dragStartPosY = posY;
 
@@ -222,6 +238,7 @@ export default defineContentScript({
           note,
           onSave: handleSave,
           onDelete: handleDelete,
+          onExportNotion: handleExportNotion,
           onDragStart: handleDragStart,
           onDrag: handleDrag,
           onDragEnd: handleDragEnd,
@@ -231,6 +248,7 @@ export default defineContentScript({
     }
   },
 });
+
 
 function normalizeUrl(url: string): string {
   try {

@@ -1,6 +1,8 @@
 import { useState } from 'preact/hooks';
 import type { StickleNote } from '../lib/types';
 import { updateNote, deleteNote } from '../lib/db';
+import { loadSettings } from './Settings';
+import { pushNoteToNotion, exportUnsyncedNotesBatch } from '../lib/notion';
 
 export type DateFilter = 'all' | 'today' | 'week';
 
@@ -96,9 +98,13 @@ export function NoteSidebar({ notes, onNoteChange, onSelectNote }: NoteSidebarPr
   const [dateFilter, setDateFilter] = useState<DateFilter>('all');
   const [editingId, setEditingId] = useState<string | null>(null);
   const [editContent, setEditContent] = useState('');
+  const [exportingId, setExportingId] = useState<string | null>(null);
+  const [isBatchExporting, setIsBatchExporting] = useState(false);
+  const [syncStatusMsg, setSyncStatusMsg] = useState<string | null>(null);
 
   const filtered = filterNotes(notes, searchQuery, dateFilter);
   const grouped = groupNotesByDomain(filtered);
+  const unsyncedCount = notes.filter((n) => !n.syncedToNotion).length;
 
   const handleStartEdit = (note: StickleNote, e: Event) => {
     e.stopPropagation();
@@ -128,6 +134,53 @@ export function NoteSidebar({ notes, onNoteChange, onSelectNote }: NoteSidebarPr
     }
   };
 
+  const handleExportNote = async (note: StickleNote, e: Event) => {
+    e.stopPropagation();
+    const config = await loadSettings();
+    if (!config.apiKey || !config.databaseId) {
+      setSyncStatusMsg('Configure Notion integration in Settings first.');
+      return;
+    }
+
+    setExportingId(note.id);
+    setSyncStatusMsg(null);
+
+    try {
+      await pushNoteToNotion(note, config);
+      setSyncStatusMsg('Exported note to Notion!');
+      onNoteChange?.();
+    } catch (err: any) {
+      setSyncStatusMsg(`Export failed: ${err.message}`);
+    } finally {
+      setExportingId(null);
+    }
+  };
+
+  const handleBatchExport = async () => {
+    const config = await loadSettings();
+    if (!config.apiKey || !config.databaseId) {
+      setSyncStatusMsg('Configure Notion integration in Settings first.');
+      return;
+    }
+
+    setIsBatchExporting(true);
+    setSyncStatusMsg('Exporting unsynced notes to Notion...');
+
+    try {
+      const result = await exportUnsyncedNotesBatch(notes, config, (current, total) => {
+        setSyncStatusMsg(`Exporting note ${current} of ${total}...`);
+      });
+      setSyncStatusMsg(
+        `Batch export complete: ${result.successCount} exported, ${result.failCount} failed.`
+      );
+      onNoteChange?.();
+    } catch (err: any) {
+      setSyncStatusMsg(`Batch export failed: ${err.message}`);
+    } finally {
+      setIsBatchExporting(false);
+    }
+  };
+
   const handleCardClick = (note: StickleNote) => {
     if (editingId === note.id) return;
     onSelectNote?.(note);
@@ -136,7 +189,7 @@ export function NoteSidebar({ notes, onNoteChange, onSelectNote }: NoteSidebarPr
 
   return (
     <div style={sidebarStyles.container}>
-      {/* Controls Bar: Search & Date Filters */}
+      {/* Controls Bar: Search, Date Filters & Batch Notion Action */}
       <div style={sidebarStyles.controlsBar}>
         <input
           type="text"
@@ -146,26 +199,42 @@ export function NoteSidebar({ notes, onNoteChange, onSelectNote }: NoteSidebarPr
           style={sidebarStyles.searchInput}
         />
 
-        <div style={sidebarStyles.filterGroup}>
-          <button
-            style={dateFilter === 'all' ? sidebarStyles.filterPillActive : sidebarStyles.filterPill}
-            onClick={() => setDateFilter('all')}
-          >
-            All
-          </button>
-          <button
-            style={dateFilter === 'today' ? sidebarStyles.filterPillActive : sidebarStyles.filterPill}
-            onClick={() => setDateFilter('today')}
-          >
-            Today
-          </button>
-          <button
-            style={dateFilter === 'week' ? sidebarStyles.filterPillActive : sidebarStyles.filterPill}
-            onClick={() => setDateFilter('week')}
-          >
-            This Week
-          </button>
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: '6px' }}>
+          <div style={sidebarStyles.filterGroup}>
+            <button
+              style={dateFilter === 'all' ? sidebarStyles.filterPillActive : sidebarStyles.filterPill}
+              onClick={() => setDateFilter('all')}
+            >
+              All
+            </button>
+            <button
+              style={dateFilter === 'today' ? sidebarStyles.filterPillActive : sidebarStyles.filterPill}
+              onClick={() => setDateFilter('today')}
+            >
+              Today
+            </button>
+            <button
+              style={dateFilter === 'week' ? sidebarStyles.filterPillActive : sidebarStyles.filterPill}
+              onClick={() => setDateFilter('week')}
+            >
+              This Week
+            </button>
+          </div>
+
+          {unsyncedCount > 0 && (
+            <button
+              style={sidebarStyles.batchExportBtn}
+              onClick={handleBatchExport}
+              disabled={isBatchExporting}
+            >
+              {isBatchExporting ? 'Exporting...' : `Export All (${unsyncedCount})`}
+            </button>
+          )}
         </div>
+
+        {syncStatusMsg && (
+          <div style={sidebarStyles.syncStatusBanner}>{syncStatusMsg}</div>
+        )}
       </div>
 
       {/* Main Notes List */}
@@ -191,6 +260,7 @@ export function NoteSidebar({ notes, onNoteChange, onSelectNote }: NoteSidebarPr
               <div style={sidebarStyles.cardList}>
                 {domainNotes.map((note) => {
                   const isEditing = editingId === note.id;
+                  const isExporting = exportingId === note.id;
                   const dateStr = new Date(note.createdAt).toLocaleDateString(undefined, {
                     month: 'short',
                     day: 'numeric',
@@ -206,7 +276,14 @@ export function NoteSidebar({ notes, onNoteChange, onSelectNote }: NoteSidebarPr
                     >
                       <div style={sidebarStyles.cardHeader}>
                         <span style={sidebarStyles.pageTitle}>{note.pageTitle || 'Untitled Page'}</span>
-                        <span style={getTierBadgeStyle(note.anchor.tier)}>{note.anchor.tier}</span>
+                        <div style={{ display: 'flex', gap: '4px', alignItems: 'center' }}>
+                          {note.syncedToNotion && (
+                            <span style={sidebarStyles.syncedTag} title="Synced to Notion">
+                              ✓ Notion
+                            </span>
+                          )}
+                          <span style={getTierBadgeStyle(note.anchor.tier)}>{note.anchor.tier}</span>
+                        </div>
                       </div>
 
                       {isEditing ? (
@@ -238,12 +315,21 @@ export function NoteSidebar({ notes, onNoteChange, onSelectNote }: NoteSidebarPr
 
                         <div style={sidebarStyles.actionGroup}>
                           {!isEditing && (
-                            <button
-                              style={sidebarStyles.actionBtn}
-                              onClick={(e) => handleStartEdit(note, e)}
-                            >
-                              Edit
-                            </button>
+                            <>
+                              <button
+                                style={sidebarStyles.notionExportBtn}
+                                onClick={(e) => handleExportNote(note, e)}
+                                disabled={isExporting}
+                              >
+                                {isExporting ? 'Exporting...' : note.syncedToNotion ? 'Re-sync Notion' : 'Export Notion'}
+                              </button>
+                              <button
+                                style={sidebarStyles.actionBtn}
+                                onClick={(e) => handleStartEdit(note, e)}
+                              >
+                                Edit
+                              </button>
+                            </>
                           )}
                           <button
                             style={sidebarStyles.deleteBtn}
@@ -264,6 +350,7 @@ export function NoteSidebar({ notes, onNoteChange, onSelectNote }: NoteSidebarPr
     </div>
   );
 }
+
 
 function getTierBadgeStyle(tier: string) {
   const base = {
@@ -477,4 +564,41 @@ const sidebarStyles = {
     cursor: 'pointer',
     padding: 0,
   },
+  batchExportBtn: {
+    padding: '3px 8px',
+    borderRadius: 'var(--radius-pill)',
+    backgroundColor: 'var(--color-block-lime)',
+    border: '1px solid var(--color-hairline)',
+    fontSize: '10px',
+    fontWeight: '600' as const,
+    color: '#3d4400',
+    cursor: 'pointer',
+  },
+  syncStatusBanner: {
+    padding: '6px 10px',
+    borderRadius: 'var(--radius-md)',
+    backgroundColor: 'var(--color-surface-soft)',
+    fontSize: '11px',
+    color: 'var(--color-ink)',
+    lineHeight: '1.3',
+  },
+  syncedTag: {
+    fontSize: '9px',
+    fontFamily: 'var(--font-mono)',
+    padding: '2px 5px',
+    borderRadius: 'var(--radius-sm)',
+    backgroundColor: '#dcfce7',
+    color: '#15803d',
+    fontWeight: '600' as const,
+  },
+  notionExportBtn: {
+    fontSize: '11px',
+    color: '#2563eb',
+    border: 'none',
+    background: 'none',
+    cursor: 'pointer',
+    padding: 0,
+    fontWeight: '500' as const,
+  },
 };
+

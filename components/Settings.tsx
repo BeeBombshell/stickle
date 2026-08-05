@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'preact/hooks';
+import { testNotionConnection } from '../lib/notion';
 
 export interface NotionSettings {
   apiKey: string;
@@ -44,6 +45,7 @@ export function saveSettings(settings: NotionSettings): Promise<void> {
 export function Settings() {
   const [apiKey, setApiKey] = useState('');
   const [databaseId, setDatabaseId] = useState('');
+  const [isTesting, setIsTesting] = useState(false);
   const [status, setStatus] = useState<{ type: 'success' | 'error'; message: string } | null>(null);
 
   useEffect(() => {
@@ -62,11 +64,26 @@ export function Settings() {
       return;
     }
 
-    await saveSettings({ apiKey: apiKey.trim(), databaseId: databaseId.trim() });
-    setStatus({
-      type: 'success',
-      message: 'Settings saved! Notion connection configuration ready.',
-    });
+    setIsTesting(true);
+    setStatus(null);
+
+    const config = { apiKey: apiKey.trim(), databaseId: databaseId.trim() };
+    await saveSettings(config);
+
+    const testRes = await testNotionConnection(config);
+    setIsTesting(false);
+
+    if (testRes.success) {
+      setStatus({
+        type: 'success',
+        message: 'Connection verified! Saved settings successfully.',
+      });
+    } else {
+      setStatus({
+        type: 'error',
+        message: `Saved settings, but connection test failed: ${testRes.error}`,
+      });
+    }
   };
 
   return (
@@ -92,14 +109,19 @@ export function Settings() {
         <input
           type="text"
           style={settingsStyles.input}
-          placeholder="32-character database ID"
+          placeholder="32-character database ID or database URL"
           value={databaseId}
           onInput={(e) => setDatabaseId((e.target as HTMLInputElement).value)}
         />
       </div>
 
-      <button className="btn-pill btn-secondary" onClick={handleSaveAndTest} style={{ marginTop: '6px', width: '100%' }}>
-        Save & Test Connection
+      <button
+        className="btn-pill btn-secondary"
+        onClick={handleSaveAndTest}
+        disabled={isTesting}
+        style={{ marginTop: '6px', width: '100%', opacity: isTesting ? 0.7 : 1 }}
+      >
+        {isTesting ? 'Testing Connection...' : 'Save & Test Connection'}
       </button>
 
       {status && (
@@ -117,6 +139,7 @@ export function Settings() {
     </div>
   );
 }
+
 
 const settingsStyles = {
   container: {
