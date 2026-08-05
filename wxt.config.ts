@@ -13,8 +13,10 @@ export default defineConfig({
     name: 'Stickle — Web Note Anchoring',
     description: 'Anchor persistent floating sticky notes directly to dynamic web content',
     permissions: ['storage', 'activeTab', 'scripting'],
+    host_permissions: ['https://api.notion.com/*'],
     action: {
       default_title: 'Stickle Notes Manager',
     },
   },
+
 });

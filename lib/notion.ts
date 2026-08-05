@@ -35,7 +35,7 @@ async function fetchWithRetry(
   throw new Error('Max retries exceeded');
 }
 
-export async function testNotionConnection(
+export async function testNotionConnectionDirect(
   config: NotionConfig
 ): Promise<{ success: boolean; error?: string }> {
   if (!config.apiKey.trim()) {
@@ -71,7 +71,7 @@ export async function testNotionConnection(
   }
 }
 
-export async function pushNoteToNotion(
+export async function pushNoteToNotionDirect(
   note: StickleNote,
   config: NotionConfig
 ): Promise<string> {
@@ -212,7 +212,7 @@ export async function pushNoteToNotion(
   }
 }
 
-export async function exportUnsyncedNotesBatch(
+export async function exportUnsyncedNotesBatchDirect(
   notes: StickleNote[],
   config: NotionConfig,
   onProgress?: (completed: number, total: number) => void
@@ -223,7 +223,7 @@ export async function exportUnsyncedNotesBatch(
 
   for (let i = 0; i < unsynced.length; i++) {
     try {
-      await pushNoteToNotion(unsynced[i], config);
+      await pushNoteToNotionDirect(unsynced[i], config);
       successCount++;
     } catch {
       failCount++;
@@ -234,4 +234,82 @@ export async function exportUnsyncedNotesBatch(
   }
 
   return { successCount, failCount };
+}
+
+// Background Proxy Routing wrappers to bypass CORS in Content Script & Popup contexts
+function shouldRouteThroughBackground(): boolean {
+  return (
+    typeof window !== 'undefined' &&
+    typeof chrome !== 'undefined' &&
+    Boolean(chrome.runtime?.sendMessage)
+  );
+}
+
+export async function testNotionConnection(
+  config: NotionConfig
+): Promise<{ success: boolean; error?: string }> {
+  if (shouldRouteThroughBackground()) {
+    return new Promise((resolve) => {
+      chrome.runtime.sendMessage(
+        { type: 'NOTION_TEST_CONNECTION', config },
+        (response) => {
+          if (chrome.runtime.lastError) {
+            resolve({ success: false, error: chrome.runtime.lastError.message });
+          } else if (response?.success) {
+            resolve(response.result);
+          } else {
+            resolve({ success: false, error: response?.error || 'Background message failed' });
+          }
+        }
+      );
+    });
+  }
+  return testNotionConnectionDirect(config);
+}
+
+export async function pushNoteToNotion(
+  note: StickleNote,
+  config: NotionConfig
+): Promise<string> {
+  if (shouldRouteThroughBackground()) {
+    return new Promise((resolve, reject) => {
+      chrome.runtime.sendMessage(
+        { type: 'NOTION_PUSH_NOTE', note, config },
+        (response) => {
+          if (chrome.runtime.lastError) {
+            reject(new Error(chrome.runtime.lastError.message));
+          } else if (response?.success) {
+            resolve(response.notionPageId);
+          } else {
+            reject(new Error(response?.error || 'Background export failed'));
+          }
+        }
+      );
+    });
+  }
+  return pushNoteToNotionDirect(note, config);
+}
+
+export async function exportUnsyncedNotesBatch(
+  notes: StickleNote[],
+  config: NotionConfig,
+  onProgress?: (completed: number, total: number) => void
+): Promise<{ successCount: number; failCount: number }> {
+  if (shouldRouteThroughBackground()) {
+    return new Promise((resolve, reject) => {
+      chrome.runtime.sendMessage(
+        { type: 'NOTION_EXPORT_BATCH', notes, config },
+        (response) => {
+          if (chrome.runtime.lastError) {
+            reject(new Error(chrome.runtime.lastError.message));
+          } else if (response?.success) {
+            resolve(response.result);
+          } else {
+            reject(new Error(response?.error || 'Background batch export failed'));
+          }
+        }
+      );
+    });
+  }
+  return exportUnsyncedNotesBatchDirect(notes, config, onProgress);
 }

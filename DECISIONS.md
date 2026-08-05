@@ -74,5 +74,10 @@ This log records non-trivial decisions made during the development of Stickle.
 - **Decision:** Wrapped all Notion API calls in `fetchWithRetry` with exponential backoff (`Math.pow(2, attempt) * 500ms`) and `Retry-After` header parsing up to 3 retries.
 - **Rationale:** Ensures resilient batch exporting without failing user requests due to Notion rate limiting.
 
+### 15. Background Service Worker Proxying for CORS Bypass
+- **Decision:** Added `host_permissions: ['https://api.notion.com/*']` in manifest and routed content script / popup Notion API requests through `entrypoints/background.ts` via message passing.
+- **Rationale:** Browsers block cross-origin `fetch` calls to `api.notion.com` from web page content script origins. Extension background service workers with host permissions execute external API fetches without CORS restrictions.
+
+
 
 
