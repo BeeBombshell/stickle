@@ -8,18 +8,32 @@ import {
 export default defineBackground(() => {
   console.log('[Stickle Background] Service worker initialized.');
 
-  // Create context menu item on install/startup
-  chrome.runtime.onInstalled.addListener(() => {
+  // Create context menu item & handle first-run onboarding on install
+  chrome.runtime.onInstalled.addListener((details) => {
     chrome.contextMenus.create({
       id: 'stickle-add-note',
       title: '📌 Add Stickle Note Here',
       contexts: ['all'],
     });
+
+    if (details.reason === 'install') {
+      chrome.tabs.create({ url: chrome.runtime.getURL('onboarding.html') });
+    }
   });
 
   chrome.contextMenus.onClicked.addListener((info, tab) => {
     if (info.menuItemId === 'stickle-add-note' && tab?.id) {
-      chrome.tabs.sendMessage(tab.id, { type: 'TRIGGER_CREATE_NOTE' });
+      // Check if URL is restricted (e.g. chrome:// or chrome-extension://)
+      if (tab.url && (tab.url.startsWith('chrome://') || tab.url.startsWith('chrome-extension://') || tab.url.startsWith('about:'))) {
+        console.warn('[Stickle] Cannot inject content script into restricted page:', tab.url);
+        return;
+      }
+
+      chrome.tabs.sendMessage(tab.id, { type: 'TRIGGER_CREATE_NOTE' }, () => {
+        if (chrome.runtime.lastError) {
+          console.warn('[Stickle] Could not send message to tab:', chrome.runtime.lastError.message);
+        }
+      });
     }
   });
 
