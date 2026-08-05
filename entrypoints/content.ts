@@ -98,35 +98,45 @@ export default defineContentScript({
     // Re-anchor on scroll or window resize
     window.addEventListener('resize', debouncedReanchor, { passive: true });
 
-    // Listen for Alt + Click to spawn a new note at cursor position
-    window.addEventListener('click', async (e: MouseEvent) => {
-      if (!e.altKey) return;
+    // Listen for Alt + Click to spawn a new note at cursor position (use capture phase)
+    window.addEventListener(
+      'click',
+      async (e: MouseEvent) => {
+        if (!e.altKey) return;
 
-      const target = e.target as HTMLElement;
-      if (!target || hostContainer.contains(target)) return;
+        const target = e.target as HTMLElement;
+        const container = getOrCreateHostContainer();
+        if (!target || container.contains(target)) return;
 
-      e.preventDefault();
-      e.stopPropagation();
+        e.preventDefault();
+        e.stopPropagation();
 
-      const rect = target.getBoundingClientRect();
-      const offsetX = e.clientX - rect.left;
-      const offsetY = e.clientY - rect.top;
+        const rect = target.getBoundingClientRect();
+        const offsetX = e.clientX - rect.left;
+        const offsetY = e.clientY - rect.top;
 
-      const anchor = createAnchor(target, offsetX, offsetY);
-      const newNote: StickleNote = {
-        id: crypto.randomUUID(),
-        url: normalizeUrl(window.location.href),
-        pageTitle: document.title,
-        content: '',
-        anchor,
-        createdAt: Date.now(),
-        updatedAt: Date.now(),
-        syncedToNotion: false,
-      };
+        const anchor = createAnchor(target, offsetX, offsetY);
+        const newNote: StickleNote = {
+          id: crypto.randomUUID(),
+          url: normalizeUrl(window.location.href),
+          pageTitle: document.title,
+          content: '',
+          anchor,
+          createdAt: Date.now(),
+          updatedAt: Date.now(),
+          syncedToNotion: false,
+        };
 
-      await createNote(newNote);
-      renderNoteWrapper(newNote);
-    });
+        await createNote(newNote);
+        const wrapper = renderNoteWrapper(newNote);
+        setTimeout(() => {
+          const textarea = wrapper?.querySelector('textarea');
+          textarea?.focus();
+        }, 50);
+      },
+      true
+    );
+
 
     async function refreshNotes() {
       try {
@@ -165,8 +175,12 @@ export default defineContentScript({
         wrapper.id = `stickle-note-wrapper-${note.id}`;
         wrapper.style.position = 'absolute';
         wrapper.style.zIndex = '2147483647';
+        wrapper.style.pointerEvents = 'auto';
+        wrapper.style.display = 'block';
+        wrapper.style.visibility = 'visible';
         wrapper.style.colorScheme = 'light';
-        hostContainer.appendChild(wrapper);
+        const container = getOrCreateHostContainer();
+        container.appendChild(wrapper);
         mountedNotes.set(note.id, wrapper);
       }
 
@@ -176,6 +190,8 @@ export default defineContentScript({
 
       wrapper.style.left = `${posX}px`;
       wrapper.style.top = `${posY}px`;
+      wrapper.style.display = 'block';
+      wrapper.style.visibility = 'visible';
 
       const handleSave = async (content: string) => {
         note.content = content;
@@ -257,8 +273,6 @@ export default defineContentScript({
   },
 });
 
-
-
 function normalizeUrl(url: string): string {
   try {
     const parsed = new URL(url);
@@ -276,11 +290,17 @@ function getOrCreateHostContainer(): HTMLElement {
     container.style.position = 'absolute';
     container.style.top = '0';
     container.style.left = '0';
-    container.style.width = '100%';
-    container.style.pointerEvents = 'auto';
+    container.style.width = '0';
+    container.style.height = '0';
+    container.style.overflow = 'visible';
+    container.style.pointerEvents = 'none';
     container.style.zIndex = '2147483646';
     container.style.colorScheme = 'light';
-    document.body.appendChild(container);
+    const parent = document.body || document.documentElement;
+    if (parent) {
+      parent.appendChild(container);
+    }
   }
   return container;
 }
+

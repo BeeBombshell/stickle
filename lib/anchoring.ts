@@ -88,6 +88,17 @@ export function resolveAnchor(anchor: NoteAnchor): ResolvedAnchor {
   const scrollX = typeof window !== 'undefined' ? window.scrollX : 0;
   const scrollY = typeof window !== 'undefined' ? window.scrollY : 0;
 
+  const bodyRect =
+    typeof document !== 'undefined' && (document.body || document.documentElement)
+      ? (document.body || document.documentElement).getBoundingClientRect()
+      : { left: 0, top: 0 };
+
+  const bodyLeft = scrollX + bodyRect.left;
+  const bodyTop = scrollY + bodyRect.top;
+
+  const computeX = (rectLeft: number) => Math.max(10, scrollX + rectLeft - bodyLeft + anchor.offsetX);
+  const computeY = (rectTop: number) => Math.max(10, scrollY + rectTop - bodyTop + anchor.offsetY);
+
   // Tier 1: Exact CSS selector
   if (anchor.cssSelector && typeof document !== 'undefined') {
     try {
@@ -96,8 +107,8 @@ export function resolveAnchor(anchor: NoteAnchor): ResolvedAnchor {
         const rect = el.getBoundingClientRect();
         return {
           element: el,
-          x: scrollX + rect.left + anchor.offsetX,
-          y: scrollY + rect.top + anchor.offsetY,
+          x: computeX(rect.left),
+          y: computeY(rect.top),
           tier: 'selector',
         };
       }
@@ -130,8 +141,8 @@ export function resolveAnchor(anchor: NoteAnchor): ResolvedAnchor {
         const rect = candidate.getBoundingClientRect();
         return {
           element: candidate,
-          x: scrollX + rect.left + anchor.offsetX,
-          y: scrollY + rect.top + anchor.offsetY,
+          x: computeX(rect.left),
+          y: computeY(rect.top),
           tier: 'text-fragment',
         };
       }
@@ -162,8 +173,8 @@ export function resolveAnchor(anchor: NoteAnchor): ResolvedAnchor {
       const rect = bestMatch.getBoundingClientRect();
       return {
         element: bestMatch,
-        x: scrollX + rect.left + anchor.offsetX,
-        y: scrollY + rect.top + anchor.offsetY,
+        x: computeX(rect.left),
+        y: computeY(rect.top),
         tier: 'fuzzy',
       };
     }
@@ -172,11 +183,12 @@ export function resolveAnchor(anchor: NoteAnchor): ResolvedAnchor {
   // Tier 4 Degraded: Unanchored
   return {
     element: null,
-    x: 20,
-    y: 20,
+    x: Math.max(20, (typeof window !== 'undefined' ? window.innerWidth : 800) / 2 - 120),
+    y: Math.max(40, (typeof window !== 'undefined' ? window.innerHeight : 600) / 4),
     tier: 'unanchored',
   };
 }
+
 
 function getSimpleCssSelector(el: Element): string {
   if (typeof document !== 'undefined') {
