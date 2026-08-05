@@ -39,13 +39,13 @@ export function App() {
     if (typeof chrome !== 'undefined' && chrome.runtime?.sendMessage) {
       chrome.runtime.sendMessage({ type: 'PING' }, (res) => {
         if (res?.type === 'PONG') {
-          setPingStatus('Active Worker Connected');
+          setPingStatus('Ready');
         } else {
-          setPingStatus('Extension Mode');
+          setPingStatus('Active');
         }
       });
     } else {
-      setPingStatus('Dev Standalone');
+      setPingStatus('Dev Mode');
     }
 
     reloadNotes();
