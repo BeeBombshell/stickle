@@ -303,33 +303,19 @@ export function NoteSidebar({ notes, onNoteChange, onSelectNote }: NoteSidebarPr
             </button>
           </div>
 
-          <div style={{ display: 'flex', gap: '4px', alignItems: 'center' }}>
-            <label style={sidebarStyles.jsonBtn}>
-              📥 Import JSON
-              <input
-                type="file"
-                accept=".json"
-                onChange={handleImportFileChange}
-                style={{ display: 'none' }}
-              />
-            </label>
-            <button style={sidebarStyles.jsonBtn} onClick={handleExportJson} title="Export all notes to portable JSON format">
-              📤 Export JSON
+          {hasNotionConfig && (
+            <button
+              style={sidebarStyles.notionBatchBtn}
+              onClick={handleBatchExport}
+              disabled={isBatchExporting || unsyncedCount === 0}
+            >
+              {isBatchExporting
+                ? 'Syncing...'
+                : unsyncedCount > 0
+                ? `Sync ${unsyncedCount} to Notion`
+                : 'All Synced ✓'}
             </button>
-            {hasNotionConfig && (
-              <button
-                style={sidebarStyles.notionBatchBtn}
-                onClick={handleBatchExport}
-                disabled={isBatchExporting || unsyncedCount === 0}
-              >
-                {isBatchExporting
-                  ? 'Syncing...'
-                  : unsyncedCount > 0
-                  ? `Sync ${unsyncedCount} to Notion`
-                  : 'All Synced ✓'}
-              </button>
-            )}
-          </div>
+          )}
         </div>
 
         {syncStatusMsg && (
