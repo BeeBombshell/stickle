@@ -46,8 +46,8 @@ export function NoteBubble({
   const dragStartRef = useRef<{ x: number; y: number } | null>(null);
   const hasDraggedRef = useRef(false);
 
-  const noteColor = note.color || 'cream';
-  const theme = COLOR_SWATCHES[noteColor] || COLOR_SWATCHES.cream;
+  const noteColor = note.color || 'lime';
+  const theme = COLOR_SWATCHES[noteColor] || COLOR_SWATCHES.lime;
 
   useEffect(() => {
     setContent(note.content);
@@ -164,7 +164,7 @@ export function NoteBubble({
           strokeWidth="2.5"
           strokeLinecap="round"
           strokeLinejoin="round"
-          style={{ flexShrink: 0, opacity: 0.9 }}
+          style={{ flexShrink: 0, opacity: 0.65 }}
         >
           <circle cx="12" cy="6" r="3" fill="currentColor" />
           <line x1="12" y1="9" x2="12" y2="20" />
@@ -187,7 +187,10 @@ export function NoteBubble({
           style={{ ...chipStyles.iconBtn, color: theme.text }}
           title="Expand note"
         >
-          +
+          <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+            <line x1="12" y1="5" x2="12" y2="19" />
+            <line x1="5" y1="12" x2="19" y2="12" />
+          </svg>
         </button>
       </div>
     );
@@ -213,8 +216,15 @@ export function NoteBubble({
         onPointerUp={handlePointerUp}
       >
         <div style={bubbleStyles.headerLeft}>
-          <span style={{ ...bubbleStyles.dragGrip, color: noteColor === 'navy' ? '#a1a1aa' : '#71717a' }} title="Drag to reposition note">
-            ⋮⋮
+          <span style={{ ...bubbleStyles.dragGrip, color: theme.text }} title="Drag to reposition note">
+            <svg width="12" height="12" viewBox="0 0 24 24" fill="currentColor">
+              <circle cx="8" cy="5" r="2.2" />
+              <circle cx="16" cy="5" r="2.2" />
+              <circle cx="8" cy="12" r="2.2" />
+              <circle cx="16" cy="12" r="2.2" />
+              <circle cx="8" cy="19" r="2.2" />
+              <circle cx="16" cy="19" r="2.2" />
+            </svg>
           </span>
           {note.syncedToNotion && (
             <span
@@ -226,27 +236,26 @@ export function NoteBubble({
             </span>
           )}
         </div>
-        <div style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: '2px' }}>
           <button
             onClick={() => setShowPalette(!showPalette)}
-            style={bubbleStyles.colorSwatchBtn}
+            style={{ ...bubbleStyles.iconBtn, color: theme.text }}
             title="Change background color"
           >
-            <span
-              style={{
-                display: 'block',
-                width: '12px',
-                height: '12px',
-                borderRadius: '50%',
-                backgroundColor: theme.bg,
-                border: noteColor === 'navy' ? '1.5px solid #ffffff' : '1.5px solid rgba(0,0,0,0.3)',
-                boxSizing: 'border-box',
-              }}
-            />
+            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+              <circle cx="12" cy="12" r="9" />
+              <circle cx="8" cy="9" r="1.5" fill="currentColor" />
+              <circle cx="12" cy="7" r="1.5" fill="currentColor" />
+              <circle cx="16" cy="9" r="1.5" fill="currentColor" />
+            </svg>
           </button>
           <button
             onClick={() => setConfirmDelete(!confirmDelete)}
-            style={{ ...bubbleStyles.iconBtn, color: confirmDelete ? '#ef4444' : theme.text }}
+            style={{
+              ...bubbleStyles.iconBtn,
+              color: confirmDelete ? '#ef4444' : theme.text,
+              opacity: confirmDelete ? 1.0 : undefined,
+            }}
             title="Delete note"
           >
             <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
@@ -259,7 +268,9 @@ export function NoteBubble({
             style={{ ...bubbleStyles.iconBtn, color: theme.text }}
             title="Minimize note"
           >
-            ✕
+            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
+              <line x1="5" y1="12" x2="19" y2="12" />
+            </svg>
           </button>
         </div>
       </div>
@@ -346,7 +357,10 @@ export function NoteBubble({
               style={{ ...bubbleStyles.tagRemoveBtn, color: theme.text }}
               title="Remove tag"
             >
-              ✕
+              <svg width="9" height="9" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                <line x1="18" y1="6" x2="6" y2="18" />
+                <line x1="6" y1="6" x2="18" y2="18" />
+              </svg>
             </button>
           </span>
         ))}
@@ -405,22 +419,17 @@ const chipStyles = {
     backgroundColor: '#15803d',
     display: 'inline-block',
   },
-  expandBtn: {
-    background: 'none',
-    border: 'none',
-    cursor: 'pointer',
-    fontSize: '14px',
-    lineHeight: '1',
-    padding: '0 2px',
-    fontWeight: 'bold' as const,
-  },
   iconBtn: {
     background: 'none',
     border: 'none',
     cursor: 'pointer',
-    fontSize: '12px',
-    padding: '2px 3px',
-    lineHeight: '1',
+    width: '18px',
+    height: '18px',
+    padding: '0',
+    display: 'inline-flex',
+    alignItems: 'center',
+    justifyContent: 'center',
+    opacity: 0.65,
   },
 };
 
@@ -448,11 +457,13 @@ const bubbleStyles = {
     gap: '6px',
   },
   dragGrip: {
-    fontSize: '12px',
-    fontWeight: 'bold' as const,
-    letterSpacing: '1px',
-    lineHeight: '1',
+    display: 'inline-flex',
+    alignItems: 'center',
+    justifyContent: 'center',
+    width: '16px',
+    height: '16px',
     cursor: 'grab',
+    opacity: 0.65,
   },
   syncedIndicator: {
     display: 'inline-flex',
@@ -474,26 +485,20 @@ const bubbleStyles = {
     backgroundColor: '#16a34a',
     display: 'inline-block',
   },
-  colorSwatchBtn: {
-    background: 'none',
-    border: 'none',
-    cursor: 'pointer',
-    padding: '2px',
-    display: 'inline-flex',
-    alignItems: 'center',
-    justifyContent: 'center',
-    lineHeight: '1',
-  },
   iconBtn: {
     background: 'none',
     border: 'none',
     cursor: 'pointer',
-    fontSize: '12px',
-    padding: '2px 3px',
+    width: '20px',
+    height: '20px',
+    padding: '0',
+    borderRadius: '4px',
     lineHeight: '1',
     display: 'inline-flex',
     alignItems: 'center',
     justifyContent: 'center',
+    opacity: 0.65,
+    transition: 'opacity 0.15s ease, background-color 0.15s ease',
   },
   palettePopover: {
     display: 'flex',
@@ -576,9 +581,8 @@ const bubbleStyles = {
     border: 'none',
     cursor: 'pointer',
     padding: '0',
-    fontSize: '9px',
     lineHeight: '1',
-    opacity: '0.6',
+    opacity: 0.65,
     display: 'inline-flex',
     alignItems: 'center',
     justifyContent: 'center',
