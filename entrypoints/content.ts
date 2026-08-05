@@ -39,13 +39,13 @@ export default defineContentScript({
     });
 
     if (typeof chrome !== 'undefined' && chrome.runtime?.onMessage) {
-      chrome.runtime.onMessage.addListener(async (msg) => {
+      chrome.runtime.onMessage.addListener(async (msg, _sender, sendResponse) => {
         if (msg?.type === 'TRIGGER_CREATE_NOTE') {
           const target = document.body;
           if (!target) return;
           const rect = target.getBoundingClientRect();
-          const offsetX = Math.max(20, window.innerWidth / 2 - rect.left - 100);
-          const offsetY = Math.max(20, window.innerHeight / 3 - rect.top);
+          const offsetX = Math.max(20, (window.innerWidth || 800) / 2 - rect.left - 100);
+          const offsetY = Math.max(20, (window.innerHeight || 600) / 3 - rect.top);
           const anchor = createAnchor(target, offsetX, offsetY);
           const newNote: StickleNote = {
             id: crypto.randomUUID(),
@@ -58,10 +58,16 @@ export default defineContentScript({
             syncedToNotion: false,
           };
           await createNote(newNote);
-          renderNoteWrapper(newNote);
+          const wrapper = renderNoteWrapper(newNote);
+          setTimeout(() => {
+            const textarea = wrapper?.querySelector('textarea');
+            textarea?.focus();
+          }, 50);
+          sendResponse?.({ success: true, noteId: newNote.id });
         }
       });
     }
+
 
     // Debounced automatic re-anchoring on DOM mutation (SPA re-renders, dynamic feeds)
     let reanchorTimeout: any = null;
@@ -245,9 +251,12 @@ export default defineContentScript({
         }),
         wrapper
       );
+
+      return wrapper;
     }
   },
 });
+
 
 
 function normalizeUrl(url: string): string {

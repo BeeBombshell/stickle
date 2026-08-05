@@ -179,6 +179,10 @@ export function resolveAnchor(anchor: NoteAnchor): ResolvedAnchor {
 }
 
 function getSimpleCssSelector(el: Element): string {
+  if (typeof document !== 'undefined') {
+    if (el === document.body) return 'body';
+    if (el === document.documentElement) return 'html';
+  }
   if (el.id) return `#${el.id}`;
   const path: string[] = [];
   let current: Element | null = el;
@@ -205,6 +209,7 @@ function getSimpleCssSelector(el: Element): string {
     path.unshift(selector);
     current = parent;
   }
-  return path.join(' > ');
+  return path.length > 0 ? path.join(' > ') : 'body';
 }
+
 
