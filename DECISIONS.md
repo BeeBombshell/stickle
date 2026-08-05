@@ -148,7 +148,18 @@ This log records non-trivial decisions made during the development of Stickle.
 
 ### 30. Dual-Environment Local Disk Sync Helper
 - **Decision:** Created `syncNotesToLocalDisk` and `formatLocalSyncJson` writing to `~/.stickle/notes.json` when running in Node/MCP environments while remaining safe in browser MV3 contexts.
-- **Rationale:** Lays the foundation for Phase 11 MCP server file access without breaking extension sandbox boundaries.
+
+---
+
+## Phase 10 — Grouped Notion Sync Restructuring
+
+### 31. Master Page per URL & Block Callout Appending Strategy
+- **Decision:** Implemented `findExistingPageForUrl` querying Notion database (`POST /v1/databases/:id/query`) to locate master pages matching note URLs, appending individual notes as 📌 Callout blocks via `PATCH /v1/blocks/:id/children` instead of creating multiple pages per URL.
+- **Rationale:** Prevents page sprawl in Notion databases by grouping all annotations for the same web page into a single master Notion document.
+
+### 32. In-Memory Batch Export URL Cache
+- **Decision:** Introduced an in-memory `pageCache: Map<string, string>` across batch export cycles (`exportUnsyncedNotesBatchDirect`).
+- **Rationale:** Ensures multiple unsynced notes sharing the same URL immediately reuse the newly created master Notion page ID during a single batch sync without triggering redundant database query requests or race conditions.
 
 
 

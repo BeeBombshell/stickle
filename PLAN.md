@@ -309,8 +309,8 @@ stickle/
 4. Update `tests/notion.test.ts` to verify page grouping behavior.
 
 **Acceptance criteria:**
-- [ ] Multiple notes on the same URL export into 1 single Notion page with nested callouts
-- [ ] Re-exporting or batch exporting does not create duplicate Notion database pages
+- [x] Multiple notes on the same URL export into 1 single Notion page with nested callouts
+- [x] Re-exporting or batch exporting does not create duplicate Notion database pages
 
 ---
 
