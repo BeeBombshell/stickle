@@ -22,10 +22,11 @@ export function loadSettings(): Promise<NotionSettings> {
         });
       });
     } else {
+      // Security: Notion API keys must never be saved in unencrypted web page localStorage.
       resolve({
-        apiKey: localStorage.getItem('stickle_notion_api_key') || '',
-        databaseId: localStorage.getItem('stickle_notion_db_id') || '',
-        defaultNoteColor: (localStorage.getItem('stickle_default_note_color') as NoteColorBlock) || 'lime',
+        apiKey: '',
+        databaseId: '',
+        defaultNoteColor: 'lime',
       });
     }
   });
@@ -44,9 +45,7 @@ export function saveSettings(settings: NotionSettings): Promise<void> {
         () => resolve()
       );
     } else {
-      localStorage.setItem('stickle_notion_api_key', settings.apiKey);
-      localStorage.setItem('stickle_notion_db_id', settings.databaseId);
-      localStorage.setItem('stickle_default_note_color', color);
+      // Security: Notion API keys must never be saved in unencrypted web page localStorage.
       resolve();
     }
   });
@@ -387,10 +386,10 @@ export function Settings() {
 
       <div>
         <h3 style={{ ...settingsStyles.title, fontSize: '15px', marginBottom: '8px' }}>Product &amp; Resources</h3>
-        <div style={{ display: 'flex', gap: '8px' }}>
+        <div style={{ display: 'flex', gap: '6px', flexWrap: 'wrap' as const }}>
           <button
             className="btn-pill btn-secondary"
-            style={{ flex: 1, fontSize: '11px', padding: '6px 12px' }}
+            style={{ flex: 1, minWidth: '90px', fontSize: '11px', padding: '6px 8px' }}
             onClick={() => {
               if (typeof chrome !== 'undefined' && chrome.tabs) {
                 chrome.tabs.create({ url: chrome.runtime.getURL('landing.html') });
@@ -399,11 +398,11 @@ export function Settings() {
               }
             }}
           >
-            🌐 Landing Page
+            🌐 Landing
           </button>
           <button
             className="btn-pill btn-secondary"
-            style={{ flex: 1, fontSize: '11px', padding: '6px 12px' }}
+            style={{ flex: 1, minWidth: '90px', fontSize: '11px', padding: '6px 8px' }}
             onClick={() => {
               if (typeof chrome !== 'undefined' && chrome.tabs) {
                 chrome.tabs.create({ url: chrome.runtime.getURL('onboarding.html') });
@@ -412,7 +411,20 @@ export function Settings() {
               }
             }}
           >
-            ⚡ Sandbox Tutorial
+            ⚡ Sandbox
+          </button>
+          <button
+            className="btn-pill btn-secondary"
+            style={{ flex: 1, minWidth: '90px', fontSize: '11px', padding: '6px 8px' }}
+            onClick={() => {
+              if (typeof chrome !== 'undefined' && chrome.tabs) {
+                chrome.tabs.create({ url: chrome.runtime.getURL('privacy.html') });
+              } else {
+                window.open('/privacy.html', '_blank');
+              }
+            }}
+          >
+            🔒 Privacy
           </button>
         </div>
       </div>
