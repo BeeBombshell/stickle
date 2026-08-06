@@ -52,9 +52,14 @@
   --space-lg: 24px;
   --space-xl: 32px;
   --space-xxl: 48px;
+  --space-section: 96px;
 }
 
 /* Base Styles */
+* {
+  box-sizing: border-box;
+}
+
 body {
   margin: 0;
   padding: 0;
@@ -65,31 +70,95 @@ body {
   -moz-osx-font-smoothing: grayscale;
 }
 
+/* Layout Utilities */
+.landing-container {
+  max-width: 1280px;
+  margin: 0 auto;
+  padding: 0 var(--space-lg);
+}
+
+.section-spacing {
+  margin-bottom: var(--space-section);
+}
+
 /* Eyebrow Label Utility */
 .eyebrow {
   font-family: var(--font-mono);
-  font-size: 11px;
-  font-weight: 500;
+  font-size: 13px;
+  font-weight: 600;
   letter-spacing: 0.6px;
   text-transform: uppercase;
   color: var(--color-ink-muted);
 }
 
-/* Button Pill Base */
+.eyebrow-inverse {
+  font-family: var(--font-mono);
+  font-size: 13px;
+  font-weight: 600;
+  letter-spacing: 0.6px;
+  text-transform: uppercase;
+  color: #94a3b8;
+}
+
+/* Typography Hierarchy (DESIGN.md) */
+.display-xl {
+  font-size: clamp(40px, 6vw, 86px);
+  font-weight: 340;
+  line-height: 1.05;
+  letter-spacing: -1.72px;
+  color: var(--color-ink);
+  margin: 0;
+}
+
+.display-lg {
+  font-size: clamp(32px, 4.5vw, 64px);
+  font-weight: 340;
+  line-height: 1.1;
+  letter-spacing: -0.96px;
+  color: var(--color-ink);
+  margin: 0;
+}
+
+.subhead {
+  font-size: clamp(20px, 2.5vw, 26px);
+  font-weight: 340;
+  line-height: 1.35;
+  letter-spacing: -0.26px;
+  color: var(--color-ink);
+}
+
+.card-title {
+  font-size: 24px;
+  font-weight: 700;
+  line-height: 1.3;
+  letter-spacing: 0;
+  color: var(--color-ink);
+  margin: 0;
+}
+
+.body-lg {
+  font-size: 20px;
+  font-weight: 330;
+  line-height: 1.4;
+  letter-spacing: -0.14px;
+  color: var(--color-ink-muted);
+}
+
+/* Button Pill System */
 .btn-pill {
   display: inline-flex;
   align-items: center;
   justify-content: center;
   gap: var(--space-xs);
-  padding: 8px 18px;
+  padding: 10px 24px;
   border-radius: var(--radius-pill);
   font-family: var(--font-sans);
-  font-size: 14px;
-  font-weight: 500;
+  font-size: 16px;
+  font-weight: 480;
   letter-spacing: -0.1px;
   cursor: pointer;
   border: none;
-  transition: background-color 0.15s ease, transform 0.1s ease;
+  transition: all 0.15s ease;
   text-decoration: none;
 }
 
@@ -100,6 +169,7 @@ body {
 
 .btn-primary:hover {
   background-color: var(--color-primary-hover);
+  transform: translateY(-1px);
 }
 
 .btn-secondary {
@@ -110,9 +180,63 @@ body {
 
 .btn-secondary:hover {
   background-color: var(--color-surface-soft);
+  transform: translateY(-1px);
 }
 
-/* Signature Color Block Classes */
+.btn-magenta {
+  background-color: var(--color-accent-magenta);
+  color: #ffffff;
+}
+
+.btn-magenta:hover {
+  background-color: #c91b65;
+  transform: translateY(-1px);
+}
+
+/* Signature Color Block Sections */
+.color-block {
+  border-radius: var(--radius-lg);
+  padding: clamp(24px, 4vw, var(--space-xxl));
+  position: relative;
+  overflow: hidden;
+}
+
+.color-block-lime {
+  background-color: var(--color-block-lime);
+  color: var(--color-ink);
+}
+
+.color-block-lilac {
+  background-color: var(--color-block-lilac);
+  color: var(--color-ink);
+}
+
+.color-block-cream {
+  background-color: var(--color-block-cream);
+  color: var(--color-ink);
+}
+
+.color-block-mint {
+  background-color: var(--color-block-mint);
+  color: var(--color-ink);
+}
+
+.color-block-pink {
+  background-color: var(--color-block-pink);
+  color: var(--color-ink);
+}
+
+.color-block-coral {
+  background-color: var(--color-block-coral);
+  color: var(--color-ink);
+}
+
+.color-block-navy {
+  background-color: var(--color-block-navy);
+  color: var(--color-inverse-ink);
+}
+
+/* Sticky Note Bubble Colors */
 .stickle-bubble-lime {
   background-color: var(--color-block-lime) !important;
   color: #111111 !important;
@@ -260,5 +384,73 @@ body {
     box-shadow: 0 0 0 0px rgba(17, 17, 17, 0), 0 12px 32px rgba(0, 0, 0, 0.16);
   }
 }
+
+/* Comparison Table Styling */
+.comparison-table {
+  width: 100%;
+  border-collapse: collapse;
+  margin-top: var(--space-lg);
+  font-size: 15px;
+}
+
+.comparison-table th,
+.comparison-table td {
+  padding: 14px 18px;
+  text-align: left;
+  border-bottom: 1px solid var(--color-hairline-soft);
+}
+
+.comparison-table th {
+  font-family: var(--font-mono);
+  font-size: 13px;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  color: var(--color-ink);
+  background-color: var(--color-surface-soft);
+}
+
+.comparison-table tr:hover td {
+  background-color: var(--color-surface-soft);
+}
+
+.check-icon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 22px;
+  height: 22px;
+  border-radius: var(--radius-full);
+  background-color: #10b981;
+  color: white;
+  font-weight: 800;
+  font-size: 12px;
+}
+
+.cross-icon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 22px;
+  height: 22px;
+  border-radius: var(--radius-full);
+  background-color: #ef4444;
+  color: white;
+  font-weight: 800;
+  font-size: 12px;
+}
+
+.warning-icon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 22px;
+  height: 22px;
+  border-radius: var(--radius-full);
+  background-color: #f59e0b;
+  color: white;
+  font-weight: 800;
+  font-size: 12px;
+}
+
 
 
