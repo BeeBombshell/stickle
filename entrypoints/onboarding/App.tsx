@@ -61,7 +61,7 @@ export default function OnboardingApp() {
             <span style={s.wordmark}>stickle</span>
           </div>
           <div style={{ display: 'flex', gap: 8, alignItems: 'center' }}>
-            <a href="https://github.com/YOUR_USERNAME/stickle" target="_blank" rel="noreferrer" style={s.navLink}>
+            <a href="https://github.com/BeeBombshell/stickle" target="_blank" rel="noreferrer" style={s.navLink}>
               GitHub ↗
             </a>
             <button style={s.btnSecondary} onClick={openPrivacyPage}>Privacy Policy</button>

@@ -1,8 +1,6 @@
 import { defineConfig } from 'wxt';
 import preact from '@preact/preset-vite';
 
-const posthogHost = process.env.WXT_PUBLIC_POSTHOG_HOST;
-
 // See https://wxt.dev/api/config.html
 export default defineConfig({
   extensionApi: 'chrome',
@@ -16,10 +14,7 @@ export default defineConfig({
     description: 'Anchor persistent floating sticky notes directly to dynamic web content',
     permissions: ['storage', 'activeTab', 'scripting', 'contextMenus'],
 
-    host_permissions: [
-      'https://api.notion.com/*',
-      ...(posthogHost ? [`${posthogHost}/*`] : []),
-    ],
+    host_permissions: ['https://api.notion.com/*'],
     icons: {
       '16': 'icon/16.png',
       '32': 'icon/32.png',

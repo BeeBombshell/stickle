@@ -1,29 +1,51 @@
-import 'posthog-js/dist/exception-autocapture';
-import posthog from 'posthog-js/dist/module.no-external';
+import posthog from 'posthog-js';
 
 const projectToken = import.meta.env.WXT_PUBLIC_POSTHOG_KEY;
 const apiHost = import.meta.env.WXT_PUBLIC_POSTHOG_HOST;
 
-if (!projectToken || !apiHost) {
-  if (import.meta.env.DEV) {
-    const missingVariable = !projectToken
-      ? 'WXT_PUBLIC_POSTHOG_KEY'
-      : 'WXT_PUBLIC_POSTHOG_HOST';
+let isInitialized = false;
 
-    throw new Error(
-      `${missingVariable} variable required by PostHog is missing or un-configured, this causes events to be silently missed. This error stops appearing once ${missingVariable} is configured`
-    );
+if (projectToken && apiHost) {
+  try {
+    const isExtensionPage =
+      typeof window !== 'undefined' &&
+      (window.location.protocol.startsWith('chrome-extension:') || window.location.protocol.startsWith('http'));
+
+    posthog.init(projectToken, {
+      api_host: apiHost,
+      autocapture: false,
+      persistence: 'localStorage',
+      disable_session_recording: true,
+      capture_pageview: false,
+      capture_exceptions: isExtensionPage
+        ? {
+            capture_unhandled_errors: true,
+            capture_unhandled_rejections: true,
+            capture_console_errors: false,
+          }
+        : false,
+    });
+    isInitialized = true;
+  } catch (err) {
+    console.warn('[Stickle Analytics] PostHog initialization skipped:', err);
   }
-} else {
-  posthog.init(projectToken, {
-    api_host: apiHost,
-    defaults: '2026-05-30',
-    capture_exceptions: {
-      capture_unhandled_errors: true,
-      capture_unhandled_rejections: true,
-      capture_console_errors: false,
-    },
-  });
+} else if (import.meta.env.DEV) {
+  console.warn(
+    '[Stickle Analytics] PostHog env variables (WXT_PUBLIC_POSTHOG_KEY / WXT_PUBLIC_POSTHOG_HOST) not configured. Tracking is disabled.'
+  );
+}
+
+/**
+ * Safe capture wrapper that never throws or blocks execution.
+ */
+export function trackEvent(eventName: string, properties?: Record<string, any>) {
+  if (!isInitialized) return;
+  try {
+    posthog.capture(eventName, properties);
+  } catch (err) {
+    console.warn(`[Stickle Analytics] Failed to track ${eventName}:`, err);
+  }
 }
 
 export default posthog;
+

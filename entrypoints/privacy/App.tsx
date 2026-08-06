@@ -26,7 +26,7 @@ export default function PrivacyApp() {
           </div>
           <div style={{ display: 'flex', gap: 12, alignItems: 'center' }}>
             <button style={s.btnSecondary} onClick={openLanding}>Product Page</button>
-            <a href="https://github.com/YOUR_USERNAME/stickle" target="_blank" rel="noreferrer" style={s.navLink}>
+            <a href="https://github.com/BeeBombshell/stickle" target="_blank" rel="noreferrer" style={s.navLink}>
               GitHub ↗
             </a>
           </div>

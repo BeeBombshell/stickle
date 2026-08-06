@@ -82,7 +82,7 @@ export default function LandingApp() {
           {/* Right: CTAs */}
           <div style={s.navActions}>
             <a
-              href="https://github.com/YOUR_USERNAME/stickle"
+              href="https://github.com/BeeBombshell/stickle"
               target="_blank"
               rel="noreferrer"
               style={s.navLink}
@@ -113,7 +113,7 @@ export default function LandingApp() {
               Add to Chrome - Free
             </button>
             <a
-              href="https://github.com/YOUR_USERNAME/stickle"
+              href="https://github.com/BeeBombshell/stickle"
               target="_blank"
               rel="noreferrer"
               style={{ ...s.btnSecondary, fontSize: 16, padding: '12px 24px', textDecoration: 'none' }}
@@ -846,7 +846,7 @@ export default function LandingApp() {
               Add to Chrome - Free
             </button>
             <a
-              href="https://github.com/YOUR_USERNAME/stickle"
+              href="https://github.com/BeeBombshell/stickle"
               target="_blank"
               rel="noreferrer"
               style={{ ...s.btnSecondary, fontSize: 16, padding: '14px 28px', textDecoration: 'none' }}
@@ -894,7 +894,7 @@ export default function LandingApp() {
                 links: [
                   { label: 'Sandbox Tutorial', href: '#', onClick: openSandbox },
                   { label: 'Privacy Policy', href: '#', onClick: openPrivacy },
-                  { label: 'GitHub Repository', href: 'https://github.com/YOUR_USERNAME/stickle' },
+                  { label: 'GitHub Repository', href: 'https://github.com/BeeBombshell/stickle' },
                   { label: 'FAQ', href: '#faq' },
                 ],
               },
@@ -903,7 +903,7 @@ export default function LandingApp() {
                 links: [
                   { label: 'Product Hunt', href: 'https://producthunt.com' },
                   { label: 'Twitter / X', href: 'https://twitter.com' },
-                  { label: 'GitHub Discussions', href: 'https://github.com' },
+                  { label: 'GitHub Discussions', href: 'https://github.com/BeeBombshell/stickle/discussions' },
                 ],
               },
             ].map(col => (
