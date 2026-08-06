@@ -1,4 +1,5 @@
 import { defineContentScript } from 'wxt/sandbox';
+import posthog from '../lib/posthog';
 import { render, h } from 'preact';
 import { NoteBubble } from '../components/NoteBubble';
 import { createAnchor, resolveAnchor } from '../lib/anchoring';
@@ -68,6 +69,7 @@ export default defineContentScript({
             syncedToNotion: false,
           };
           await createNote(newNote);
+          posthog.capture('note_created', { creation_method: 'popup_action' });
           const wrapper = renderNoteWrapper(newNote);
           setTimeout(() => {
             const textarea = wrapper?.querySelector('textarea');
@@ -140,6 +142,7 @@ export default defineContentScript({
         };
 
         await createNote(newNote);
+        posthog.capture('note_created', { creation_method: 'alt_click' });
         const wrapper = renderNoteWrapper(newNote);
         setTimeout(() => {
           const textarea = wrapper?.querySelector('textarea');
@@ -255,6 +258,7 @@ export default defineContentScript({
         // Wrap DOM selection range in <mark> tag
         applyHighlightOverlay(currentRange, newNote.id, color);
         await createNote(newNote);
+        posthog.capture('note_created', { creation_method: 'text_selection' });
 
         hideSelectionPill();
         currentSelection.removeAllRanges();
@@ -383,6 +387,7 @@ export default defineContentScript({
 
       const handleDelete = async () => {
         await deleteNote(note.id);
+        posthog.capture('note_deleted');
         removeHighlightOverlay(note.id);
         wrapper?.remove();
         mountedNotes.delete(note.id);
@@ -392,6 +397,7 @@ export default defineContentScript({
         note.color = color;
         note.updatedAt = Date.now();
         await updateNote(note.id, { color, updatedAt: note.updatedAt });
+        posthog.capture('note_color_changed', { color });
 
         // Update mark overlay colors if highlight note
         const marks = document.querySelectorAll(`mark[data-stickle-id="${note.id}"]`);

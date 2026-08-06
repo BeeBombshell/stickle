@@ -5,6 +5,7 @@ import { loadSettings } from './Settings';
 import { pushNoteToNotion, exportUnsyncedNotesBatch } from '../lib/notion';
 import { exportNotesToJson, importNotesFromJson } from '../lib/export-import';
 import { COLOR_SWATCHES } from './NoteBubble';
+import posthog from '../lib/posthog';
 
 export type DateFilter = 'all' | 'today' | 'week';
 
@@ -160,6 +161,7 @@ export function NoteSidebar({ notes, onNoteChange, onSelectNote }: NoteSidebarPr
     e.stopPropagation();
     if (confirm('Are you sure you want to delete this note?')) {
       await deleteNote(noteId);
+      posthog.capture('note_deleted', { deletion_method: 'popup_manager' });
       onNoteChange?.();
     }
   };
@@ -177,6 +179,7 @@ export function NoteSidebar({ notes, onNoteChange, onSelectNote }: NoteSidebarPr
 
     try {
       await pushNoteToNotion(note, config);
+      posthog.capture('notion_note_exported');
       setSyncStatusMsg('Exported note to Notion!');
       onNoteChange?.();
     } catch (err: any) {
@@ -199,6 +202,10 @@ export function NoteSidebar({ notes, onNoteChange, onSelectNote }: NoteSidebarPr
     try {
       const result = await exportUnsyncedNotesBatch(notes, config, (current, total) => {
         setSyncStatusMsg(`Exporting note ${current} of ${total}...`);
+      });
+      posthog.capture('notion_notes_batch_exported', {
+        exported_count: result.successCount,
+        failed_count: result.failCount,
       });
       setSyncStatusMsg(
         `Batch export complete: ${result.successCount} exported, ${result.failCount} failed.`

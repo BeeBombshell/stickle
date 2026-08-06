@@ -4,6 +4,7 @@ import { getAllNotes } from '../../lib/db';
 import { NoteSidebar } from '../../components/NoteSidebar';
 import { Settings } from '../../components/Settings';
 import { exportNotesToJson, importNotesFromJson } from '../../lib/export-import';
+import posthog from '../../lib/posthog';
 
 export type PopupTab = 'all-notes' | 'active-tab' | 'settings';
 
@@ -82,6 +83,7 @@ export function App() {
       return;
     }
     const { filename } = exportNotesToJson(notes);
+    posthog.capture('notes_backup_exported', { note_count: notes.length });
     setStatusMsg(`Exported ${notes.length} notes to ${filename}`);
   };
 
@@ -96,6 +98,11 @@ export function App() {
       if (!text) return;
       const res = await importNotesFromJson(text);
       if (res.success) {
+        posthog.capture('notes_backup_imported', {
+          imported_count: res.imported,
+          updated_count: res.updated,
+          skipped_count: res.skipped,
+        });
         setStatusMsg(
           `Imported ${res.imported}, updated ${res.updated} (${res.skipped} skipped).`
         );
