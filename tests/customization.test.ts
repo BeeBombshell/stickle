@@ -9,7 +9,7 @@ describe('Phase 6: Note Customization & Collapsible UI', () => {
   });
 
   it('validates COLOR_SWATCHES contains all 7 Figma pastel color blocks', () => {
-    const expectedColors: NoteColorBlock[] = ['lime', 'lilac', 'cream', 'mint', 'pink', 'coral', 'navy'];
+    const expectedColors: NoteColorBlock[] = ['lime', 'lilac', 'cream', 'mint', 'pink', 'coral', 'blue'];
     for (const color of expectedColors) {
       expect(COLOR_SWATCHES[color]).toBeDefined();
       expect(COLOR_SWATCHES[color].bg).toMatch(/^#[0-9a-fA-F]{6}$/);
@@ -65,10 +65,10 @@ describe('Phase 6: Note Customization & Collapsible UI', () => {
     await createNote(note);
 
     // Update color to navy and collapse
-    await updateNote('test-custom-2', { color: 'navy', collapsed: true });
+    await updateNote('test-custom-2', { color: 'lilac', collapsed: true });
 
     const all = await getAllNotes();
-    expect(all[0].color).toBe('navy');
+    expect(all[0].color).toBe('lilac');
     expect(all[0].collapsed).toBe(true);
   });
 });

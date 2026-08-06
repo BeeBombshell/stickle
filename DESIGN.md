@@ -30,13 +30,14 @@ This is a system built on contrast: the monochrome chrome makes the color blocks
 - **Surface Soft** ({colors.surface-soft}): Off-white tile background used for icon buttons, template cards, and feature illustration tiles when they sit on the white canvas.
 - **Hairline** ({colors.hairline}): 1px borders on form inputs, pricing cards, and table dividers.
 - **Hairline Soft** ({colors.hairline-soft}): Even subtler dividers — comparison-table row separators and footer column rules.
-- **Block Lime** ({colors.block-lime}): The signature **systems / FAQ / contact-form** color block. Recurs across home, pricing, contact.
-- **Block Lilac** ({colors.block-lilac}): Hero block on `/design/`; also the inline Release Notes promo banner.
+- **Block Lime** ({colors.block-lime}): Signature systems color block (`#e4f579`). Used for Problem callouts, Knowledge Base active tabs, animated Second Brain visual, rollout CTA buttons, Supporter Access pricing tier, and FAQ blocks.
+- **Block Sky Blue** ({colors.block-blue}): Fresh pastel accent (`#bfdbfe` / `#93c5fd`) added to Stickle note swatches (replacing teal) and Q3 Cross-Device Sync roadmap cards.
+- **Block Lilac** ({colors.block-lilac}): Soft pastel accent (`#e8d5ff`) used on Stickle notes, Tier 2 resilient anchoring badges, Notion export cards, Obsidian float tags, and Q4 Team roadmap cards.
+- **Accent Magenta / Rose Pop** ({colors.accent-magenta}): Accent color (`#f472b6`) used on Why Stickle dark card badges and feature highlight tags.
 - **Block Cream** ({colors.block-cream}): Soft warm background — Whiteboard hero strip, template-grid section.
-- **Block Mint** ({colors.block-mint}): Whiteboard pastel section.
-- **Block Pink** ({colors.block-pink}): Whiteboard pastel section.
-- **Block Coral** ({colors.block-coral}): "Ship products" coral story block on home.
-- **Block Navy** ({colors.block-navy}): Deep indigo story block — only place dark surfaces appear above the footer.
+- **Block Mint** ({colors.block-mint}): Whiteboard pastel section (`#d1f7c4`).
+- **Block Pink** ({colors.block-pink}): Whiteboard pastel section (`#ffd6e8`).
+- **Monochrome Dark** ({colors.block-navy}): High-contrast dark block (`#111111`) used for Why Stickle feature cards, Problem statement, Knowledge Base Sync dark editor, Supporter Access pricing card, and rollout waitlist.
 
 ### Text
 - **Ink** ({colors.ink}): All headline, body, and caption type on light surfaces. There is no softer mid-gray text role on marketing — body copy is always black at weight 320–340, and weight (not opacity) carries the hierarchy.
@@ -237,7 +238,7 @@ The defining surface of vector canvas marketing. Each is a full-content-width pa
 ### Product Landing Page (`landing.html`)
 The flagship marketing page follows an editorial rhythm alternating between white canvas and oversized signature pastel color blocks:
 1. **Nav Bar**: Sticky white canvas bar (`{colors.canvas}`) with wordmark, version badge, page links, and pill CTAs.
-2. **Hero Section**: Eyebrow `NEW — V1.0 IS LIVE & OPEN SOURCE`, Display XL headline *"Leave notes in the margins of the web."*, dual pill CTAs, and interactive sandbox preview.
+2. **Hero Section**: 2-column layout with Eyebrow `NEW — V1.0 IS LIVE & OPEN SOURCE`, Display XL headline *"Leave notes in the margins of the web."*, pill CTAs, and right-hand signature Lime (`{colors.block-lime}`) accent interactive browser canvas featuring authentic drag & drop `<NoteBubble />` instances and click-to-pin DOM targets.
 3. **Problem Statement**: Coral color block (`{colors.block-coral}`) framing app-switching friction vs spatial web annotation.
 4. **Value Props Grid**: Lilac (`{colors.block-lilac}`), Cream (`{colors.block-cream}`), and Mint (`{colors.block-mint}`) value prop cards.
 5. **Core Feature Showcase**: Soft surface cards highlighting keyboard shortcuts, design swatches, and popup note manager.

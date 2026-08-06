@@ -13,12 +13,12 @@
 
   /* Signature Pastel Color Blocks */
   --color-block-lime: #e4f579;
+  --color-block-blue: #bfdbfe;
   --color-block-lilac: #e8d5ff;
   --color-block-cream: #fff7db;
   --color-block-mint: #d1f7c4;
   --color-block-pink: #ffd6e8;
   --color-block-coral: #ffdbcc;
-  --color-block-navy: #1e2038;
 
   /* Text Roles */
   --color-ink: #111111;
@@ -233,9 +233,19 @@
   color: var(--color-inverse-ink);
 }
 
+.color-block-teal {
+  background-color: var(--color-block-teal);
+  color: #ffffff;
+}
+
 /* Sticky Note Bubble Colors */
 .stickle-bubble-lime {
   background-color: var(--color-block-lime) !important;
+  color: #111111 !important;
+}
+
+.stickle-bubble-teal {
+  background-color: var(--color-block-teal-soft) !important;
   color: #111111 !important;
 }
 
@@ -448,6 +458,35 @@
   font-weight: 800;
   font-size: 12px;
 }
+
+/* Playful Lime Second Brain Animation Styles */
+@keyframes floatSlow {
+  0%, 100% { transform: translateY(0px) rotate(0deg); }
+  50% { transform: translateY(-8px) rotate(1.5deg); }
+}
+
+@keyframes floatReverse {
+  0%, 100% { transform: translateY(0px) rotate(0deg); }
+  50% { transform: translateY(7px) rotate(-1.5deg); }
+}
+
+@keyframes pulseBrainGlow {
+  0%, 100% { opacity: 0.35; filter: blur(20px); transform: scale(0.96); }
+  50% { opacity: 0.85; filter: blur(30px); transform: scale(1.08); }
+}
+
+.brain-float-1 {
+  animation: floatSlow 4s ease-in-out infinite;
+}
+
+.brain-float-2 {
+  animation: floatReverse 5s ease-in-out infinite 0.5s;
+}
+
+.brain-glow {
+  animation: pulseBrainGlow 3.5s ease-in-out infinite;
+}
+
 
 
 

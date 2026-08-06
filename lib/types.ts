@@ -1,6 +1,6 @@
 export type AnchorTier = 'selector' | 'text-fragment' | 'fuzzy' | 'unanchored';
 
-export type NoteColorBlock = 'lime' | 'lilac' | 'cream' | 'mint' | 'pink' | 'coral' | 'navy';
+export type NoteColorBlock = 'lime' | 'lilac' | 'cream' | 'mint' | 'pink' | 'coral' | 'blue';
 
 export interface NoteAnchor {
   cssSelector: string;

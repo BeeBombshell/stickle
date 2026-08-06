@@ -3,12 +3,12 @@ import type { StickleNote, AnchorTier, NoteColorBlock } from '../lib/types';
 
 export const COLOR_SWATCHES: Record<NoteColorBlock, { name: string; bg: string; text: string }> = {
   lime: { name: 'Lime', bg: '#e4f579', text: '#111111' },
+  blue: { name: 'Sky Blue', bg: '#bfdbfe', text: '#111111' },
   lilac: { name: 'Lilac', bg: '#e8d5ff', text: '#111111' },
   cream: { name: 'Cream', bg: '#fff7db', text: '#111111' },
   mint: { name: 'Mint', bg: '#d1f7c4', text: '#111111' },
   pink: { name: 'Pink', bg: '#ffd6e8', text: '#111111' },
   coral: { name: 'Coral', bg: '#ffdbcc', text: '#111111' },
-  navy: { name: 'Navy', bg: '#1e2038', text: '#ffffff' },
 };
 
 interface NoteBubbleProps {

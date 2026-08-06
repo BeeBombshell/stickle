@@ -1,4 +1,6 @@
-import { useState } from 'preact/hooks';
+import { useState, useRef } from 'preact/hooks';
+import { NoteBubble } from '../../components/NoteBubble';
+import type { StickleNote, NoteColorBlock } from '../../lib/types';
 import { WaitlistForm } from './WaitlistForm';
 
 type FaqItem = { q: string; a: string };
@@ -23,15 +25,92 @@ const FAQ_ITEMS = [
 ];
 
 const FAQS = FAQ_ITEMS;
-const DEMO_COLORS = ['#e4f579', '#e8d5ff', '#fff7db', '#d1f7c4', '#ffd6e8', '#ffdbcc'];
 
 export default function LandingApp() {
   const [openFaq, setOpenFaq] = useState<number | null>(null);
   const [pkmTab, setPkmTab] = useState<'notion' | 'obsidian' | 'mcp'>('notion');
-  const [demoColor, setDemoColor] = useState('#e4f579');
-  const [demoText, setDemoText] = useState(
-    'Alt + Click pinned this note here. Notes survive page reloads and React re-renders: try editing this.'
-  );
+
+  // Authentic Stickle Notes state for Landing Page Hero
+  const [landingNotes, setLandingNotes] = useState<StickleNote[]>([
+    {
+      id: 'landing-hero-1',
+      url: 'https://docs.github.com/en/get-started',
+      pageTitle: 'GitHub Docs',
+      content: 'Alt + Click pinned this note directly to the h1 heading. Survives reloads and React re-renders.',
+      color: 'lime',
+      anchor: { cssSelector: 'h1', offsetX: 0, offsetY: 0, tier: 'selector' },
+      createdAt: Date.now(),
+      updatedAt: Date.now(),
+      syncedToNotion: true,
+      tags: ['research', 'github-docs', 'v1.0'],
+    },
+    {
+      id: 'landing-hero-2',
+      url: 'https://docs.github.com/en/get-started',
+      pageTitle: 'GitHub Docs',
+      content: '📌 Synced to Notion in 1 click! Try dragging me by the top header handle (⋮⋮).',
+      color: 'lilac',
+      anchor: { cssSelector: 'pre.code', offsetX: 0, offsetY: 0, tier: 'text-fragment' },
+      createdAt: Date.now(),
+      updatedAt: Date.now(),
+      syncedToNotion: true,
+      tags: ['notion', 'sync', 'local-first'],
+    },
+    {
+      id: 'landing-hero-3',
+      url: 'https://docs.github.com/en/get-started',
+      pageTitle: 'GitHub Docs',
+      content: '⚡️ 3-Tier fallback yields 99.4% anchor recovery rate on dynamic SPAs.',
+      color: 'mint',
+      anchor: { cssSelector: 'div.fakeArticle', offsetX: 0, offsetY: 0, tier: 'fuzzy' },
+      createdAt: Date.now(),
+      updatedAt: Date.now(),
+      syncedToNotion: true,
+      tags: ['resilient', 'anchoring'],
+    },
+  ]);
+
+  // Position offsets for drag & drop
+  const [landingPositions, setLandingPositions] = useState<Record<string, { x: number; y: number }>>({});
+  const landingDragRef = useRef<{ noteId: string; startX: number; startY: number } | null>(null);
+  const [landingActiveDragId, setLandingActiveDragId] = useState<string | null>(null);
+
+  const handleLandingDragStart = (noteId: string) => {
+    const current = landingPositions[noteId] || { x: 0, y: 0 };
+    landingDragRef.current = { noteId, startX: current.x, startY: current.y };
+    setLandingActiveDragId(noteId);
+  };
+
+  const handleLandingDrag = (noteId: string, dx: number, dy: number) => {
+    if (!landingDragRef.current || landingDragRef.current.noteId !== noteId) return;
+    const newX = landingDragRef.current.startX + dx;
+    const newY = landingDragRef.current.startY + dy;
+    setLandingPositions(prev => ({
+      ...prev,
+      [noteId]: { x: newX, y: newY },
+    }));
+  };
+
+  const handleLandingDragEnd = () => {
+    landingDragRef.current = null;
+    setLandingActiveDragId(null);
+  };
+
+  const addLandingNote = (targetName: string, color: NoteColorBlock) => {
+    const newNote: StickleNote = {
+      id: `landing-${Date.now()}`,
+      url: 'https://docs.github.com/en/get-started',
+      pageTitle: 'GitHub Docs',
+      content: `Attached to ${targetName}. Try editing text or dragging me around!`,
+      color,
+      anchor: { cssSelector: targetName, offsetX: 0, offsetY: 0, tier: 'selector' },
+      createdAt: Date.now(),
+      updatedAt: Date.now(),
+      syncedToNotion: false,
+      tags: ['interactive', 'demo'],
+    };
+    setLandingNotes(prev => [...prev, newNote]);
+  };
 
   const toggleFaq = (idx: number) => {
     setOpenFaq(openFaq === idx ? null : idx);
@@ -52,8 +131,6 @@ export default function LandingApp() {
       window.open('/privacy.html', '_blank');
     }
   };
-
-  const DEMO_COLORS = ['#e4f579', '#e8d5ff', '#fff7db', '#d1f7c4', '#ffd6e8', '#ffdbcc'];
 
   return (
     <div style={s.page}>
@@ -97,95 +174,243 @@ export default function LandingApp() {
         </div>
       </nav>
 
-      {/* ══ 2. HERO ══════════════════════════════════════════════════════════ */}
+      {/* ══ 2. HERO (Signature Lime Accent & Interactive Canvas) ══════════════ */}
       <section style={s.hero}>
-        <div style={s.wrap}>
-          <span style={s.eyebrow}>NEW: V1.0 IS LIVE &amp; OPEN SOURCE</span>
-          <h1 style={s.displayXL}>
-            Leave notes in the<br />margins of the web.
-          </h1>
-          <p style={s.heroSub}>
-            Alt + Click any element on any webpage to drop a sticky note.
-            It stays pinned there: through reloads, re-renders, and revisits:
-            and syncs to Notion in one click.
-          </p>
+        <div style={s.heroGrid}>
+          {/* Left Column: Headlines & Actions */}
+          <div style={s.heroContent}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 12 }}>
+              <span style={{ width: 8, height: 8, borderRadius: '50%', backgroundColor: '#e4f579' }} />
+              <span style={s.eyebrow}>STICKLE • V1.0 IS LIVE &amp; OPEN SOURCE</span>
+            </div>
+            <h1 style={s.displayXL}>
+              Leave notes in the<br />margins of the web.
+            </h1>
+            <p style={s.heroSub}>
+              Alt + Click any element on any webpage to drop a sticky note.
+              It stays pinned right there: through reloads, re-renders, and revisits:
+              and syncs to Notion in one click.
+            </p>
 
-          <div style={s.ctaRow}>
-            <a
-              href="/waitlist.html"
-              style={{ ...s.btnPrimary, fontSize: 16, padding: '12px 28px', textDecoration: 'none' }}
-            >
-              Join Launch Waitlist ↗
-            </a>
-            <button style={{ ...s.btnSecondary, fontSize: 16, padding: '12px 24px' }} onClick={openSandbox}>
-              Try Sandbox
-            </button>
-            <a
-              href="https://github.com/BeeBombshell/stickle"
-              target="_blank"
-              rel="noreferrer"
-              style={{ ...s.btnSecondary, fontSize: 16, padding: '12px 24px', textDecoration: 'none' }}
-            >
-              View on GitHub ↗
-            </a>
+            <div style={s.ctaRow}>
+              <a
+                href="/waitlist.html"
+                style={{ ...s.btnPrimary, fontSize: 16, padding: '12px 28px', textDecoration: 'none' }}
+              >
+                Join Launch Waitlist ↗
+              </a>
+              <button style={{ ...s.btnSecondary, fontSize: 16, padding: '12px 24px' }} onClick={openSandbox}>
+                Try Sandbox
+              </button>
+              <a
+                href="https://github.com/BeeBombshell/stickle"
+                target="_blank"
+                rel="noreferrer"
+                style={{ ...s.btnSecondary, fontSize: 16, padding: '12px 24px', textDecoration: 'none' }}
+              >
+                View on GitHub ↗
+              </a>
+            </div>
+
+            <p style={s.trustBar}>
+              100% Local-first · Works Offline · No Account Needed · Open Source
+            </p>
           </div>
 
-          <p style={s.trustBar}>
-            100% Local-first&nbsp;·&nbsp;Works Offline&nbsp;·&nbsp;No Account Needed&nbsp;·&nbsp;Open Source
-          </p>
-
-          {/* Browser mock + floating stickle demo */}
-          <div style={s.browserMock}>
-            <div style={s.browserBar}>
-              <div style={s.browserDots}>
-                {['#ef4444', '#f59e0b', '#10b981'].map(c => (
-                  <span key={c} style={{ width: 10, height: 10, borderRadius: '50%', backgroundColor: c, display: 'inline-block' }} />
-                ))}
-              </div>
-              <div style={s.browserAddress}>https://docs.github.com/en/get-started</div>
-            </div>
-            <div style={s.browserBody}>
-              {/* Fake article */}
-              <div style={s.fakeArticle}>
-                <span style={{ ...s.eyebrow, fontSize: 10, color: '#94a3b8', marginBottom: 10 }}>DOCUMENTATION</span>
-                <h3 style={{ fontSize: 22, fontWeight: 800, margin: '0 0 10px', color: '#111', letterSpacing: '-0.4px' }}>
-                  Understanding Persistent Web Annotation
-                </h3>
-                <p style={{ fontSize: 14, color: '#475569', lineHeight: 1.6, margin: 0 }}>
-                  Stickle attaches floating sticky notes to exact DOM positions. Notes survive React re-renders,
-                  ads reloading, and layout shifts via a 3-tier anchoring engine.
-                </p>
-                {/* Inline color switcher */}
-                <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginTop: 16 }}>
-                  <span style={{ ...s.eyebrow, fontSize: 9, color: '#94a3b8' }}>NOTE COLOR</span>
-                  {DEMO_COLORS.map(c => (
-                    <button
-                      key={c}
-                      onClick={() => setDemoColor(c)}
-                      style={{
-                        width: 16, height: 16, borderRadius: '50%',
-                        backgroundColor: c,
-                        border: demoColor === c ? '2px solid #111' : '1px solid rgba(0,0,0,0.1)',
-                        cursor: 'pointer', padding: 0,
-                      }}
-                    />
-                  ))}
+          {/* Right Column: Signature Lime Accent Web Browser Interactive Canvas */}
+          <div style={s.heroVisual}>
+            {/* Signature Lime Accent Background Panel */}
+            <div style={{
+              backgroundColor: '#e4f579',
+              borderRadius: 24,
+              padding: 16,
+              border: '1px solid rgba(0,0,0,0.1)',
+              transform: 'rotate(1.2deg)',
+              boxShadow: '0 16px 40px rgba(0,0,0,0.08)',
+            }}>
+              {/* Browser Mock Window */}
+              <div style={{
+                border: '1px solid #111111',
+                borderRadius: 16,
+                overflow: 'hidden',
+                backgroundColor: '#ffffff',
+                transform: 'rotate(-1.2deg)',
+                boxShadow: '0 8px 24px rgba(0,0,0,0.12)',
+              }}>
+                {/* Browser Header Bar */}
+                <div style={{
+                  backgroundColor: '#111111',
+                  padding: '10px 16px',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'space-between',
+                }}>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+                    <div style={{ display: 'flex', gap: 5 }}>
+                      {['#ff5f56', '#ffbd2e', '#27c93f'].map(c => (
+                        <span key={c} style={{ width: 10, height: 10, borderRadius: '50%', backgroundColor: c, display: 'inline-block' }} />
+                      ))}
+                    </div>
+                    <div style={{
+                      backgroundColor: 'rgba(255,255,255,0.12)',
+                      padding: '3px 12px',
+                      borderRadius: 50,
+                      fontSize: 11,
+                      fontFamily: "'JetBrains Mono', monospace",
+                      color: '#ffffff',
+                      letterSpacing: '0.2px',
+                    }}>
+                      https://docs.github.com/en/get-started
+                    </div>
+                  </div>
+                  <span style={{
+                    fontFamily: "'JetBrains Mono', monospace",
+                    fontSize: 9,
+                    fontWeight: 700,
+                    backgroundColor: '#e4f579',
+                    color: '#111111',
+                    padding: '3px 8px',
+                    borderRadius: 50,
+                    letterSpacing: '0.6px',
+                  }}>
+                    LIVE DEMO
+                  </span>
                 </div>
-              </div>
 
-              {/* Floating stickle */}
-              <div style={{ ...s.floatingNote, backgroundColor: demoColor }}>
-                <div style={s.noteBar}>
-                  <span style={{ ...s.eyebrow, fontSize: 9, letterSpacing: '0.8px' }}>STICKLE • TIER 1</span>
-                  <span style={s.noteChip}>STRUCTURAL</span>
-                </div>
-                <textarea
-                  style={s.noteTextarea}
-                  value={demoText}
-                  onInput={e => setDemoText((e.target as HTMLTextAreaElement).value)}
-                />
-                <div style={{ ...s.eyebrow, fontSize: 9, color: '#555', textAlign: 'right' as const, marginTop: 6 }}>
-                  notion sync ready
+                {/* Simulated Webpage Body */}
+                <div style={{
+                  padding: '24px 20px',
+                  backgroundColor: '#fbfbf9',
+                  position: 'relative',
+                  minHeight: 340,
+                }}>
+                  {/* Interactive Element Target 1: Article Heading */}
+                  <div
+                    onClick={() => addLandingNote('Heading <h1>', 'mint')}
+                    title="Click to attach Stickle note to Heading"
+                    style={{
+                      padding: '10px 14px',
+                      borderRadius: 8,
+                      border: '1.5px dashed rgba(0,0,0,0.18)',
+                      backgroundColor: '#ffffff',
+                      marginBottom: 16,
+                      cursor: 'pointer',
+                      transition: 'all 0.15s ease',
+                    }}
+                  >
+                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 4 }}>
+                      <span style={{ fontFamily: "'JetBrains Mono', monospace", fontSize: 9, color: '#666', fontWeight: 600 }}>
+                        DOM ELEMENT: &lt;h1.article-title&gt;
+                      </span>
+                      <span style={{ fontFamily: "'JetBrains Mono', monospace", fontSize: 9, color: '#111', fontWeight: 700, backgroundColor: '#e4f579', padding: '1px 6px', borderRadius: 4 }}>
+                        + Click to pin
+                      </span>
+                    </div>
+                    <h3 style={{ fontSize: 18, fontWeight: 800, color: '#111111', margin: 0, letterSpacing: '-0.4px' }}>
+                      Understanding Persistent Web Annotation
+                    </h3>
+                  </div>
+
+                  {/* Interactive Element Target 2: Code Snippet */}
+                  <div
+                    onClick={() => addLandingNote('Code snippet', 'pink')}
+                    title="Click to attach Stickle note to Code Block"
+                    style={{
+                      padding: '10px 14px',
+                      borderRadius: 8,
+                      border: '1.5px dashed rgba(0,0,0,0.18)',
+                      backgroundColor: '#111111',
+                      color: '#ffffff',
+                      marginBottom: 20,
+                      cursor: 'pointer',
+                      transition: 'all 0.15s ease',
+                    }}
+                  >
+                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 4 }}>
+                      <span style={{ fontFamily: "'JetBrains Mono', monospace", fontSize: 9, color: '#e4f579', fontWeight: 600 }}>
+                        DOM ELEMENT: &lt;pre.code-block&gt;
+                      </span>
+                      <span style={{ fontFamily: "'JetBrains Mono', monospace", fontSize: 9, color: '#111', fontWeight: 700, backgroundColor: '#e4f579', padding: '1px 6px', borderRadius: 4 }}>
+                        + Click to pin
+                      </span>
+                    </div>
+                    <code style={{ fontFamily: "'JetBrains Mono', monospace", fontSize: 12, color: '#e8d5ff' }}>
+                      const note = stickle.attach('#heading', &#123; tier: 'selector' &#125;);
+                    </code>
+                  </div>
+
+                  {/* Rendered NoteBubbles on top of simulated webpage */}
+                  <div style={{
+                    position: 'absolute',
+                    top: 16,
+                    right: 16,
+                    left: 16,
+                    bottom: 16,
+                    pointerEvents: 'none',
+                    zIndex: 10,
+                  }}>
+                    {landingNotes.map((note, idx) => {
+                      const pos = landingPositions[note.id] || { x: 0, y: 0 };
+                      const isDragging = landingActiveDragId === note.id;
+
+                      return (
+                        <div
+                          key={note.id}
+                          style={{
+                            position: 'absolute',
+                            top: idx === 0 ? 10 : idx === 1 ? 120 : 60 + idx * 20,
+                            right: idx === 0 ? 10 : idx === 1 ? 20 : 30 + idx * 10,
+                            transform: `translate3d(${pos.x}px, ${pos.y}px, 0)`,
+                            transition: isDragging ? 'none' : 'transform 0.15s ease-out',
+                            zIndex: isDragging ? 50 : 5 + idx,
+                            pointerEvents: 'auto',
+                            filter: isDragging ? 'drop-shadow(0 16px 32px rgba(0,0,0,0.25))' : 'drop-shadow(0 8px 20px rgba(0,0,0,0.12))',
+                          }}
+                        >
+                          <NoteBubble
+                            note={note}
+                            onSave={(val) => setLandingNotes(prev => prev.map(n => n.id === note.id ? { ...n, content: val } : n))}
+                            onColorChange={(col) => setLandingNotes(prev => prev.map(n => n.id === note.id ? { ...n, color: col } : n))}
+                            onToggleCollapse={(coll) => setLandingNotes(prev => prev.map(n => n.id === note.id ? { ...n, collapsed: coll } : n))}
+                            onTagsChange={(tags) => setLandingNotes(prev => prev.map(n => n.id === note.id ? { ...n, tags } : n))}
+                            onDelete={() => setLandingNotes(prev => prev.filter(n => n.id !== note.id))}
+                            onDragStart={() => handleLandingDragStart(note.id)}
+                            onDrag={(dx, dy) => handleLandingDrag(note.id, dx, dy)}
+                            onDragEnd={handleLandingDragEnd}
+                          />
+                        </div>
+                      );
+                    })}
+                  </div>
+
+                  {/* Drag Instruction Banner */}
+                  <div style={{
+                    display: 'flex',
+                    justifyContent: 'space-between',
+                    alignItems: 'center',
+                    marginTop: 16,
+                    paddingTop: 12,
+                    borderTop: '1px solid #e5e5e0',
+                  }}>
+                    <span style={{
+                      fontFamily: "'JetBrains Mono', monospace",
+                      fontSize: 10,
+                      fontWeight: 700,
+                      color: '#111111',
+                      display: 'flex',
+                      alignItems: 'center',
+                      gap: 4,
+                    }}>
+                      🖐 GRAB TOP HEADER (⋮⋮) TO DRAG &amp; PLACE
+                    </span>
+                    <span style={{
+                      fontFamily: "'JetBrains Mono', monospace",
+                      fontSize: 9,
+                      color: '#64748b',
+                    }}>
+                      {landingNotes.length} notes active
+                    </span>
+                  </div>
                 </div>
               </div>
             </div>
@@ -193,27 +418,27 @@ export default function LandingApp() {
         </div>
       </section>
 
-      {/* ══ 3. PROBLEM (monochrome container with coral callout) ══════════════ */}
+      {/* ══ 3. PROBLEM (Black block, lime callout) ════════════════════════════ */}
       <section style={s.sectionSpacing}>
         <div style={s.wrap}>
-          <div style={{ ...s.colorBlock, backgroundColor: '#f8f8f6', border: '1px solid #e5e5e0' }}>
-            <span style={{ ...s.eyebrow, color: '#52514e', marginBottom: 12 }}>THE BROKEN WORKFLOW</span>
-            <h2 style={{ ...s.displayLg, color: '#111111', maxWidth: 860 }}>
+          <div style={{ ...s.colorBlock, backgroundColor: '#111111', color: '#ffffff', padding: '56px 48px' }}>
+            <span style={{ ...s.eyebrow, color: '#e4f579', marginBottom: 12 }}>THE BROKEN WORKFLOW</span>
+            <h2 style={{ ...s.displayLg, color: '#ffffff', maxWidth: 860 }}>
               Stop losing your thinking<br />in app-switching context collapse.
             </h2>
-            <p style={{ fontSize: 20, fontWeight: 330, lineHeight: 1.4, letterSpacing: '-0.14px', color: '#52514e', maxWidth: 720, margin: '0 0 28px' }}>
+            <p style={{ fontSize: 20, fontWeight: 330, lineHeight: 1.4, letterSpacing: '-0.14px', color: '#a1a1aa', maxWidth: 720, margin: '0 0 28px' }}>
               You read something interesting, have a thought, then alt-tab to Notion, lose the reading
               flow, and paste a raw URL you will never fully remember.
               Highlighters only capture text you select. Web clippers save the page, not your thinking.
             </p>
-            <div style={{ ...s.problemCallout, backgroundColor: '#ffdbcc', color: '#7c2d12', border: '1px solid rgba(124,45,18,0.1)' }}>
+            <div style={{ ...s.problemCallout, backgroundColor: '#e4f579', color: '#111111', border: 'none' }}>
               <strong>Stickle closes the gap:</strong>&nbsp;write floating notes directly on the webpage, right where your thoughts happen.
             </div>
           </div>
         </div>
       </section>
 
-      {/* ══ 4. VALUE PROPS (three pastel blocks) ════════════════════════════ */}
+      {/* ══ 4. VALUE PROPS (white canvas, 3 black cards, lime-only eyebrows) ═════════ */}
       <section id="features" style={s.sectionSpacing}>
         <div style={s.wrap}>
           <span style={s.eyebrow}>WHY STICKLE IS DIFFERENT</span>
@@ -238,12 +463,34 @@ export default function LandingApp() {
                 body: 'Batch-export all unsynced notes with source URL, page title, and timestamps into your existing Notion database.',
               },
             ].map(prop => (
-              <div key={prop.eyebrow} style={{ ...s.colorBlock, backgroundColor: '#ffffff', border: '1px solid #e5e5e0', flex: 1, minWidth: 260 }}>
-                <span style={{ ...s.eyebrow, fontSize: 10, color: '#111111', marginBottom: 16 }}>{prop.eyebrow}</span>
-                <h3 style={{ fontSize: 22, fontWeight: 700, lineHeight: 1.25, letterSpacing: '-0.3px', color: '#111111', margin: '0 0 12px' }}>
+              <div
+                key={prop.eyebrow}
+                style={{
+                  ...s.colorBlock,
+                  backgroundColor: '#111111',
+                  color: '#ffffff',
+                  border: '1px solid #1e1e1e',
+                  flex: 1,
+                  minWidth: 260,
+                  padding: '40px 36px',
+                }}
+              >
+                <span
+                  style={{
+                    ...s.eyebrow,
+                    fontSize: 9,
+                    color: '#e4f579',
+                    marginBottom: 16,
+                    display: 'inline-block',
+                    fontWeight: 700,
+                  }}
+                >
+                  {prop.eyebrow}
+                </span>
+                <h3 style={{ fontSize: 22, fontWeight: 700, lineHeight: 1.25, letterSpacing: '-0.3px', color: '#ffffff', margin: '16px 0 12px' }}>
                   {prop.headline}
                 </h3>
-                <p style={{ fontSize: 15, fontWeight: 330, lineHeight: 1.55, color: '#52514e', margin: 0 }}>
+                <p style={{ fontSize: 15, fontWeight: 330, lineHeight: 1.55, color: '#a1a1aa', margin: 0 }}>
                   {prop.body}
                 </p>
               </div>
@@ -264,8 +511,8 @@ export default function LandingApp() {
               },
               {
                 eyebrow: 'DESIGN SYSTEM',
-                title: 'Five signature pastel colors.',
-                body: 'Lime, lilac, cream, mint, pink: each with a crisp monochrome frame that reads on light and dark pages without competing with the site.',
+                title: 'Seven signature pastel colors.',
+                body: 'Lime, sky blue, lilac, cream, mint, pink, coral: each with a crisp monochrome frame that reads on light and dark pages without competing with the site.',
               },
               {
                 eyebrow: 'NOTE MANAGEMENT',
@@ -292,15 +539,15 @@ export default function LandingApp() {
         </div>
       </section>
 
-      {/* ══ 6. ANCHORING ENGINE (monochrome section, pink cards) ══════════════ */}
+      {/* ══ 6. ANCHORING ENGINE (Navy block — per DESIGN.md §Product Landing Page) ═ */}
       <section id="anchoring" style={s.sectionSpacing}>
         <div style={s.wrap}>
-          <div style={{ ...s.colorBlock, backgroundColor: '#f8f8f6', border: '1px solid #e5e5e0', padding: '48px 48px' }}>
-            <span style={{ ...s.eyebrow, color: '#52514e', marginBottom: 12 }}>3-TIER ANCHORING ENGINE</span>
-            <h2 style={{ ...s.displayLg, color: '#111111', maxWidth: 720 }}>
+          <div style={{ ...s.colorBlock, backgroundColor: '#111111', color: '#ffffff', padding: '48px 48px' }}>
+            <span style={{ ...s.eyebrow, color: '#e4f579', marginBottom: 12 }}>3-TIER ANCHORING ENGINE</span>
+            <h2 style={{ ...s.displayLg, color: '#ffffff', maxWidth: 720 }}>
               Notes that don't drift.<br />Ever.
             </h2>
-            <p style={{ fontSize: 18, fontWeight: 330, lineHeight: 1.45, letterSpacing: '-0.26px', color: '#52514e', maxWidth: 640, margin: '0 0 36px' }}>
+            <p style={{ fontSize: 18, fontWeight: 330, lineHeight: 1.45, letterSpacing: '-0.26px', color: '#a1a1aa', maxWidth: 640, margin: '0 0 36px' }}>
               Single-method highlighters break when DOM trees shift. Stickle combines three independent fallback tiers so your notes always find their home.
             </p>
 
@@ -310,8 +557,12 @@ export default function LandingApp() {
                   badge: 'TIER 1: EXACT',
                   title: 'Structural XPath & DOM',
                   desc: 'Attaches directly to the target element using an optimized selector chain and relative offset vector.',
+                  badgeBg: '#e4f579',
+                  badgeColor: '#111111',
+                  iconBg: '#e4f579',
+                  iconStroke: '#111111',
                   icon: (
-                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#500724" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#111111" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
                       <circle cx="12" cy="12" r="10" />
                       <line x1="12" y1="8" x2="12" y2="12" />
                       <line x1="12" y1="16" x2="12.01" y2="16" />
@@ -322,8 +573,12 @@ export default function LandingApp() {
                   badge: 'TIER 2: RESILIENT',
                   title: 'Survives dynamic re-renders',
                   desc: 'Fingerprints surrounding content so notes stay attached even when Twitter, Reddit, or GitHub update in real time.',
+                  badgeBg: 'rgba(255,255,255,0.15)',
+                  badgeColor: '#ffffff',
+                  iconBg: 'rgba(255,255,255,0.12)',
+                  iconStroke: '#ffffff',
                   icon: (
-                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#500724" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#ffffff" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
                       <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z" />
                     </svg>
                   ),
@@ -332,8 +587,12 @@ export default function LandingApp() {
                   badge: 'TIER 3: FUZZY',
                   title: 'Handles layout refactors',
                   desc: 'Scans page text nodes to relocate your notes even if HTML structure or CSS styling changes completely.',
+                  badgeBg: 'rgba(255,255,255,0.15)',
+                  badgeColor: '#ffffff',
+                  iconBg: 'rgba(255,255,255,0.12)',
+                  iconStroke: '#ffffff',
                   icon: (
-                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#500724" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#ffffff" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
                       <circle cx="11" cy="11" r="8" />
                       <line x1="21" y1="21" x2="16.65" y2="16.65" />
                     </svg>
@@ -343,26 +602,26 @@ export default function LandingApp() {
                 <div
                   key={t.title}
                   style={{
-                    backgroundColor: '#ffffff',
+                    backgroundColor: 'rgba(255,255,255,0.07)',
                     borderRadius: 16,
                     padding: 24,
                     display: 'flex',
                     flexDirection: 'column',
                     justifyContent: 'space-between',
-                    border: '1px solid #e5e5e0',
+                    border: '1px solid rgba(255,255,255,0.10)',
                   }}
                 >
                   <div>
                     <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 16 }}>
-                      <div style={{ width: 36, height: 36, borderRadius: 10, backgroundColor: '#f0fdf4', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                      <div style={{ width: 36, height: 36, borderRadius: 10, backgroundColor: t.badgeBg, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
                         {t.icon}
                       </div>
                       <span
                         style={{
                           ...s.eyebrow,
                           fontSize: 9,
-                          color: '#111111',
-                          backgroundColor: '#e4f579',
+                          color: t.badgeColor,
+                          backgroundColor: t.badgeBg,
                           padding: '4px 10px',
                           borderRadius: 50,
                           fontWeight: 700,
@@ -371,10 +630,10 @@ export default function LandingApp() {
                         {t.badge}
                       </span>
                     </div>
-                    <h3 style={{ fontSize: 18, fontWeight: 700, lineHeight: 1.3, color: '#111111', margin: '0 0 8px', letterSpacing: '-0.3px' }}>
+                    <h3 style={{ fontSize: 18, fontWeight: 700, lineHeight: 1.3, color: '#ffffff', margin: '0 0 8px', letterSpacing: '-0.3px' }}>
                       {t.title}
                     </h3>
-                    <p style={{ fontSize: 14, fontWeight: 330, lineHeight: 1.5, color: '#52514e', margin: 0 }}>
+                    <p style={{ fontSize: 14, fontWeight: 330, lineHeight: 1.5, color: '#a1a1aa', margin: 0 }}>
                       {t.desc}
                     </p>
                   </div>
@@ -385,17 +644,88 @@ export default function LandingApp() {
         </div>
       </section>
 
-      {/* ══ 7. NOTION & SECOND BRAIN (monochrome section, mint cards) ═════════ */}
+      {/* ══ 7. KNOWLEDGE BASE SYNC (Black block, lime accents) ══════════════════ */}
       <section style={s.sectionSpacing}>
         <div style={s.wrap}>
-          <div style={{ ...s.colorBlock, backgroundColor: '#f8f8f6', border: '1px solid #e5e5e0', padding: '48px 48px' }}>
-            <span style={{ ...s.eyebrow, color: '#52514e', marginBottom: 12 }}>KNOWLEDGE BASE SYNC</span>
-            <h2 style={{ ...s.displayLg, color: '#111111', maxWidth: 680 }}>
-              Export your web thoughts<br />directly to your Second Brain.
-            </h2>
-            <p style={{ fontSize: 18, fontWeight: 330, lineHeight: 1.45, letterSpacing: '-0.26px', color: '#52514e', maxWidth: 620, margin: '0 0 36px' }}>
-              No more lost tabs or forgotten bookmarks. Connect your web annotations directly to Notion, Obsidian, or your local AI notes in one click.
-            </p>
+          <div style={{ ...s.colorBlock, backgroundColor: '#111111', color: '#ffffff', padding: '48px 48px' }}>
+            
+            {/* Header Flex Layout with Sync-Flow Animation */}
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: 40, marginBottom: 36, flexWrap: 'wrap' }}>
+              <div style={{ maxWidth: 640 }}>
+                <span style={{ ...s.eyebrow, color: '#e4f579', marginBottom: 12 }}>KNOWLEDGE BASE SYNC</span>
+                <h2 style={{ ...s.displayLg, color: '#ffffff', margin: '0 0 16px' }}>
+                  Export your web thoughts<br />directly to your Second Brain.
+                </h2>
+                <p style={{ fontSize: 18, fontWeight: 330, lineHeight: 1.45, letterSpacing: '-0.26px', color: '#a1a1aa', margin: 0 }}>
+                  No more lost tabs or forgotten bookmarks. Connect your web annotations directly to Notion, Obsidian, or your local AI notes in one click.
+                </p>
+              </div>
+
+              {/* ── Sync-Flow Animation: notes flying to Notion / Obsidian / AI ── */}
+              <div style={{ flex: '1 1 320px', minWidth: 300, maxWidth: 380, position: 'relative', height: 220 }}>
+                {/* ambient glow */}
+                <div className="sync-glow" style={{ position: 'absolute', left: '10%', top: '50%', marginTop: -80, width: 160, height: 160, borderRadius: '50%', backgroundColor: '#e4f579', pointerEvents: 'none' }} />
+
+                {/* ── SVG connector lines ── */}
+                <svg width="100%" height="220" viewBox="0 0 380 220" style={{ position: 'absolute', top: 0, left: 0, pointerEvents: 'none' }}>
+                  {/* line to Notion — lime accent */}
+                  <path className="sync-connector" d="M 130 70 C 200 70 240 45 295 38" fill="none" stroke="#e4f579" strokeWidth="1.5" strokeLinecap="round" />
+                  {/* line to Obsidian — monochrome */}
+                  <path className="sync-connector sync-connector-2" d="M 130 110 C 210 110 250 110 295 108" fill="none" stroke="rgba(255,255,255,0.3)" strokeWidth="1.5" strokeLinecap="round" />
+                  {/* line to AI — monochrome */}
+                  <path className="sync-connector sync-connector-3" d="M 130 150 C 200 150 240 170 295 178" fill="none" stroke="rgba(255,255,255,0.3)" strokeWidth="1.5" strokeLinecap="round" />
+                </svg>
+
+                {/* ── SOURCE: 3 bobbing sticky notes ── */}
+                {/* Note 1 – lime */}
+                <div className="sync-note-1" style={{ position: 'absolute', left: 0, top: 38, width: 110, backgroundColor: '#e4f579', borderRadius: 10, padding: '8px 10px', boxShadow: '0 6px 20px rgba(228,245,121,0.25)', border: '1px solid rgba(0,0,0,0.1)' }}>
+                  <div style={{ fontFamily: "'JetBrains Mono', monospace", fontSize: 8, fontWeight: 700, color: '#111', marginBottom: 4, opacity: 0.5 }}>stickle://note</div>
+                  <div style={{ fontSize: 11, fontWeight: 600, color: '#111', lineHeight: 1.4 }}>Found great insight on page 3!</div>
+                </div>
+                {/* Note 2 – white (monochrome) */}
+                <div className="sync-note-2" style={{ position: 'absolute', left: 8, top: 94, width: 110, backgroundColor: '#ffffff', borderRadius: 10, padding: '8px 10px', boxShadow: '0 6px 20px rgba(0,0,0,0.25)', border: '1px solid rgba(0,0,0,0.1)' }}>
+                  <div style={{ fontFamily: "'JetBrains Mono', monospace", fontSize: 8, fontWeight: 700, color: '#111', marginBottom: 4, opacity: 0.5 }}>stickle://note</div>
+                  <div style={{ fontSize: 11, fontWeight: 600, color: '#111', lineHeight: 1.4 }}>Review this API pattern later</div>
+                </div>
+                {/* Note 3 – light gray (monochrome) */}
+                <div className="sync-note-3" style={{ position: 'absolute', left: 2, top: 152, width: 110, backgroundColor: '#f0f0eb', borderRadius: 10, padding: '8px 10px', boxShadow: '0 6px 20px rgba(0,0,0,0.20)', border: '1px solid rgba(0,0,0,0.1)' }}>
+                  <div style={{ fontFamily: "'JetBrains Mono', monospace", fontSize: 8, fontWeight: 700, color: '#111', marginBottom: 4, opacity: 0.5 }}>stickle://note</div>
+                  <div style={{ fontSize: 11, fontWeight: 600, color: '#111', lineHeight: 1.4 }}>Ask AI about this approach</div>
+                </div>
+
+                {/* ── FLYING PARTICLES — all lime, monochrome look ── */}
+                <div className="sync-fly-1" style={{ position: 'absolute', left: 110, top: 58, width: 18, height: 18, backgroundColor: '#e4f579', borderRadius: 4, border: '1.5px solid rgba(0,0,0,0.15)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 9 }}>📝</div>
+                <div className="sync-fly-2" style={{ position: 'absolute', left: 110, top: 100, width: 18, height: 18, backgroundColor: '#e4f579', borderRadius: 4, border: '1.5px solid rgba(0,0,0,0.15)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 9 }}>📝</div>
+                <div className="sync-fly-3" style={{ position: 'absolute', left: 110, top: 142, width: 18, height: 18, backgroundColor: '#e4f579', borderRadius: 4, border: '1.5px solid rgba(0,0,0,0.15)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 9 }}>📝</div>
+
+                {/* ── DESTINATIONS: Notion, Obsidian, AI — all monochrome, lime accents ── */}
+                {/* Notion */}
+                <div className="sync-target-notion" style={{ position: 'absolute', right: 0, top: 12, width: 72, borderRadius: 14, backgroundColor: '#1e1e1e', border: '1.5px solid #e4f579', padding: '10px 8px', display: 'flex', flexDirection: 'column' as const, alignItems: 'center', gap: 5 }}>
+                  <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#e4f579" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                    <rect x="3" y="3" width="18" height="18" rx="3" />
+                    <path d="M9 9h6M9 12h6M9 15h4" />
+                  </svg>
+                  <span style={{ fontFamily: "'JetBrains Mono', monospace", fontSize: 8, fontWeight: 700, color: '#e4f579', letterSpacing: '0.5px' }}>NOTION</span>
+                </div>
+                {/* Obsidian */}
+                <div className="sync-target-obsidian" style={{ position: 'absolute', right: 0, top: 84, width: 72, borderRadius: 14, backgroundColor: '#1e1e1e', border: '1.5px solid rgba(255,255,255,0.25)', padding: '10px 8px', display: 'flex', flexDirection: 'column' as const, alignItems: 'center', gap: 5 }}>
+                  <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="rgba(255,255,255,0.7)" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                    <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z" />
+                    <polyline points="14 2 14 8 20 8" />
+                    <line x1="16" y1="13" x2="8" y2="13" />
+                    <line x1="16" y1="17" x2="8" y2="17" />
+                  </svg>
+                  <span style={{ fontFamily: "'JetBrains Mono', monospace", fontSize: 8, fontWeight: 700, color: 'rgba(255,255,255,0.6)', letterSpacing: '0.5px' }}>OBSIDIAN</span>
+                </div>
+                {/* AI */}
+                <div className="sync-target-ai" style={{ position: 'absolute', right: 0, top: 154, width: 72, borderRadius: 14, backgroundColor: '#1e1e1e', border: '1.5px solid rgba(255,255,255,0.25)', padding: '10px 8px', display: 'flex', flexDirection: 'column' as const, alignItems: 'center', gap: 5 }}>
+                  <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="rgba(255,255,255,0.7)" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                    <path d="m12 3-1.912 5.813a2 2 0 0 1-1.275 1.275L3 12l5.813 1.912a2 2 0 0 1 1.275 1.275L12 21l1.912-5.813a2 2 0 0 1 1.275-1.275L21 12l-5.813-1.912a2 2 0 0 1-1.275-1.275L12 3Z" />
+                  </svg>
+                  <span style={{ fontFamily: "'JetBrains Mono', monospace", fontSize: 8, fontWeight: 700, color: 'rgba(255,255,255,0.6)', letterSpacing: '0.5px' }}>AI CHAT</span>
+                </div>
+              </div>
+            </div>
 
             {/* Interactive Format Selector Tabs */}
             <div style={{ display: 'flex', gap: 8, marginBottom: 20, flexWrap: 'wrap' as const }}>
@@ -411,11 +741,11 @@ export default function LandingApp() {
                     padding: '8px 20px',
                     borderRadius: 50,
                     fontSize: 11,
-                    fontFamily: "'Inter', system-ui, sans-serif",
+                    fontFamily: "'JetBrains Mono', monospace",
                     fontWeight: 700,
                     letterSpacing: '0.5px',
-                    backgroundColor: pkmTab === tab.id ? '#052e16' : 'rgba(255, 255, 255, 0.75)',
-                    color: pkmTab === tab.id ? '#ffffff' : '#052e16',
+                    backgroundColor: pkmTab === tab.id ? '#e4f579' : '#27272a',
+                    color: pkmTab === tab.id ? '#111111' : '#a1a1aa',
                     border: 'none',
                     cursor: 'pointer',
                     transition: 'all 0.15s ease',
@@ -426,16 +756,16 @@ export default function LandingApp() {
               ))}
             </div>
 
-            {/* Content Preview Box */}
-            <div style={{ backgroundColor: '#ffffff', borderRadius: 16, padding: 24, marginBottom: 28, border: '1px solid rgba(5,46,22,0.08)', boxShadow: '0 2px 10px rgba(0,0,0,0.03)' }}>
+            {/* Content Preview Box — dark surface on black block */}
+            <div style={{ backgroundColor: '#18181b', borderRadius: 16, padding: 24, marginBottom: 28, border: '1px solid #27272a' }}>
               {pkmTab === 'notion' && (
                 <div>
-                  <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 16, paddingBottom: 12, borderBottom: '1px solid #f0fdf4' }}>
-                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#052e16" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                  <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 16, paddingBottom: 12, borderBottom: '1px solid #27272a' }}>
+                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#e4f579" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
                       <path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z" />
                       <polyline points="22,6 12,13 2,6" />
                     </svg>
-                    <span style={{ fontSize: 13, fontWeight: 700, color: '#052e16' }}>Notion Database Entry • Automatic Field Mapping</span>
+                    <span style={{ fontSize: 13, fontWeight: 700, color: '#e4f579' }}>Notion Database Entry • Automatic Field Mapping</span>
                   </div>
                   <div style={s.notionPropGrid}>
                     {[
@@ -446,9 +776,9 @@ export default function LandingApp() {
                       { label: 'NOTE THEME', value: 'Pastel color label' },
                       { label: 'SYNC STATUS', value: 'Synced flag' },
                     ].map(p => (
-                      <div key={p.label} style={s.notionPropCard}>
-                        <span style={{ ...s.eyebrow, fontSize: 9, color: '#065f46', marginBottom: 4, display: 'block' }}>{p.label}</span>
-                        <p style={{ fontSize: 14, fontWeight: 600, color: '#052e16', margin: 0 }}>{p.value}</p>
+                      <div key={p.label} style={{ ...s.notionPropCard, backgroundColor: '#27272a', border: '1px solid #3f3f46' }}>
+                        <span style={{ ...s.eyebrow, fontSize: 9, color: '#e4f579', marginBottom: 4, display: 'block' }}>{p.label}</span>
+                        <p style={{ fontSize: 14, fontWeight: 600, color: '#ffffff', margin: 0 }}>{p.value}</p>
                       </div>
                     ))}
                   </div>
@@ -458,21 +788,21 @@ export default function LandingApp() {
               {pkmTab === 'obsidian' && (
                 <div>
                   <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 12 }}>
-                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#052e16" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#e4f579" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
                       <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z" />
                       <polyline points="14 2 14 8 20 8" />
                     </svg>
-                    <span style={{ fontSize: 13, fontWeight: 700, color: '#052e16' }}>Clean `.md` Export with YAML Frontmatter &amp; [[WikiLinks]]</span>
+                    <span style={{ fontSize: 13, fontWeight: 700, color: '#e4f579' }}>Clean `.md` Export with YAML Frontmatter &amp; [[WikiLinks]]</span>
                   </div>
-                  <div style={{ fontFamily: "'JetBrains Mono', monospace", fontSize: 13, color: '#052e16', lineHeight: 1.6, backgroundColor: '#f4fce3', padding: 16, borderRadius: 12 }}>
-                    <div style={{ color: '#065f46', fontWeight: 700 }}>---</div>
+                  <div style={{ fontFamily: "'JetBrains Mono', monospace", fontSize: 13, color: '#e4f579', lineHeight: 1.6, backgroundColor: '#09090b', padding: 16, borderRadius: 12, border: '1px solid #27272a' }}>
+                    <div style={{ color: '#a1a1aa', fontWeight: 700 }}>---</div>
                     <div>title: "Persistent Web Annotation"</div>
                     <div>url: "https://docs.github.com/en/get-started"</div>
                     <div>created: "2026-08-06T01:50:00Z"</div>
-                    <div style={{ color: '#065f46', fontWeight: 700 }}>---</div>
+                    <div style={{ color: '#a1a1aa', fontWeight: 700 }}>---</div>
                     <br />
-                    <div style={{ fontWeight: 700 }}># [[Persistent Web Annotation]]</div>
-                    <div>Stickle attaches sticky notes directly to web page elements. Notes persist across reloads.</div>
+                    <div style={{ fontWeight: 700, color: '#ffffff' }}># [[Persistent Web Annotation]]</div>
+                    <div style={{ color: '#d4d4d8' }}>Stickle attaches sticky notes directly to web page elements. Notes persist across reloads.</div>
                   </div>
                 </div>
               )}
@@ -480,12 +810,12 @@ export default function LandingApp() {
               {pkmTab === 'mcp' && (
                 <div>
                   <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 12 }}>
-                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#052e16" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#e4f579" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
                       <path d="m12 3-1.912 5.813a2 2 0 0 1-1.275 1.275L3 12l5.813 1.912a2 2 0 0 1 1.275 1.275L12 21l1.912-5.813a2 2 0 0 1 1.275-1.275L21 12l-5.813-1.912a2 2 0 0 1-1.275-1.275L12 3Z" />
                     </svg>
-                    <span style={{ fontSize: 13, fontWeight: 700, color: '#052e16' }}>Live Context Feed for Claude Desktop, Cursor &amp; ChatGPT</span>
+                    <span style={{ fontSize: 13, fontWeight: 700, color: '#e4f579' }}>Live Context Feed for Claude Desktop, Cursor &amp; ChatGPT</span>
                   </div>
-                  <div style={{ fontSize: 14, color: '#14532d', lineHeight: 1.55 }}>
+                  <div style={{ fontSize: 14, color: '#d4d4d8', lineHeight: 1.55 }}>
                     Your web sticky notes expose instant context to local LLMs. Ask your AI: <em>"What did I note about this documentation page last week?"</em> and get accurate answers backed by your notes.
                   </div>
                 </div>
@@ -500,7 +830,7 @@ export default function LandingApp() {
                   desc: 'Push single notes or batch-sync all web annotations directly to your Notion database.',
                   badge: 'NOTION API',
                   icon: (
-                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#052e16" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#e4f579" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
                       <path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z" />
                       <polyline points="17 21 17 13 7 13 7 21" />
                       <polyline points="7 3 7 8 15 8" />
@@ -512,7 +842,7 @@ export default function LandingApp() {
                   desc: 'Export formatted `.md` files with YAML frontmatter ready for Obsidian [[WikiLinks]].',
                   badge: 'OPEN FORMAT',
                   icon: (
-                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#052e16" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#e4f579" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
                       <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z" />
                       <polyline points="14 2 14 8 20 8" />
                     </svg>
@@ -523,7 +853,7 @@ export default function LandingApp() {
                   desc: 'Feed your web annotations into AI tools so your assistant remembers what you read.',
                   badge: 'AI READY',
                   icon: (
-                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#052e16" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#e4f579" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
                       <path d="m12 3-1.912 5.813a2 2 0 0 1-1.275 1.275L3 12l5.813 1.912a2 2 0 0 1 1.275 1.275L12 21l1.912-5.813a2 2 0 0 1 1.275-1.275L21 12l-5.813-1.912a2 2 0 0 1-1.275-1.275L12 3Z" />
                     </svg>
                   ),
@@ -533,30 +863,31 @@ export default function LandingApp() {
                   desc: 'Your data stays on device in local storage. Notion sync connects directly to Notion.',
                   badge: 'LOCAL-FIRST',
                   icon: (
-                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#052e16" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#e4f579" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
                       <rect x="3" y="11" width="18" height="11" rx="2" ry="2" />
                       <path d="M7 11V7a5 5 0 0 1 10 0v4" />
                     </svg>
                   ),
                 },
               ].map(item => (
-                <div key={item.title} style={{ backgroundColor: 'rgba(255,255,255,0.75)', borderRadius: 16, padding: 20 }}>
+                <div key={item.title} style={{ backgroundColor: '#18181b', borderRadius: 16, padding: 20, border: '1px solid #27272a' }}>
                   <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 12 }}>
-                    <div style={{ width: 32, height: 32, borderRadius: 8, backgroundColor: '#e4f579', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                    <div style={{ width: 32, height: 32, borderRadius: 8, backgroundColor: 'rgba(228,245,121,0.12)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
                       {item.icon}
                     </div>
-                    <span style={{ ...s.eyebrow, fontSize: 9, color: '#111111' }}>{item.badge}</span>
+                    <span style={{ ...s.eyebrow, fontSize: 9, color: '#e4f579', fontWeight: 700 }}>{item.badge}</span>
                   </div>
-                  <h3 style={{ fontSize: 16, fontWeight: 700, color: '#111111', margin: '0 0 6px' }}>{item.title}</h3>
-                  <p style={{ fontSize: 13, color: '#52514e', lineHeight: 1.5, margin: 0 }}>{item.desc}</p>
+                  <h3 style={{ fontSize: 16, fontWeight: 700, color: '#ffffff', margin: '0 0 6px' }}>{item.title}</h3>
+                  <p style={{ fontSize: 13, color: '#a1a1aa', lineHeight: 1.5, margin: 0 }}>{item.desc}</p>
                 </div>
               ))}
+
             </div>
           </div>
         </div>
       </section>
 
-      {/* ══ 8. ROADMAP (monochrome section, lime cards) ═══════════════════════ */}
+      {/* ══ 8. ROADMAP (off-white, lime badge for NOW only, rest monochrome) ══════ */}
       <section id="roadmap" style={s.sectionSpacing}>
         <div style={s.wrap}>
           <div style={{ ...s.colorBlock, backgroundColor: '#f8f8f6', border: '1px solid #e5e5e0', padding: '48px 48px' }}>
@@ -575,7 +906,10 @@ export default function LandingApp() {
                   badge: 'NOW • V1.0',
                   title: 'Instant Web Notes',
                   desc: 'Drop floating sticky notes on any webpage. Fully offline, local storage, and 1-click Notion export.',
-                  isCurrent: true,
+                  badgeBg: '#e4f579',
+                  badgeColor: '#111111',
+                  iconBg: '#e4f579',
+                  iconStroke: '#111111',
                   icon: (
                     <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#111111" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
                       <line x1="12" y1="17" x2="12" y2="22" />
@@ -588,9 +922,12 @@ export default function LandingApp() {
                   badge: 'NEXT • Q3 2026',
                   title: 'Cross-Device Sync',
                   desc: 'Access your web notes automatically across all your devices and Chromium browsers with cloud backup.',
-                  isCurrent: false,
+                  badgeBg: '#27272a',
+                  badgeColor: '#a1a1aa',
+                  iconBg: '#27272a',
+                  iconStroke: '#ffffff',
                   icon: (
-                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#111111" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#ffffff" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
                       <path d="M17.5 19H9a7 7 0 1 1 6.71-9h1.79a4.5 4.5 0 1 1 0 9Z" />
                       <path d="M12 13l-3-3m0 0l3-3m-3 3h8" />
                     </svg>
@@ -600,9 +937,12 @@ export default function LandingApp() {
                   badge: 'SOON • Q4 2026',
                   title: 'Team Workspaces',
                   desc: 'Share annotated web pages with your team. Discuss articles, documentation, and PRs right where they live.',
-                  isCurrent: false,
+                  badgeBg: '#27272a',
+                  badgeColor: '#a1a1aa',
+                  iconBg: '#27272a',
+                  iconStroke: '#ffffff',
                   icon: (
-                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#111111" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#ffffff" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
                       <path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2" />
                       <circle cx="9" cy="7" r="4" />
                       <path d="M22 21v-2a4 4 0 0 0-3-3.87" />
@@ -614,9 +954,12 @@ export default function LandingApp() {
                   badge: 'FUTURE VISION',
                   title: 'AI Assistant Context',
                   desc: 'Connect your web notes to Claude, Cursor, or ChatGPT so your AI assistant remembers what you read.',
-                  isCurrent: false,
+                  badgeBg: '#27272a',
+                  badgeColor: '#a1a1aa',
+                  iconBg: '#27272a',
+                  iconStroke: '#ffffff',
                   icon: (
-                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#111111" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#ffffff" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
                       <path d="m12 3-1.912 5.813a2 2 0 0 1-1.275 1.275L3 12l5.813 1.912a2 2 0 0 1 1.275 1.275L12 21l1.912-5.813a2 2 0 0 1 1.275-1.275L21 12l-5.813-1.912a2 2 0 0 1-1.275-1.275L12 3Z" />
                       <path d="M5 3v4" />
                       <path d="M19 17v4" />
@@ -635,21 +978,20 @@ export default function LandingApp() {
                     display: 'flex',
                     flexDirection: 'column',
                     justifyContent: 'space-between',
-                    border: '1px solid rgba(0,0,0,0.06)',
-                    boxShadow: '0 2px 8px rgba(0,0,0,0.02)',
+                    border: '1px solid #e5e5e0',
                   }}
                 >
                   <div>
                     <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 16 }}>
-                      <div style={{ width: 36, height: 36, borderRadius: 10, backgroundColor: '#e4f579', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                      <div style={{ width: 36, height: 36, borderRadius: 10, backgroundColor: item.iconBg, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
                         {item.icon}
                       </div>
                       <span
                         style={{
                           ...s.eyebrow,
                           fontSize: 9,
-                          color: item.isCurrent ? '#ffffff' : '#111111',
-                          backgroundColor: item.isCurrent ? '#111111' : '#e4f579',
+                          color: item.badgeColor,
+                          backgroundColor: item.badgeBg,
                           padding: '4px 10px',
                           borderRadius: 50,
                           fontWeight: 700,
@@ -672,7 +1014,7 @@ export default function LandingApp() {
         </div>
       </section>
 
-      {/* ══ 9. COMPARISON (white) ════════════════════════════════════════════ */}
+      {/* ══ 9. COMPARISON (white canvas) ═════════════════════════════════════ */}
       <section id="comparison" style={s.sectionSpacing}>
         <div style={s.wrap}>
           <span style={s.eyebrow}>FEATURE COMPARISON</span>
@@ -684,7 +1026,7 @@ export default function LandingApp() {
               <thead>
                 <tr>
                   <th style={s.th}>Feature</th>
-                  <th style={{ ...s.th, color: '#111', fontWeight: 800 }}>Stickle</th>
+                  <th style={{ ...s.th, color: '#111111', fontWeight: 800 }}>Stickle</th>
                   <th style={s.th}>Hypothes.is</th>
                   <th style={s.th}>Notion Clipper</th>
                   <th style={s.th}>Readwise / Liner</th>
@@ -720,7 +1062,7 @@ export default function LandingApp() {
         </div>
       </section>
 
-      {/* ══ 10. PRICING (white, hairline cards) ══════════════════════════════ */}
+      {/* ══ 10. PRICING (Signature Lime for Early Access) ════════════════════ */}
       <section id="pricing" style={s.sectionSpacing}>
         <div style={s.wrap}>
           <span style={s.eyebrow}>TRANSPARENT PRICING</span>
@@ -748,26 +1090,26 @@ export default function LandingApp() {
               </button>
             </div>
 
-            {/* Pro */}
-            <div style={{ ...s.priceCard, border: '2px solid #111', position: 'relative' as const }}>
-              <span style={s.featuredBadge}>EARLY ACCESS</span>
-              <span style={{ ...s.eyebrow, color: '#e02475' }}>PRO SUPPORTER</span>
-              <h3 style={{ fontSize: 24, fontWeight: 700, margin: '8px 0 4px', letterSpacing: '-0.3px' }}>Supporter Access</h3>
-              <div style={s.priceAmount}>
-                $29 <span style={{ fontSize: 15, fontWeight: 400 }}>one-time</span>
+            {/* Pro Supporter (Lime featured card) */}
+            <div style={{ ...s.priceCard, backgroundColor: '#111111', color: '#ffffff', border: '2px solid #e4f579', position: 'relative' as const }}>
+              <span style={{ ...s.featuredBadge, backgroundColor: '#e4f579', color: '#111111' }}>EARLY ACCESS</span>
+              <span style={{ ...s.eyebrow, color: '#e4f579' }}>PRO SUPPORTER</span>
+              <h3 style={{ fontSize: 24, fontWeight: 700, color: '#ffffff', margin: '8px 0 4px', letterSpacing: '-0.3px' }}>Supporter Access</h3>
+              <div style={{ ...s.priceAmount, color: '#ffffff' }}>
+                $29 <span style={{ fontSize: 15, fontWeight: 400, color: '#a1a1aa' }}>one-time</span>
               </div>
-              <p style={{ fontSize: 14, color: '#52514e', margin: '0 0 24px', lineHeight: 1.5 }}>
+              <p style={{ fontSize: 14, color: '#a1a1aa', margin: '0 0 24px', lineHeight: 1.5 }}>
                 Support open source + unlock cloud features when they ship.
               </p>
               <ul style={s.featureList}>
                 {['Everything in Free Core', 'Cross-device cloud sync', 'Central web dashboard', 'Remote MCP server for AI context', 'Priority feature requests'].map(f => (
-                  <li key={f} style={s.featureItem}>
-                    <span style={s.checkMark}>✓</span> {f}
+                  <li key={f} style={{ ...s.featureItem, color: '#ffffff' }}>
+                    <span style={{ ...s.checkMark, color: '#e4f579' }}>✓</span> {f}
                   </li>
                 ))}
               </ul>
               <button
-                style={{ ...s.btnPrimary, width: '100%', marginTop: 'auto', backgroundColor: '#e02475' }}
+                style={{ ...s.btnPrimary, width: '100%', marginTop: 'auto', backgroundColor: '#e4f579', color: '#111111' }}
                 onClick={openSandbox}
               >
                 Become a Supporter
@@ -802,28 +1144,28 @@ export default function LandingApp() {
         </div>
       </section>
 
-      {/* ══ 10.5 DEDICATED WAITLIST SECTION (Block Lime: #e4f579) ══════════════ */}
+      {/* ══ 10.5 DEDICATED WAITLIST SECTION (High Contrast Black Block: #111111) ══ */}
       <section id="waitlist" style={s.sectionSpacing}>
         <div style={s.wrap}>
-          <div style={{ ...s.colorBlock, backgroundColor: '#e4f579', padding: '56px 48px', textAlign: 'center' as const }}>
+          <div style={{ ...s.colorBlock, backgroundColor: '#111111', padding: '56px 48px', textAlign: 'center' as const, color: '#ffffff' }}>
             <div style={{ maxWidth: 680, margin: '0 auto' }}>
-              <span style={{ ...s.eyebrow, color: '#111111', marginBottom: 12 }}>EXTENSION ROLLOUT</span>
-              <h2 style={{ ...s.displayLg, color: '#111111', margin: '0 0 16px' }}>
+              <span style={{ ...s.eyebrow, color: '#e4f579', marginBottom: 12 }}>EXTENSION ROLLOUT</span>
+              <h2 style={{ ...s.displayLg, color: '#ffffff', margin: '0 0 16px' }}>
                 Be first in line when Stickle launches.
               </h2>
-              <p style={{ fontSize: 18, fontWeight: 330, lineHeight: 1.5, color: '#333333', margin: '0 0 28px' }}>
+              <p style={{ fontSize: 18, fontWeight: 330, lineHeight: 1.5, color: '#a1a1aa', margin: '0 0 28px' }}>
                 We are preparing the extension for public release. Join the waitlist to receive an email notification the exact moment early access builds are live.
               </p>
               <div>
                 <a
                   href="/waitlist.html"
-                  style={{ ...s.btnPrimary, fontSize: 16, padding: '14px 32px', textDecoration: 'none', display: 'inline-block' }}
+                  style={{ ...s.btnPrimary, backgroundColor: '#e4f579', color: '#111111', fontSize: 16, padding: '14px 32px', textDecoration: 'none', display: 'inline-block' }}
                 >
                   Join Rollout Waitlist ↗
                 </a>
               </div>
               <div style={{ marginTop: 20 }}>
-                <span style={{ ...s.eyebrow, fontSize: 11, color: '#111111', letterSpacing: '0.8px' }}>
+                <span style={{ ...s.eyebrow, fontSize: 11, color: '#a1a1aa', letterSpacing: '0.8px' }}>
                   JOIN 500+ RESEARCHERS &amp; DEVELOPERS ALREADY WAITING FOR LAUNCH
                 </span>
               </div>
@@ -1090,7 +1432,22 @@ const s = {
   },
 
   // Hero
-  hero: { padding: '80px 0 96px', maxWidth: 1280, margin: '0 auto', paddingLeft: 32, paddingRight: 32 },
+  hero: { padding: '72px 0 88px', maxWidth: 1280, margin: '0 auto', paddingLeft: 32, paddingRight: 32 },
+  heroGrid: {
+    display: 'grid',
+    gridTemplateColumns: 'repeat(auto-fit, minmax(340px, 1fr))',
+    gap: 48,
+    alignItems: 'center',
+  },
+  heroContent: {
+    display: 'flex',
+    flexDirection: 'column' as const,
+    alignItems: 'flex-start',
+  },
+  heroVisual: {
+    position: 'relative' as const,
+    width: '100%',
+  },
   heroSub: {
     fontSize: 20,
     fontWeight: 330,
@@ -1108,7 +1465,7 @@ const s = {
     letterSpacing: '0.5px',
     textTransform: 'uppercase' as const,
     color: '#b0b0a8',
-    margin: '0 0 56px',
+    margin: '0 0 0',
   },
 
   // Browser mock
