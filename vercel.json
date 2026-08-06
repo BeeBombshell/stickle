@@ -1,5 +1,6 @@
 {
-  "buildCommand": "pnpm run build",
+  "buildCommand": "npm run build",
+  "installCommand": "npm install",
   "outputDirectory": ".output/chrome-mv3",
   "cleanUrls": true,
   "rewrites": [

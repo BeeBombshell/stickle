@@ -1,3 +1,4 @@
+import '../../lib/posthog';
 import { render } from 'preact';
 import PrivacyApp from './App';
 import '../../styles/design-tokens.css';

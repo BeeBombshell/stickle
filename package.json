@@ -19,6 +19,7 @@
   "dependencies": {
     "@modelcontextprotocol/sdk": "^1.30.0",
     "dexie": "^4.0.10",
+    "posthog-js": "^1.407.2",
     "preact": "^10.26.4"
   },
   "devDependencies": {

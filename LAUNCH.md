@@ -587,7 +587,7 @@ export const Events = {
 
 ### Privacy Policy Reference
 - **Hosted Privacy Policy Page:** `privacy.html` (`entrypoints/privacy/`)
-- **Privacy Core Tenet:** 100% local-first data storage in IndexedDB, zero telemetry/tracking, direct HTTPS Notion API communication without proxy servers.
+- **Privacy Core Tenet:** 100% local-first data storage in IndexedDB, privacy-preserving anonymized usage metrics (PostHog), direct HTTPS Notion API communication without proxy servers.
 
 ---
 
