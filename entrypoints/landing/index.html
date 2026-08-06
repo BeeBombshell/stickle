@@ -100,6 +100,39 @@
       }
       .sync-connector-2 { animation-delay: 1.2s !important; }
       .sync-connector-3 { animation-delay: 2.4s !important; }
+
+      /* ── Roadmap Road Animation ── */
+      @keyframes roadLineDrive {
+        0%   { stroke-dashoffset: 36; }
+        100% { stroke-dashoffset: 0; }
+      }
+      @keyframes roadCarTravel {
+        0%   { left: -70px; opacity: 0; }
+        3%   { opacity: 1; }
+        97%  { opacity: 1; }
+        100% { left: 105%; opacity: 0; }
+      }
+      @keyframes roadPinPulse {
+        0%, 100% { transform: scale(1); filter: drop-shadow(0 2px 4px rgba(0,0,0,0.15)); }
+        50%       { transform: scale(1.18); filter: drop-shadow(0 6px 14px rgba(228,245,121,0.6)); }
+      }
+      @keyframes roadCarBounce {
+        0%, 100% { transform: translateY(0); }
+        50%       { transform: translateY(-3px); }
+      }
+      .road-dashed-line {
+        stroke-dasharray: 12, 12;
+        animation: roadLineDrive 1s linear infinite;
+      }
+      .road-sticky-car {
+        animation: roadCarTravel 9s linear infinite;
+      }
+      .road-car-body {
+        animation: roadCarBounce 0.4s ease-in-out infinite;
+      }
+      .road-pin-pulse {
+        animation: roadPinPulse 2.4s ease-in-out infinite;
+      }
     </style>
   </head>
   <body>
