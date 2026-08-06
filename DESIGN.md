@@ -251,12 +251,12 @@ The flagship marketing page follows an editorial rhythm alternating between whit
 
 ### Onboarding Tutorial Page (`onboarding.html`)
 First-run installation tutorial page:
-1. **Header & Tagline**: Monochrome lockup with version badge and positioning.
-2. **Branding Banner**: Lilac color block (`{colors.block-lilac}`) summarizing local-first positioning.
-3. **Core Mechanics**: 3-step grid for Alt+Click, selection pill, and context menu.
-4. **Interactive Sandbox**: Warm cream color block (`{colors.block-cream}`) with live interactive sticky note playground.
-5. **Anchoring Engine Overview**: Navy color block (`{colors.block-navy}`) with tier badges.
-6. **Product Roadmap**: Lime color block (`{colors.block-lime}`) featuring 4 clean milestone cards with SVG vector icons and benefit-focused copy.
+1. **Header & Hero Section**: 2-column hero featuring main headline, positioning body, pill CTAs, and a playful interactive sticky note on the right with color palette picker, stamp badges, and stacked depth effect.
+2. **Core Mechanics**: 3-step grid for Alt+Click, selection pill, and context menu.
+3. **Interactive Sandbox**: Dark inverse color block (`#111111`) with live interactive sticky note playground.
+4. **Anchoring Engine Overview**: Monochrome off-white section (`#f8f8f6`) with 3-tier fallback badges.
+5. **Notion Sync**: Dark inverse color block (`#111111`) explaining 1-click export setup.
+6. **Product Roadmap**: Monochrome off-white section (`#f8f8f6`) featuring 4 clean milestone cards with SVG vector icons.
 7. **Closing CTA**: White canvas CTA to start annotating the web.
 
 

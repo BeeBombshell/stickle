@@ -1,33 +1,150 @@
-import { useState } from 'preact/hooks';
-
-// ─── Mini sticky note component for the sandbox ───────────────────────────
-type NoteColor = 'lime' | 'lilac' | 'cream' | 'mint' | 'pink' | 'coral';
-const NOTE_COLORS: Record<NoteColor, string> = {
-  lime: '#e4f579',
-  lilac: '#e8d5ff',
-  cream: '#fff7db',
-  mint: '#d1f7c4',
-  pink: '#ffd6e8',
-  coral: '#ffdbcc',
-};
+import { useState, useRef } from 'preact/hooks';
+import { NoteBubble } from '../../components/NoteBubble';
+import type { StickleNote, NoteColorBlock } from '../../lib/types';
 
 export default function OnboardingApp() {
-  const [notes, setNotes] = useState<Array<{ id: number; text: string; color: NoteColor }>>([
-    { id: 1, text: 'Hold Alt and click any element on a webpage. Your note attaches right there.', color: 'lime' },
-    { id: 2, text: 'Notes survive React re-renders, page reloads, and tab closes.', color: 'lilac' },
+  // Authentic Stickle Notes for Interactive Sandbox (STEP 2)
+  const [sandboxNotes, setSandboxNotes] = useState<StickleNote[]>([
+    {
+      id: 'sandbox-1',
+      url: 'https://stickle.app/onboarding',
+      pageTitle: 'Interactive Sandbox',
+      content: 'Hold Alt and click any element on a webpage. Your note attaches right there.',
+      color: 'lime',
+      anchor: { cssSelector: '#sandbox-el-1', offsetX: 0, offsetY: 0, tier: 'selector' },
+      createdAt: Date.now(),
+      updatedAt: Date.now(),
+      syncedToNotion: true,
+      tags: ['sandbox', 'tutorial'],
+    },
+    {
+      id: 'sandbox-2',
+      url: 'https://stickle.app/onboarding',
+      pageTitle: 'Interactive Sandbox',
+      content: 'Notes survive React re-renders, page reloads, and tab closes.',
+      color: 'lilac',
+      anchor: { cssSelector: '#sandbox-el-2', offsetX: 0, offsetY: 0, tier: 'text-fragment' },
+      createdAt: Date.now(),
+      updatedAt: Date.now(),
+      syncedToNotion: true,
+      tags: ['sync', 'reload-safe'],
+    },
   ]);
 
-  const spawnNote = () => {
-    const colorKeys = Object.keys(NOTE_COLORS) as NoteColor[];
-    const color = colorKeys[notes.length % colorKeys.length];
-    setNotes(prev => [...prev, {
-      id: Date.now(),
-      text: 'Edit this note - it stays right where you left it.',
-      color,
-    }]);
+  // Drag position map for Sandbox notes
+  const [sandboxPositions, setSandboxPositions] = useState<Record<string, { x: number; y: number }>>({});
+  const sandboxDragRef = useRef<{ noteId: string; startX: number; startY: number } | null>(null);
+  const [activeDraggingId, setActiveDraggingId] = useState<string | null>(null);
+
+  const handleSandboxDragStart = (noteId: string) => {
+    const current = sandboxPositions[noteId] || { x: 0, y: 0 };
+    sandboxDragRef.current = { noteId, startX: current.x, startY: current.y };
+    setActiveDraggingId(noteId);
   };
 
-  const deleteNote = (id: number) => setNotes(prev => prev.filter(n => n.id !== id));
+  const handleSandboxDrag = (noteId: string, dx: number, dy: number) => {
+    if (!sandboxDragRef.current || sandboxDragRef.current.noteId !== noteId) return;
+    const newX = sandboxDragRef.current.startX + dx;
+    const newY = sandboxDragRef.current.startY + dy;
+    setSandboxPositions(prev => ({
+      ...prev,
+      [noteId]: { x: newX, y: newY },
+    }));
+  };
+
+  const handleSandboxDragEnd = () => {
+    sandboxDragRef.current = null;
+    setActiveDraggingId(null);
+  };
+
+  // Authentic Stickle Notes for Hero Section (matching actual extension NoteBubble)
+  const [heroNote1, setHeroNote1] = useState<StickleNote>({
+    id: 'hero-note-1',
+    url: 'https://stickle.app/onboarding',
+    pageTitle: 'Stickle Onboarding',
+    content: 'Hold Alt and click anywhere on any webpage: a heading, code block, or image. Your note pins right there!',
+    color: 'lime',
+    anchor: {
+      cssSelector: 'h1.displayXL',
+      offsetX: 0,
+      offsetY: 0,
+      tier: 'selector',
+    },
+    createdAt: Date.now(),
+    updatedAt: Date.now(),
+    syncedToNotion: true,
+    tags: ['alt-click', 'web-margins', 'v1.0'],
+  });
+
+  const [heroNote2, setHeroNote2] = useState<StickleNote>({
+    id: 'hero-note-2',
+    url: 'https://stickle.app/onboarding',
+    pageTitle: 'Stickle Onboarding',
+    content: 'Notes survive React re-renders, page reloads, and export straight to Notion with 1 click!',
+    color: 'lilac',
+    anchor: {
+      cssSelector: 'p.bodyLg',
+      offsetX: 0,
+      offsetY: 0,
+      tier: 'text-fragment',
+    },
+    createdAt: Date.now(),
+    updatedAt: Date.now(),
+    syncedToNotion: true,
+    tags: ['notion', 'sync', 'local-first'],
+  });
+
+  // Position offsets for Hero notes dragging
+  const [hero1Pos, setHero1Pos] = useState<{ x: number; y: number }>({ x: 0, y: 0 });
+  const [hero2Pos, setHero2Pos] = useState<{ x: number; y: number }>({ x: 0, y: 0 });
+  const heroDragRef = useRef<{ noteId: string; startX: number; startY: number } | null>(null);
+
+  const handleHeroDragStart = (noteId: string) => {
+    const start = noteId === 'hero-note-1' ? hero1Pos : hero2Pos;
+    heroDragRef.current = { noteId, startX: start.x, startY: start.y };
+    setActiveDraggingId(noteId);
+  };
+
+  const handleHeroDrag = (noteId: string, dx: number, dy: number) => {
+    if (!heroDragRef.current || heroDragRef.current.noteId !== noteId) return;
+    const newX = heroDragRef.current.startX + dx;
+    const newY = heroDragRef.current.startY + dy;
+    if (noteId === 'hero-note-1') {
+      setHero1Pos({ x: newX, y: newY });
+    } else {
+      setHero2Pos({ x: newX, y: newY });
+    }
+  };
+
+  const handleHeroDragEnd = () => {
+    heroDragRef.current = null;
+    setActiveDraggingId(null);
+  };
+
+  const [isHeroHovered, setIsHeroHovered] = useState<boolean>(false);
+
+  const spawnSandboxNote = () => {
+    const colorKeys: NoteColorBlock[] = ['lime', 'lilac', 'cream', 'mint', 'pink', 'coral'];
+    const color = colorKeys[sandboxNotes.length % colorKeys.length];
+    const newId = `sandbox-${Date.now()}`;
+    const newNote: StickleNote = {
+      id: newId,
+      url: 'https://stickle.app/onboarding',
+      pageTitle: 'Interactive Sandbox',
+      content: 'Edit or drag this note — it stays right where you drop it!',
+      color,
+      anchor: { cssSelector: '.sandbox-item', offsetX: 0, offsetY: 0, tier: 'selector' },
+      createdAt: Date.now(),
+      updatedAt: Date.now(),
+      syncedToNotion: false,
+      tags: ['sandbox', 'draggable'],
+    };
+    setSandboxNotes(prev => [...prev, newNote]);
+  };
+
+  const deleteSandboxNote = (id: string) => {
+    setSandboxNotes(prev => prev.filter(n => n.id !== id));
+  };
 
   const openLandingPage = () => {
     if (typeof chrome !== 'undefined' && chrome.tabs) {
@@ -71,34 +188,148 @@ export default function OnboardingApp() {
         </div>
       </nav>
 
-      {/* ── HERO ────────────────────────────────────────────────────────── */}
+      {/* ── HERO WITH AUTHENTIC PLAYFUL STICKLE NOTE STACK ──────────────── */}
       <section style={s.hero}>
-        <span style={s.eyebrow}>STICKLE • V1.0 • WELCOME</span>
-        <h1 style={s.displayXL}>
-          Leave notes in the<br />margins of the web.
-        </h1>
-        <p style={s.bodyLg}>
-          You just installed Stickle. Hold <kbd style={s.kbd}>Alt</kbd> and click anything on any webpage:
-          a heading, a code block, an image. A sticky note pins right there and stays,
-          even when the page re-renders.
-        </p>
-        <div style={s.ctaRow}>
-          <button style={s.btnPrimary} onClick={() => window.close()}>
-            Start taking notes
-          </button>
-          <button style={s.btnSecondary} onClick={openLandingPage}>
-            View product page
-          </button>
+        <div style={s.heroGrid}>
+          {/* Left Column: Headline & Action */}
+          <div style={s.heroContent}>
+            <span style={s.eyebrow}>STICKLE • V1.0 • WELCOME</span>
+            <h1 style={s.displayXL}>
+              Leave notes in the<br />margins of the web.
+            </h1>
+            <p style={s.bodyLg}>
+              You just installed Stickle. Hold <kbd style={s.kbd}>Alt</kbd> and click anything on any webpage:
+              a heading, a code block, an image. A sticky note pins right there and stays,
+              even when the page re-renders.
+            </p>
+
+            <div style={s.ctaRow}>
+              <button style={s.btnPrimary} onClick={() => window.close()}>
+                Start taking notes
+              </button>
+              <button style={s.btnSecondary} onClick={openLandingPage}>
+                View product page
+              </button>
+            </div>
+            <p style={s.trustLine}>
+              100% local-first · No account needed · Works offline · Open source
+            </p>
+          </div>
+
+          {/* Right Column: Playful Sticky Note Hero Graphic matching actual NoteBubble design */}
+          <div style={s.heroVisual}>
+            {/* Floating Pill Badge Top Right */}
+            <div style={{
+              position: 'absolute',
+              top: -8,
+              right: 12,
+              zIndex: 10,
+              backgroundColor: '#111111',
+              color: '#ffffff',
+              padding: '5px 14px',
+              borderRadius: 50,
+              fontFamily: "'JetBrains Mono', monospace",
+              fontSize: 10,
+              fontWeight: 700,
+              letterSpacing: '0.6px',
+              boxShadow: '0 4px 14px rgba(0,0,0,0.18)',
+              display: 'flex',
+              alignItems: 'center',
+              gap: 6,
+              userSelect: 'none',
+            }}>
+              <span style={{ width: 6, height: 6, borderRadius: '50%', backgroundColor: '#e4f579' }} />
+              ALT + CLICK ANYWHERE
+            </div>
+
+            {/* Floating Pill Badge Bottom Left */}
+            <div style={{
+              position: 'absolute',
+              bottom: 4,
+              left: 4,
+              zIndex: 10,
+              backgroundColor: '#ffffff',
+              color: '#111111',
+              border: '1px solid #e5e5e0',
+              padding: '5px 14px',
+              borderRadius: 50,
+              fontFamily: "'JetBrains Mono', monospace",
+              fontSize: 10,
+              fontWeight: 700,
+              letterSpacing: '0.6px',
+              boxShadow: '0 4px 14px rgba(0,0,0,0.06)',
+              userSelect: 'none',
+            }}>
+              ⚡️ 3-TIER ANCHORED
+            </div>
+
+            {/* Collage Note Stack */}
+            <div
+              onMouseEnter={() => setIsHeroHovered(true)}
+              onMouseLeave={() => setIsHeroHovered(false)}
+              style={{
+                position: 'relative',
+                width: 320,
+                minHeight: 280,
+                display: 'flex',
+                justifyContent: 'center',
+                alignItems: 'center',
+              }}
+            >
+              {/* Background Stacked NoteBubble (Lilac, Tier 2 Fragment border) */}
+              <div style={{
+                position: 'absolute',
+                top: 0,
+                left: 0,
+                zIndex: activeDraggingId === 'hero-note-2' ? 50 : 1,
+                transform: isHeroHovered
+                  ? `rotate(-6.5deg) translate3d(${-20 + hero2Pos.x}px, ${12 + hero2Pos.y}px, 0)`
+                  : `rotate(-5deg) translate3d(${-14 + hero2Pos.x}px, ${8 + hero2Pos.y}px, 0)`,
+                transition: activeDraggingId === 'hero-note-2' ? 'none' : 'all 0.3s cubic-bezier(0.34, 1.56, 0.64, 1)',
+                opacity: 0.94,
+              }}>
+                <NoteBubble
+                  note={heroNote2}
+                  onSave={(val) => setHeroNote2(prev => ({ ...prev, content: val }))}
+                  onColorChange={(col) => setHeroNote2(prev => ({ ...prev, color: col }))}
+                  onToggleCollapse={(coll) => setHeroNote2(prev => ({ ...prev, collapsed: coll }))}
+                  onTagsChange={(tags) => setHeroNote2(prev => ({ ...prev, tags }))}
+                  onDragStart={() => handleHeroDragStart('hero-note-2')}
+                  onDrag={(dx, dy) => handleHeroDrag('hero-note-2', dx, dy)}
+                  onDragEnd={handleHeroDragEnd}
+                />
+              </div>
+
+              {/* Foreground NoteBubble (Lime, Tier 1 Selector border) */}
+              <div style={{
+                position: 'relative',
+                zIndex: activeDraggingId === 'hero-note-1' ? 50 : 2,
+                transform: isHeroHovered
+                  ? `rotate(0deg) scale(1.03) translate3d(${12 + hero1Pos.x}px, ${-6 + hero1Pos.y}px, 0)`
+                  : `rotate(3.5deg) translate3d(${16 + hero1Pos.x}px, ${4 + hero1Pos.y}px, 0)`,
+                transition: activeDraggingId === 'hero-note-1' ? 'none' : 'all 0.3s cubic-bezier(0.34, 1.56, 0.64, 1)',
+                filter: isHeroHovered ? 'drop-shadow(0 16px 36px rgba(0,0,0,0.2))' : 'drop-shadow(0 10px 24px rgba(0,0,0,0.12))',
+              }}>
+                <NoteBubble
+                  note={heroNote1}
+                  onSave={(val) => setHeroNote1(prev => ({ ...prev, content: val }))}
+                  onColorChange={(col) => setHeroNote1(prev => ({ ...prev, color: col }))}
+                  onToggleCollapse={(coll) => setHeroNote1(prev => ({ ...prev, collapsed: coll }))}
+                  onTagsChange={(tags) => setHeroNote1(prev => ({ ...prev, tags }))}
+                  onDragStart={() => handleHeroDragStart('hero-note-1')}
+                  onDrag={(dx, dy) => handleHeroDrag('hero-note-1', dx, dy)}
+                  onDragEnd={handleHeroDragEnd}
+                />
+              </div>
+            </div>
+          </div>
         </div>
-        <p style={s.trustLine}>
-          100% local-first · No account needed · Works offline · Open source
-        </p>
       </section>
 
       {/* ── HOW IT WORKS (white canvas) ─────────────────────────────────── */}
       <section style={s.section}>
         <div style={s.container}>
-          <span style={s.eyebrow}>STEP 1: CORE MECHANICS</span>
+          <span style={{ ...s.eyebrow, color: '#111111' }}>STEP 1: CORE MECHANICS</span>
           <h2 style={s.displayLg}>Three ways to attach a stickle.</h2>
           <div style={s.threeGrid}>
             {[
@@ -128,74 +359,81 @@ export default function OnboardingApp() {
         </div>
       </section>
 
-      {/* ── SANDBOX (cream color block) ─────────────────────────────────── */}
+      {/* ── SANDBOX (Dark Inverse #111 container) ───────────────────────── */}
       <section style={s.section}>
         <div style={s.container}>
-          <div style={{ ...s.colorBlock, backgroundColor: '#fff7db' }}>
-            <span style={s.eyebrow}>STEP 2: INTERACTIVE SANDBOX</span>
-            <h2 style={{ ...s.displayLg, maxWidth: 560 }}>
-              Try creating notes right here.
+          <div style={{ ...s.colorBlock, backgroundColor: '#111111', color: '#ffffff' }}>
+            <span style={{ ...s.eyebrow, color: '#e4f579' }}>STEP 2: INTERACTIVE SANDBOX</span>
+            <h2 style={{ ...s.displayLg, color: '#ffffff', maxWidth: 560 }}>
+              Try creating &amp; placing notes.
             </h2>
-            <p style={{ ...s.bodyText, maxWidth: 560, marginBottom: 32 }}>
-              Click the button to spawn live stickle notes. Type in them, change the color, close them.
-              This is exactly how they work on any webpage.
+            <p style={{ ...s.bodyText, color: '#a3a3a3', maxWidth: 560, marginBottom: 32 }}>
+              Click the button to spawn live stickle notes. Grab any note by its header grip handle (⋮⋮) to drag and place it anywhere!
             </p>
 
             <div style={s.sandboxBar}>
-              <button style={s.btnPrimary} onClick={spawnNote}>
+              <button style={{ ...s.btnPrimary, backgroundColor: '#ffffff', color: '#111111' }} onClick={spawnSandboxNote}>
                 + Spawn stickle
               </button>
-              <span style={s.eyebrow}>{notes.length} active</span>
+              <span style={{ ...s.eyebrow, color: '#e4f579' }}>{sandboxNotes.length} active</span>
+              <span style={{
+                fontFamily: "'JetBrains Mono', monospace",
+                fontSize: 10,
+                fontWeight: 700,
+                color: '#a3a3a3',
+                backgroundColor: 'rgba(255,255,255,0.08)',
+                padding: '4px 12px',
+                borderRadius: 50,
+              }}>
+                🖐 GRAB HEADER (⋮⋮) TO DRAG &amp; PLACE
+              </span>
             </div>
 
-            {notes.length > 0 && (
+            {sandboxNotes.length > 0 && (
               <div style={s.notesGrid}>
-                {notes.map(note => (
-                  <div key={note.id} style={{ ...s.stickyNote, backgroundColor: NOTE_COLORS[note.color] }}>
-                    <div style={s.noteHeader}>
-                      <span style={{ ...s.eyebrow, fontSize: 9, letterSpacing: '0.8px' }}>STICKLE NOTE</span>
-                      <button style={s.closeBtn} onClick={() => deleteNote(note.id)}>✕</button>
-                    </div>
-                    <textarea
-                      style={s.noteArea}
-                      value={note.text}
-                      onInput={e => {
-                        const v = (e.target as HTMLTextAreaElement).value;
-                        setNotes(prev => prev.map(n => n.id === note.id ? { ...n, text: v } : n));
+                {sandboxNotes.map(note => {
+                  const pos = sandboxPositions[note.id] || { x: 0, y: 0 };
+                  const isDragging = activeDraggingId === note.id;
+
+                  return (
+                    <div
+                      key={note.id}
+                      style={{
+                        position: 'relative',
+                        transform: `translate3d(${pos.x}px, ${pos.y}px, 0)`,
+                        transition: isDragging ? 'none' : 'transform 0.15s ease-out',
+                        zIndex: isDragging ? 50 : 1,
                       }}
-                    />
-                    {/* Color picker */}
-                    <div style={s.notePicker}>
-                      {(Object.keys(NOTE_COLORS) as NoteColor[]).map(c => (
-                        <button
-                          key={c}
-                          onClick={() => setNotes(prev => prev.map(n => n.id === note.id ? { ...n, color: c } : n))}
-                          style={{
-                            width: 14, height: 14, borderRadius: '50%',
-                            backgroundColor: NOTE_COLORS[c],
-                            border: note.color === c ? '2px solid #111' : '1px solid rgba(0,0,0,0.15)',
-                            cursor: 'pointer', padding: 0,
-                          }}
-                        />
-                      ))}
+                    >
+                      <NoteBubble
+                        note={note}
+                        onSave={(val) => setSandboxNotes(prev => prev.map(n => n.id === note.id ? { ...n, content: val } : n))}
+                        onColorChange={(col) => setSandboxNotes(prev => prev.map(n => n.id === note.id ? { ...n, color: col } : n))}
+                        onToggleCollapse={(coll) => setSandboxNotes(prev => prev.map(n => n.id === note.id ? { ...n, collapsed: coll } : n))}
+                        onTagsChange={(tags) => setSandboxNotes(prev => prev.map(n => n.id === note.id ? { ...n, tags } : n))}
+                        onDelete={() => deleteSandboxNote(note.id)}
+                        onDragStart={() => handleSandboxDragStart(note.id)}
+                        onDrag={(dx, dy) => handleSandboxDrag(note.id, dx, dy)}
+                        onDragEnd={handleSandboxDragEnd}
+                      />
                     </div>
-                  </div>
-                ))}
+                  );
+                })}
               </div>
             )}
           </div>
         </div>
       </section>
 
-      {/* ── ANCHORING (pink color block) ─────────────────────────────── */}
+      {/* ── ANCHORING (Monochrome off-white #f8f8f6 container) ─────────── */}
       <section style={s.section}>
         <div style={s.container}>
-          <div style={{ ...s.colorBlock, backgroundColor: '#ffd6e8' }}>
-            <span style={{ ...s.eyebrow, color: '#9d174d' }}>STEP 3: ANCHORING ENGINE</span>
-            <h2 style={{ ...s.displayLg, color: '#500724', maxWidth: 620 }}>
+          <div style={{ ...s.colorBlock, backgroundColor: '#f8f8f6', border: '1px solid #e5e5e0' }}>
+            <span style={{ ...s.eyebrow, color: '#111111' }}>STEP 3: ANCHORING ENGINE</span>
+            <h2 style={{ ...s.displayLg, color: '#111111', maxWidth: 620 }}>
               Notes that stay even when pages change.
             </h2>
-            <p style={{ ...s.bodyText, color: '#831843', maxWidth: 600, marginBottom: 40 }}>
+            <p style={{ ...s.bodyText, color: '#52514e', maxWidth: 600, marginBottom: 40 }}>
               Most annotation tools break silently when websites update. Stickle uses a
               3-tier fallback so your note always finds its way back.
             </p>
@@ -206,13 +444,13 @@ export default function OnboardingApp() {
                 { num: '03', badge: 'TIER 3: FUZZY', title: 'Trigram similarity', body: 'Searches DOM text nodes when structure changes completely. Threshold ≥ 0.75.' },
                 { num: '↩', badge: 'FALLBACK: RECOVERABLE', title: 'Orphaned note tray', body: 'If content is deleted entirely, your note lands in the tray: zero data loss.' },
               ].map(t => (
-                <div key={t.badge} style={s.tierCard}>
+                <div key={t.badge} style={{ ...s.tierCard, backgroundColor: '#ffffff', border: '1px solid #e5e5e0' }}>
                   <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: 12 }}>
-                    <span style={{ fontSize: 24, fontWeight: 800, color: '#500724', letterSpacing: '-0.8px', lineHeight: 1 }}>{t.num}</span>
-                    <span style={{ ...s.eyebrow, fontSize: 9, color: '#9d174d', backgroundColor: 'rgba(255,255,255,0.6)', padding: '2px 8px', borderRadius: 50 }}>{t.badge}</span>
+                    <span style={{ fontSize: 24, fontWeight: 800, color: '#111111', letterSpacing: '-0.8px', lineHeight: 1 }}>{t.num}</span>
+                    <span style={{ ...s.eyebrow, fontSize: 9, color: '#111111', backgroundColor: '#e4f579', padding: '2px 8px', borderRadius: 50 }}>{t.badge}</span>
                   </div>
-                  <h4 style={{ color: '#500724', fontWeight: 700, fontSize: 16, margin: '0 0 6px 0', lineHeight: 1.3 }}>{t.title}</h4>
-                  <p style={{ color: '#9f1239', fontSize: 13, lineHeight: 1.5, margin: 0, fontWeight: 330 }}>{t.body}</p>
+                  <h4 style={{ color: '#111111', fontWeight: 700, fontSize: 16, margin: '0 0 6px 0', lineHeight: 1.3 }}>{t.title}</h4>
+                  <p style={{ color: '#52514e', fontSize: 13, lineHeight: 1.5, margin: 0, fontWeight: 330 }}>{t.body}</p>
                 </div>
               ))}
             </div>
@@ -220,19 +458,19 @@ export default function OnboardingApp() {
         </div>
       </section>
 
-      {/* ── NOTION (mint color block) ────────────────────────────────────── */}
+      {/* ── NOTION (Dark Inverse #111 container) ────────────────────────── */}
       <section style={s.section}>
         <div style={s.container}>
-          <div style={{ ...s.colorBlock, backgroundColor: '#d1f7c4' }}>
-            <span style={{ ...s.eyebrow, color: '#065f46' }}>STEP 4: OPTIONAL NOTION SYNC</span>
-            <h2 style={{ ...s.displayLg, color: '#052e16', maxWidth: 580 }}>
+          <div style={{ ...s.colorBlock, backgroundColor: '#111111', color: '#ffffff' }}>
+            <span style={{ ...s.eyebrow, color: '#e4f579' }}>STEP 4: OPTIONAL NOTION SYNC</span>
+            <h2 style={{ ...s.displayLg, color: '#ffffff', maxWidth: 580 }}>
               Push your research to Notion in one click.
             </h2>
-            <p style={{ ...s.bodyText, color: '#14532d', maxWidth: 560, marginBottom: 32 }}>
+            <p style={{ ...s.bodyText, color: '#a3a3a3', maxWidth: 560, marginBottom: 32 }}>
               Connect your Notion workspace once in Settings. Every note exports with source URL,
               page title, and timestamp: right into your existing knowledge base.
             </p>
-            <ol style={{ ...s.bodyText, color: '#14532d', paddingLeft: 20, margin: 0, lineHeight: 2.2 }}>
+            <ol style={{ ...s.bodyText, color: '#e5e5e5', paddingLeft: 20, margin: 0, lineHeight: 2.2 }}>
               <li>Go to <strong>notion.so/my-integrations</strong> → create an Internal Integration Token.</li>
               <li>Share your target database with the integration.</li>
               <li>Paste the token + database ID into Stickle → Settings → Notion.</li>
@@ -241,15 +479,15 @@ export default function OnboardingApp() {
         </div>
       </section>
 
-      {/* ── ROADMAP (lime color block) ───────────────────────────────────── */}
+      {/* ── ROADMAP (Monochrome off-white #f8f8f6 container) ─────────────── */}
       <section style={s.section}>
         <div style={s.container}>
-          <div style={{ ...s.colorBlock, backgroundColor: '#e4f579' }}>
-            <span style={{ ...s.eyebrow, color: '#3f6212' }}>PRODUCT ROADMAP</span>
-            <h2 style={{ ...s.displayLg, color: '#14290a', maxWidth: 620 }}>
+          <div style={{ ...s.colorBlock, backgroundColor: '#f8f8f6', border: '1px solid #e5e5e0' }}>
+            <span style={{ ...s.eyebrow, color: '#111111' }}>PRODUCT ROADMAP</span>
+            <h2 style={{ ...s.displayLg, color: '#111111', maxWidth: 620 }}>
               The cloud &amp; AI layer is being built next.
             </h2>
-            <p style={{ ...s.bodyText, color: '#365314', maxWidth: 560, marginBottom: 40 }}>
+            <p style={{ ...s.bodyText, color: '#52514e', maxWidth: 560, marginBottom: 40 }}>
               v1.0 is 100% local-first and ships today. Here is what we're building next:
             </p>
             <div style={s.roadmapGrid}>
@@ -259,7 +497,7 @@ export default function OnboardingApp() {
                   title: 'Cross-Device Cloud Sync',
                   body: 'Access your web sticky notes automatically across all your devices and Chromium browsers.',
                   icon: (
-                    <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#14290a" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                    <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#111111" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
                       <path d="M17.5 19H9a7 7 0 1 1 6.71-9h1.79a4.5 4.5 0 1 1 0 9Z" />
                       <path d="M12 13l-3-3m0 0l3-3m-3 3h8" />
                     </svg>
@@ -270,7 +508,7 @@ export default function OnboardingApp() {
                   title: 'Team Shared Annotations',
                   body: 'Share annotated web pages with teammates. Discuss documentation, GitHub issues, and PRs in context.',
                   icon: (
-                    <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#14290a" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                    <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#111111" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
                       <path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2" />
                       <circle cx="9" cy="7" r="4" />
                       <path d="M22 21v-2a4 4 0 0 0-3-3.87" />
@@ -283,7 +521,7 @@ export default function OnboardingApp() {
                   title: 'AI Assistant Context',
                   body: 'Connect your web notes to Claude, Cursor, or ChatGPT so your AI assistant remembers what you read.',
                   icon: (
-                    <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#14290a" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                    <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#111111" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
                       <path d="m12 3-1.912 5.813a2 2 0 0 1-1.275 1.275L3 12l5.813 1.912a2 2 0 0 1 1.275 1.275L12 21l1.912-5.813a2 2 0 0 1 1.275-1.275L21 12l-5.813-1.912a2 2 0 0 1-1.275-1.275L12 3Z" />
                       <path d="M5 3v4" />
                       <path d="M19 17v4" />
@@ -297,7 +535,7 @@ export default function OnboardingApp() {
                   title: 'Central Web Dashboard',
                   body: 'Full web UI for searching, sorting, timeline views, and bulk exporting your annotations across all sites.',
                   icon: (
-                    <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#14290a" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                    <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#111111" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
                       <rect x="3" y="3" width="18" height="18" rx="2" ry="2" />
                       <line x1="3" y1="9" x2="21" y2="9" />
                       <line x1="9" y1="21" x2="9" y2="9" />
@@ -307,13 +545,13 @@ export default function OnboardingApp() {
               ].map(item => (
                 <div key={item.title} style={s.roadmapCard}>
                   <div style={s.roadmapTop}>
-                    <div style={{ width: 36, height: 36, borderRadius: 10, backgroundColor: '#f4fce3', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                    <div style={{ width: 36, height: 36, borderRadius: 10, backgroundColor: '#e4f579', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
                       {item.icon}
                     </div>
-                    <span style={{ ...s.eyebrow, fontSize: 9, color: '#3f6212' }}>{item.badge}</span>
+                    <span style={{ ...s.eyebrow, fontSize: 9, color: '#111111' }}>{item.badge}</span>
                   </div>
-                  <h3 style={{ fontWeight: 700, fontSize: 17, margin: '12px 0 8px 0', color: '#14290a' }}>{item.title}</h3>
-                  <p style={{ fontSize: 14, color: '#365314', lineHeight: 1.5, margin: 0 }}>{item.body}</p>
+                  <h3 style={{ fontWeight: 700, fontSize: 17, margin: '12px 0 8px 0', color: '#111111' }}>{item.title}</h3>
+                  <p style={{ fontSize: 14, color: '#52514e', lineHeight: 1.5, margin: 0 }}>{item.body}</p>
                 </div>
               ))}
             </div>
@@ -478,7 +716,26 @@ const s = {
   hero: {
     maxWidth: 1280,
     margin: '0 auto',
-    padding: '80px 24px 96px',
+    padding: '72px 24px 88px',
+  },
+  heroGrid: {
+    display: 'grid',
+    gridTemplateColumns: 'repeat(auto-fit, minmax(340px, 1fr))',
+    gap: 48,
+    alignItems: 'center',
+  },
+  heroContent: {
+    display: 'flex',
+    flexDirection: 'column' as const,
+    alignItems: 'flex-start',
+  },
+  heroVisual: {
+    display: 'flex',
+    justifyContent: 'center',
+    alignItems: 'center',
+    position: 'relative' as const,
+    padding: '30px 10px',
+    minHeight: 340,
   },
   section: { padding: '0 0 96px' },
   container: {
