@@ -339,3 +339,393 @@ stickle/
 2. Log every non-trivial judgment call in `DECISIONS.md` with a one-line rationale.
 3. Do not introduce new external dependencies beyond what's named in this doc without noting the reason in `DECISIONS.md`.
 4. If an acceptance criterion cannot be met, stop and surface the blocker.
+
+---
+
+---
+
+# Stickle v2 — Backend, Cloud Sync, Team Workspaces, Web Dashboard & Remote MCP
+
+> **Philosophy**: The core extension (local-first notes, 3-tier anchoring, Notion export, local MCP) remains **free and open source forever**. Cloud backend features are gated behind an Open-Core subscription model.
+
+## Locked-in v2 architectural decisions
+
+- **Backend / Database**: Supabase (PostgreSQL + Row-Level Security + Realtime WebSockets)
+- **Auth**: Supabase Auth with PKCE flow (Chrome MV3 extension-compatible)
+- **Web Dashboard**: Next.js 15 (App Router) + TailwindCSS + Shadcn/UI, hosted on Vercel
+- **Remote MCP**: HTTP/SSE transport via `@modelcontextprotocol/sdk`, hosted on Cloudflare Workers or Railway
+- **Payments**: LemonSqueezy (handles global merchant of record, VAT, license key generation) or Stripe Checkout
+- **Sync Strategy**: Local-first (Dexie remains source of truth), delta sync to Supabase on changes; Last-Write-Wins conflict resolution keyed on `updatedAt`
+- **Feature Flag evaluation**: Client-side for UX (show "Coming Soon" UI); server-side RLS and API key checks for enforcement — extension codebase stays fully open source
+
+## Open-Core feature scope
+
+| Feature | Free | Pro ($29 one-time) | Teams ($9/user/mo) |
+|---|:---:|:---:|:---:|
+| Local Web Notes (3-Tier Anchoring) | ✅ | ✅ | ✅ |
+| Local Notion Export | ✅ | ✅ | ✅ |
+| Offline Storage (IndexedDB) | ✅ | ✅ | ✅ |
+| Local STDIO MCP Server | ✅ | ✅ | ✅ |
+| Cross-Device Cloud Sync | ❌ | ✅ | ✅ |
+| Central Web Dashboard | ❌ | ✅ | ✅ |
+| Personal Remote MCP (HTTPS/SSE) | ❌ | ✅ | ✅ |
+| Team Shared In-Page Annotations | ❌ | ❌ | ✅ |
+| Team Timeline & Author Badges | ❌ | ❌ | ✅ |
+| Workspace Roles & Audit Log | ❌ | ❌ | ✅ |
+
+---
+
+## Phase 12 — Standalone Waitlist Page & Lead Capture
+
+**Goal:** Add a dedicated standalone Waitlist page (`/waitlist` mapped to `entrypoints/waitlist/` -> `waitlist.html`) and homepage lead capture to collect early-access signups for Stickle Pro & Cloud Sync, persisting leads to a Supabase database (with local fallback/caching) and tracking conversion events via PostHog.
+
+**New & modified files:**
+```
+entrypoints/waitlist/
+├── index.html          # HTML entrypoint for /waitlist route
+├── main.tsx            # Preact entry point
+└── App.tsx             # Standalone Waitlist page with Hero, Form, 4-card feature teasers, FAQ & Footer
+entrypoints/landing/
+├── App.tsx             # Add hero waitlist CTA & navigation link to /waitlist.html
+├── WaitlistForm.tsx    # Standalone Preact waitlist component with email validation & success toast
+lib/
+└── waitlist.ts         # Supabase client / REST API integration for waitlist persistence & localStorage caching
+supabase/
+└── schema.sql          # Add waitlist table & public RLS insert policy
+vercel.json             # Added rewrite rule: { "source": "/waitlist", "destination": "/waitlist.html" }
+```
+
+**Tasks:**
+1. **Supabase Schema for Waitlist**:
+   - Add `waitlist` table definition to `supabase/schema.sql`:
+     ```sql
+     CREATE TABLE IF NOT EXISTS public.waitlist (
+       id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+       email TEXT UNIQUE NOT NULL,
+       use_case TEXT,
+       source TEXT DEFAULT 'homepage',
+       created_at TIMESTAMPTZ DEFAULT now()
+     );
+     ALTER TABLE public.waitlist ENABLE ROW LEVEL SECURITY;
+     CREATE POLICY "Enable public insert for waitlist" ON public.waitlist FOR INSERT WITH CHECK (true);
+     ```
+2. **Waitlist Persistence Service (`lib/waitlist.ts`)**:
+   - `submitWaitlistEmail({ email: string, useCase?: string, source?: string })`:
+     - Validate email format using standard regex.
+     - Send `POST` to Supabase REST endpoint (`/rest/v1/waitlist`) using `SUPABASE_URL` and `SUPABASE_ANON_KEY` or Supabase client.
+     - Store waitlist submission state in `localStorage` (`stickle_waitlist_email` & `stickle_waitlist_joined_at`).
+     - Track conversion event in PostHog (`posthog.capture('waitlist_submitted', { email, source })`).
+3. **Waitlist UI Component (`entrypoints/landing/WaitlistForm.tsx`)**:
+   - Create a clean Preact waitlist form component with:
+     - Email text input field with inline validation.
+     - Role / Use-case selector pills ("Researcher", "Developer / AI", "Product / Design", "Other").
+     - Submit button with dynamic loading state ("Joining...").
+     - Animated success state ("🎉 You're on the list! We'll reach out soon.").
+     - Error banner for invalid formats or network issues (with retry).
+4. **Homepage Integration (`entrypoints/landing/App.tsx`)**:
+   - **Hero Section**: Add an inline email waitlist input right in the Hero CTA area next to "Add to Chrome" / "Sandbox".
+   - **Dedicated Waitlist Section (`#waitlist`)**: Insert a full-width high-converting pastel callout section before the footer with the `WaitlistForm` component, social proof badges ("Join 500+ researchers on the waitlist"), and feature teaser bullets.
+   - **Nav Link**: Add "Waitlist" link in the navbar that smooth-scrolls to `#waitlist`.
+5. **Returning Visitor State**:
+   - Check `localStorage` on load; if user already submitted their email, display "✓ You're on the early access waitlist!" instead of re-showing an empty form.
+
+**Acceptance criteria:**
+- [ ] Homepage `/` displays the Waitlist form in both the Hero section and the dedicated `#waitlist` section.
+- [ ] Validating email format works with instant inline UI feedback.
+- [ ] Email submissions successfully save to Supabase `waitlist` table.
+- [ ] Duplicate emails return a friendly "Already on the waitlist" response without throwing an error.
+- [ ] PostHog captures `waitlist_submitted` event with source and use_case parameters.
+- [ ] Returning visitors see their waitlist confirmation badge via `localStorage`.
+- [ ] Mobile & desktop layouts render cleanly with no layout overflow.
+
+---
+
+## Phase 13 — Feature Flags, Auth & Supabase Project Setup
+
+**Goal:** Wire Supabase Auth into the extension, implement feature flag evaluation from user tier, and show "Coming Soon" gating in the popup UI for Pro/Team features.
+
+**New files / folders:**
+```
+lib/flags.ts         # Feature flag definitions + isEnabled() evaluator
+lib/auth.ts          # Supabase client init + signIn / signOut / getSession
+lib/types.ts         # Extend StickleNote: add userId, workspaceId, syncStatus fields
+supabase/
+├── schema.sql       # Full PostgreSQL schema (profiles, workspaces, workspace_members, notes, api_keys)
+└── seed.sql         # Dev seed data for local testing
+```
+
+**Tasks:**
+1. Create a Supabase project. Copy `SUPABASE_URL` and `SUPABASE_ANON_KEY` into `.env` (already gitignored). Add them to `.env.example` with placeholder values.
+2. Apply `supabase/schema.sql`:
+   - `profiles` — extends `auth.users` with `tier` (`'free' | 'supporter' | 'team_member'`), `license_key`
+   - `workspaces` — `id`, `name`, `slug`, `owner_id`
+   - `workspace_members` — `workspace_id`, `user_id`, `role` (`'owner' | 'admin' | 'member' | 'viewer'`)
+   - `notes` — mirrors `StickleNote` plus `user_id`, `workspace_id`, `domain`, `anchor` (JSONB), `deleted_at` (soft delete)
+   - `api_keys` — `user_id`, `key_hash`, `name`, `last_used_at`
+   - Enable RLS on all tables; write policies: users can only read/write their own rows; workspace members can read workspace notes.
+3. Implement `lib/auth.ts`:
+   - `initSupabase()` — returns a singleton Supabase client using `createClient` from `@supabase/supabase-js`
+   - `signInWithMagicLink(email)` / `signInWithGoogle()` — use PKCE redirect; redirect URL points to a dedicated extension page (`entrypoints/auth-callback/`)
+   - `signOut()`, `getSession()`, `getProfile()` — fetches `profiles` row for current user
+4. Create `entrypoints/auth-callback/index.html` — tiny page that catches the OAuth/magic-link redirect, extracts the session token from the URL hash, stores it in `chrome.storage.local`, and closes itself.
+5. Implement `lib/flags.ts`:
+   ```typescript
+   export type FeatureFlag = 'cloudSync' | 'teamSharing' | 'remoteMCP' | 'centralDashboard';
+   export type UserTier = 'free' | 'supporter' | 'team_member';
+
+   const TIER_FLAGS: Record<UserTier, Record<FeatureFlag, boolean>> = {
+     free:        { cloudSync: false, teamSharing: false, remoteMCP: false, centralDashboard: false },
+     supporter:   { cloudSync: true,  teamSharing: false, remoteMCP: true,  centralDashboard: true  },
+     team_member: { cloudSync: true,  teamSharing: true,  remoteMCP: true,  centralDashboard: true  },
+   };
+
+   export const isEnabled = (flag: FeatureFlag, tier: UserTier = 'free'): boolean =>
+     TIER_FLAGS[tier][flag];
+   ```
+6. Update the popup `Settings.tsx` tab: add a "Sign In" / account section. When signed in, show user email and tier badge. When not signed in, show "Sign in to enable cloud sync" with a sign-in button.
+7. In the popup `App.tsx`, show "Coming Soon — Pro" badges on the Sync, Dashboard, and MCP sections for free-tier users (use `isEnabled()` evaluated against the stored profile tier).
+
+**Acceptance criteria:**
+- [ ] Supabase schema is applied and all RLS policies pass a manual test (free user cannot read another user's notes)
+- [ ] Magic link sign-in flow works end-to-end from the popup: click "Sign In" → email received → callback page captures session → popup reflects "Signed in as user@email.com"
+- [ ] `isEnabled('cloudSync', 'free')` returns `false`; `isEnabled('cloudSync', 'supporter')` returns `true`
+- [ ] "Coming Soon" badges show correctly in the popup for free-tier accounts on gated features
+
+---
+
+## Phase 13 — Cross-Device Cloud Sync Engine
+
+**Goal:** Notes created or edited on one device/browser appear on all other signed-in devices within a few seconds. Offline mutations are queued and flushed on reconnect.
+
+**New files:**
+```
+lib/sync.ts          # Delta sync engine: push local → cloud, pull cloud → local
+tests/sync.test.ts   # Vitest unit tests for sync logic and conflict resolution
+```
+
+**Tasks:**
+1. Extend `StickleNote` in `lib/types.ts`:
+   ```typescript
+   syncStatus: 'local' | 'synced' | 'pending' | 'conflict';
+   cloudId?: string;       // Supabase notes.id UUID once pushed
+   userId?: string;        // Supabase auth user ID
+   deletedAt?: number;     // Soft-delete timestamp for sync tombstoning
+   ```
+2. Implement `lib/sync.ts`:
+   - `pushPendingNotes()` — upserts all `syncStatus: 'pending'` notes to `supabase.notes` using `upsert({ onConflict: 'local_id' })`. Marks successfully pushed notes as `syncStatus: 'synced'` in Dexie.
+   - `pullRemoteNotes(since: number)` — queries Supabase for `updated_at > since`, merges into Dexie using Last-Write-Wins: if `remote.updatedAt > local.updatedAt`, overwrite local; else keep local.
+   - `fullSync()` — calls `pushPendingNotes()` then `pullRemoteNotes(lastSyncedAt)`. Updates `lastSyncedAt` in `chrome.storage.local` on success.
+   - `startRealtimeSync()` — subscribes to `supabase.channel('notes').on('postgres_changes', ...)` for the current user's rows. Applies incoming inserts/updates to Dexie immediately.
+3. Call `fullSync()` from `entrypoints/background.ts` on startup (if signed in) and whenever the extension receives a `SYNC_NOW` internal message.
+4. Set `syncStatus: 'pending'` on every `createNote`, `updateNote`, and `deleteNote` call in `lib/db.ts`. Trigger `pushPendingNotes()` after each mutation (debounced 2 s).
+5. Soft-delete: `deleteNote` sets `deletedAt = Date.now()` and `syncStatus: 'pending'` instead of removing from Dexie. Push the tombstone to Supabase. Remote pulls that receive a tombstone call `deleteNote` locally.
+6. Conflict indicator: if `syncStatus: 'conflict'` is detected (both local and remote have `updatedAt` within 5 s of each other and content differs), mark the note with a small ⚠️ conflict badge in `NoteBubble.tsx` and popup sidebar — do not silently discard either version.
+
+**Acceptance criteria:**
+- [ ] Note created on Device A appears on Device B within 5 seconds (realtime subscription working)
+- [ ] Note created offline on Device A (Supabase unreachable) syncs automatically when connection is restored
+- [ ] Deleting a note on Device A removes it from Device B via tombstone sync
+- [ ] Conflict badge appears when `syncStatus: 'conflict'` — neither version is silently lost
+- [ ] `vitest run tests/sync.test.ts` — all sync unit tests pass
+
+---
+
+## Phase 14 — Central Web Dashboard
+
+**Goal:** A standalone web app (separate from the extension) where users can search, browse, and manage all their notes across every device and browser tab.
+
+**New files / folders:**
+```
+dashboard/                      # Standalone Next.js 15 App Router app
+├── app/
+│   ├── layout.tsx
+│   ├── page.tsx                # Redirect → /notes
+│   ├── (auth)/
+│   │   └── login/page.tsx      # Magic link + Google sign-in page
+│   ├── notes/
+│   │   ├── page.tsx            # Explorer view (main notes list)
+│   │   └── [id]/page.tsx       # Single note detail / edit
+│   ├── timeline/page.tsx       # Chronological activity feed
+│   ├── team/
+│   │   ├── page.tsx            # Workspace overview (team notes)
+│   │   └── invite/page.tsx     # Invite members by email
+│   └── settings/
+│       ├── page.tsx            # Account, tier, billing portal link
+│       └── api-keys/page.tsx   # Create / revoke Remote MCP API keys
+├── components/
+│   ├── NoteCard.tsx
+│   ├── NoteSearch.tsx
+│   ├── DomainSidebar.tsx
+│   ├── TimelineEntry.tsx
+│   └── AuthorAvatar.tsx
+└── lib/
+    └── supabase-client.ts      # Browser-side Supabase client
+```
+
+**Tasks:**
+1. `npx -y create-next-app@latest dashboard --typescript --tailwind --app --no-src-dir --import-alias "@/*"` in the repo root. Add `shadcn/ui` (`npx shadcn@latest init`).
+2. Configure Supabase Auth SSR helpers (`@supabase/ssr`) with middleware for session refresh.
+3. **Explorer View** (`/notes`):
+   - Fetch notes from Supabase with server-side rendering (`createServerClient`).
+   - Left sidebar: domains listed with note counts, clicking filters the main panel.
+   - Main panel: infinite-scrolling list of `NoteCard` components — shows page title, URL domain chip, note excerpt, color block, tags, and "Jump to page ↗" link.
+   - Top bar: full-text search input (queries `supabase.notes` using `ilike '%query%'`), filter dropdowns (tag, color, date range).
+4. **Timeline View** (`/timeline`):
+   - Chronological feed grouped by day. Each entry shows: author avatar (for team notes), note excerpt, page title, domain, and timestamp.
+   - Real-time updates: Supabase Realtime subscription appends new notes at the top without page refresh.
+5. **Team Workspace View** (`/team`):
+   - Lists all team members with their note counts.
+   - Clicking a member filters the note list to their contributions.
+   - "Invite" button → sends Supabase invite email + adds pending `workspace_members` row.
+6. **API Keys** (`/settings/api-keys`):
+   - Generate a new key: `sk_stickle_` + 32 random hex chars. Store the SHA-256 hash in `api_keys`. Show the raw key **once** (never stored in plaintext).
+   - List existing keys by name + `last_used_at`. Revoke (delete) by row.
+7. **Settings / Billing** (`/settings`):
+   - Show current tier and license key if applicable.
+   - "Manage Billing" → redirect to LemonSqueezy customer portal URL (or Stripe portal).
+8. Deploy dashboard to Vercel. Set `NEXT_PUBLIC_SUPABASE_URL`, `NEXT_PUBLIC_SUPABASE_ANON_KEY` as environment variables. Add the Vercel domain to Supabase Auth's allowed redirect URLs.
+
+**Acceptance criteria:**
+- [ ] Unauthenticated users are redirected to `/login`
+- [ ] Authenticated user sees all their notes from all devices in the Explorer view
+- [ ] Search and domain/tag filters return correct results
+- [ ] Timeline view updates in real-time when a new note is created from the extension on another tab
+- [ ] API key can be generated, displayed once, and revoked from `/settings/api-keys`
+- [ ] Dashboard is deployed and accessible at a public Vercel URL
+
+---
+
+## Phase 15 — Remote MCP Server (Hosted, HTTP/SSE)
+
+**Goal:** AI agents (Claude Desktop, Cursor, Antigravity) can query a user's notes over HTTPS without needing the local extension running, using a Bearer API key from the dashboard.
+
+**New files / folders:**
+```
+remote-mcp/
+├── src/
+│   ├── index.ts          # Hono app entry point
+│   ├── auth.ts           # Bearer token validation against supabase.api_keys
+│   ├── tools/
+│   │   ├── list.ts
+│   │   ├── search.ts
+│   │   ├── get-for-url.ts
+│   │   ├── add.ts
+│   │   ├── summary.ts
+│   │   └── team-timeline.ts
+│   └── mcp-handler.ts    # MCP protocol over HTTP/SSE using @modelcontextprotocol/sdk
+├── package.json
+├── tsconfig.json
+└── wrangler.toml         # Cloudflare Workers config (or Dockerfile for Railway)
+```
+
+**Tasks:**
+1. Scaffold a Hono app in `remote-mcp/`. Add `@modelcontextprotocol/sdk`, `@supabase/supabase-js`, `hono`.
+2. Implement `auth.ts`:
+   - Extract `Authorization: Bearer sk_stickle_...` from request headers.
+   - SHA-256 hash the token and query `supabase.api_keys WHERE key_hash = $1`.
+   - If found, update `last_used_at` and return the associated `user_id`. If not found, return 401.
+3. Implement MCP HTTP/SSE handler in `mcp-handler.ts` using `@modelcontextprotocol/sdk`'s `Server` with an SSE transport adapter for HTTP. Expose at `GET /sse` (SSE stream) and `POST /message` (client-to-server messages).
+4. Implement tools (reuse logic from local `mcp-server/index.ts` but query Supabase instead of `~/.stickle/notes.json`):
+   - `list_stickle_notes` — query `notes WHERE user_id = $userId` with optional `domain`, `tag`, `limit`
+   - `search_stickle_notes` — full-text `ilike` search on `content`, `page_title`, `url`, `tags`
+   - `get_notes_for_url` — exact URL match with fallback `starts_with` prefix match
+   - `add_stickle_note` — insert a new note row (sets `sync_status = 'synced'`, `user_id` from auth)
+   - `export_stickle_summary` — generates the same Markdown report as the local server, from Supabase data
+   - `get_team_activity_timeline` — queries workspace notes (`workspace_id = $activeWorkspaceId`) ordered by `created_at DESC`, including author profile name and avatar
+5. Deploy to Cloudflare Workers (`wrangler publish`) or Railway. Set `SUPABASE_URL` + `SUPABASE_SERVICE_ROLE_KEY` (service role key, not anon — server only, never exposed to client) as secrets.
+6. Update the Web Dashboard `settings/api-keys` page to show the Remote MCP endpoint URL (`https://mcp.stickle.app/sse`) with copy-to-clipboard + a one-liner config snippet for Claude Desktop `mcpServers` JSON.
+7. Write a `README` in `remote-mcp/` explaining how to self-host the remote MCP server (for open-source users who want to run their own backend).
+
+**Acceptance criteria:**
+- [ ] `curl -H "Authorization: Bearer sk_stickle_INVALID" https://mcp.stickle.app/sse` returns 401
+- [ ] Claude Desktop configured with a valid API key can call `list_stickle_notes` and receive the user's notes from Supabase
+- [ ] `add_stickle_note` via Remote MCP creates a row in Supabase that subsequently appears in the extension after the next sync
+- [ ] `get_team_activity_timeline` returns notes from all workspace members, not just the authenticated user
+- [ ] Remote MCP server self-host instructions documented in `remote-mcp/README.md`
+
+---
+
+## Phase 16 — Team Shared In-Page Annotations
+
+**Goal:** When a user belongs to a Workspace, they see their teammates' notes overlaid on the same webpage in real-time, with author avatars and read-only indicators.
+
+**Tasks:**
+1. Add `activeWorkspaceId` to `chrome.storage.local` (set from the popup Settings tab — a dropdown of workspaces the user belongs to). `null` means "Personal mode" — only own notes shown.
+2. Update `entrypoints/content.ts`:
+   - On page load, if `activeWorkspaceId` is set, fetch `notes WHERE (user_id = $userId OR workspace_id = $workspaceId) AND url = $currentUrl` from Supabase (in addition to the local Dexie query for offline support).
+   - Subscribe to `supabase.channel('workspace_notes').on('postgres_changes', { filter: 'workspace_id=eq.$id AND url=eq.$url' }, ...)` to receive teammates' notes in real-time without a page reload.
+3. Extend `NoteBubble.tsx` for team notes:
+   - Show author avatar (profile `avatar_url` or initials fallback) as a small circular badge in the top-left corner of the note.
+   - Team member notes are **read-only** (no edit/delete) unless the current user is the author or a workspace admin.
+   - Dim team notes slightly to visually distinguish them from own notes.
+4. Update the popup sidebar `NoteSidebar.tsx`:
+   - Add a "Workspace" tab alongside "My Notes" tab. Workspace tab shows all team notes grouped by author.
+   - Show an active workspace selector dropdown at the top of the popup.
+5. Implement workspace invite from the extension popup:
+   - Settings tab: "Team Workspace" section → show current workspace name + member count, or "Create Workspace / Join Workspace" if not a member.
+   - "Invite" sends an email invite via a Supabase Edge Function that creates a pending `workspace_members` row and sends an email with an accept link.
+
+**Edge cases:**
+- A team member's note on a page where the DOM element no longer exists: apply the same 3-tier re-anchoring as personal notes; if all tiers fail, show in the team "Orphaned Notes" tray.
+- User is in personal mode (`activeWorkspaceId = null`): no Supabase fetch occurs on content script load — behavior is identical to v1 for free users.
+- Rate limiting: Supabase Realtime has concurrent subscription limits. Limit to 1 channel per active tab; unsubscribe in `content.ts` `window.beforeunload`.
+
+**Acceptance criteria:**
+- [ ] In a shared Workspace, User A drops a note on a GitHub issue; User B (different device, same workspace) opens the same URL and sees User A's note with their avatar within 3 seconds
+- [ ] User B cannot edit or delete User A's note (read-only)
+- [ ] Switching to "Personal mode" hides all workspace notes — only own notes are shown on the page
+- [ ] Team workspace notes appear in the popup sidebar "Workspace" tab grouped by author
+- [ ] `vitest run tests/team-sync.test.ts` — test workspace note fetch, RLS isolation, and real-time delivery
+
+---
+
+## Phase 17 — Monetization: Payments, License Validation & Waitlist
+
+**Goal:** Wire up LemonSqueezy (or Stripe) checkout for Pro and Teams tiers, validate license status in the extension and backend, and set up a public-facing waitlist / early-access page on the landing site.
+
+**New files / folders:**
+```
+remote-mcp/src/webhooks/
+└── lemonsqueezy.ts    # Webhook handler: order.created → upsert profile tier
+dashboard/app/
+└── upgrade/page.tsx   # Upgrade / pricing page with checkout links
+```
+
+**Tasks:**
+1. **LemonSqueezy Setup**:
+   - Create two products: "Stickle Pro Supporter" (one-time $29) and "Stickle Teams" (per-seat $9/mo).
+   - Enable License Keys in LemonSqueezy product settings (auto-generates a key per purchase).
+   - Copy webhook secret; configure webhook URL: `https://mcp.stickle.app/webhooks/lemonsqueezy` (or a separate Hono route).
+2. **Webhook handler** (`lemonsqueezy.ts`):
+   - Verify HMAC-SHA256 signature on incoming webhook using the secret.
+   - On `order.created` event: extract `customer_email` and `license_key`. Upsert `profiles` row: set `tier = 'supporter'` (or `'team_member'`) and `license_key`.
+   - On `subscription.cancelled`: set `tier = 'free'` for Teams users.
+3. **License validation in the extension** (`lib/auth.ts`):
+   - On sign-in, `getProfile()` fetches `tier` and `license_key` from Supabase. Store tier in `chrome.storage.local`.
+   - `isEnabled()` in `lib/flags.ts` reads from stored tier — no extra API call needed on every flag check.
+   - Re-validate tier on extension startup and once per 24 h (in `background.ts` alarm) to catch subscription cancellations.
+4. **Upgrade page** (`dashboard/app/upgrade/page.tsx`):
+   - Clean pricing card layout: Free / Pro ($29 one-time) / Teams ($9/user/mo).
+   - "Buy Pro" button → direct LemonSqueezy checkout URL with pre-filled email from Supabase session.
+   - After purchase, LemonSqueezy redirects to `dashboard/upgrade?success=true` → page polls `getProfile()` until tier updates, then shows success state.
+5. **Waitlist** (if Teams features not fully built yet):
+   - Add a simple `waitlist` table in Supabase (`email`, `source`, `created_at`).
+   - Add a "Join Teams Waitlist" form on the landing page (`entrypoints/landing/`) and dashboard upgrade page that inserts a row.
+6. **Early-access badge**: Add a "🎉 Early Access" tag in the extension popup for users who signed up during launch — `profiles.created_at < LAUNCH_CUTOFF_DATE`.
+
+**Acceptance criteria:**
+- [ ] Purchasing Pro via LemonSqueezy checkout → within 10 s, `profiles.tier` updates to `'supporter'` via webhook
+- [ ] Extension re-validates tier within 24 h; cloud sync and Remote MCP unlock without reinstalling the extension
+- [ ] Invalid / revoked license key causes `isEnabled('cloudSync')` to return `false` after next validation cycle
+- [ ] Upgrade page renders correctly at `dashboard.stickle.app/upgrade` with working checkout links
+- [ ] "Coming Soon" Pro banners in the popup show a "Unlock — $29" CTA that deep-links to the upgrade page
+
+---
+
+## Rules for the agent executing this plan
+1. Work through phases strictly in order. Do not begin a phase whose predecessor's acceptance criteria are unchecked.
+2. Log every non-trivial judgment call in `DECISIONS.md` with a one-line rationale.
+3. Do not introduce new external dependencies beyond what's named in this doc without noting the reason in `DECISIONS.md`.
+4. If an acceptance criterion cannot be met, stop and surface the blocker.
+5. **Phases 12–17 are v2 cloud features.** They assume Phases 1–11 acceptance criteria are already met. Do not attempt v2 phases on a fresh clone without first verifying v1 is functional.
+6. **Never store the Supabase service role key in extension code or the public GitHub repo.** It lives only as a secret in the remote-mcp deployment environment (Cloudflare Workers / Railway secrets).
