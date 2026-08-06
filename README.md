@@ -125,6 +125,16 @@ stickle/
 
 ---
 
+## 🔒 Privacy & Security
+
+Stickle is built local-first. We do not collect, track, or sell your personal data or browsing activity.
+- **Local Storage:** All sticky notes and preferences are saved locally in Chrome IndexedDB / `chrome.storage.local`.
+- **Zero Telemetry:** No analytics scripts, trackers, or telemetry exist in this project.
+- **Direct Sync:** Notion export requests travel directly from your browser to Notion's official API (`api.notion.com`).
+- **Privacy Policy Page:** View our full [Privacy Policy Specification](file:///Users/bhavya/dev/showcase/stickle/entrypoints/privacy/App.tsx) (`privacy.html`).
+
+---
+
 ## 📄 License
 
 MIT © Stickle Authors

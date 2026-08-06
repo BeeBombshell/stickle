@@ -564,4 +564,32 @@ export const Events = {
 
 ---
 
+## 🔒 Chrome Web Store Compliance & Submission Package
+
+### Single Purpose Declaration
+> **Single Purpose Description:** Stickle is dedicated to a single utility: allowing users to attach persistent floating sticky notes and text selection highlights directly onto webpage elements and export them to Notion.
+
+### Permission Justifications Table
+
+| Permission / Host | Why It's Needed (Store Listing Justification) |
+|---|---|
+| `storage` | Used to save user sticky notes, element anchor coordinates, tag lists, and preferences locally on device in `chrome.storage.local`. |
+| `activeTab` | Used to attach floating sticky note overlays and selection highlight pills onto the active webpage when triggered by user action (Alt+Click or selection). |
+| `scripting` | Used to inject element positioning handlers and selection highlight listeners into active web page DOM contexts. |
+| `contextMenus` | Used to provide a right-click context menu shortcut ("📌 Add Stickle Note Here") for fast note creation. |
+| `https://api.notion.com/*` | Used exclusively to transmit user-initiated note exports directly to Notion's official API. |
+
+### Remote Code Execution (RCE) Verification
+- [x] **Zero RCE Verified:** Codebase verified free of dynamic remote script execution.
+- [x] **No dynamic scripts:** Zero dynamic `<script src="...">` tags, dynamic CDN loads, or remote module imports.
+- [x] **No eval:** Zero calls to `eval()`, `new Function()`, or string-based timer execution.
+- [x] **100% packaged build:** All extension scripts are statically bundled via WXT/Vite into the published Manifest V3 extension package.
+
+### Privacy Policy Reference
+- **Hosted Privacy Policy Page:** `privacy.html` (`entrypoints/privacy/`)
+- **Privacy Core Tenet:** 100% local-first data storage in IndexedDB, zero telemetry/tracking, direct HTTPS Notion API communication without proxy servers.
+
+---
+
 *This is a living document. Update URLs, pricing, and copy as the product evolves.*
+
