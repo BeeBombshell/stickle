@@ -382,6 +382,40 @@ export function Settings() {
           {status.message}
         </div>
       )}
+
+      <hr style={{ border: 'none', borderTop: '1px solid var(--color-hairline)', margin: '16px 0' }} />
+
+      <div>
+        <h3 style={{ ...settingsStyles.title, fontSize: '15px', marginBottom: '8px' }}>Product &amp; Resources</h3>
+        <div style={{ display: 'flex', gap: '8px' }}>
+          <button
+            className="btn-pill btn-secondary"
+            style={{ flex: 1, fontSize: '11px', padding: '6px 12px' }}
+            onClick={() => {
+              if (typeof chrome !== 'undefined' && chrome.tabs) {
+                chrome.tabs.create({ url: chrome.runtime.getURL('landing.html') });
+              } else {
+                window.open('/landing.html', '_blank');
+              }
+            }}
+          >
+            🌐 Landing Page
+          </button>
+          <button
+            className="btn-pill btn-secondary"
+            style={{ flex: 1, fontSize: '11px', padding: '6px 12px' }}
+            onClick={() => {
+              if (typeof chrome !== 'undefined' && chrome.tabs) {
+                chrome.tabs.create({ url: chrome.runtime.getURL('onboarding.html') });
+              } else {
+                window.open('/onboarding.html', '_blank');
+              }
+            }}
+          >
+            ⚡ Sandbox Tutorial
+          </button>
+        </div>
+      </div>
     </div>
   );
 }
