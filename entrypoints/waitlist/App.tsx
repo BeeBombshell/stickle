@@ -65,7 +65,7 @@ export default function WaitlistApp() {
       {/* ══ 2. HERO / WAITLIST COLOR BLOCK (Coral: #ffdbcc) ═══════════════════ */}
       <section style={s.heroSection}>
         <div style={s.wrap}>
-          <div style={{ ...s.colorBlock, backgroundColor: '#ffdbcc', padding: '56px 48px' }}>
+          <div style={{ ...s.colorBlock, backgroundColor: '#ffdbcc', padding: '56px 48px', position: 'relative' as const }}>
             <div style={s.heroHeader}>
               <span style={{ ...s.eyebrow, color: '#9a3412', marginBottom: 12 }}>STICKLE LAUNCH ROLLOUT</span>
               <h1 style={{ ...s.displayXL, color: '#7c2d12', margin: '0 0 20px' }}>
@@ -74,6 +74,24 @@ export default function WaitlistApp() {
               <p style={{ ...s.heroSub, color: '#9a3412' }}>
                 Leave persistent sticky notes in the margins of the web. Enter your email to get notified the exact moment Stickle is released on the Chrome Web Store.
               </p>
+            </div>
+
+            {/* Monochrome Floating Sticky Note Preview */}
+            <div style={s.stickyNotePreview}>
+              <div style={s.stickyNoteHeader}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
+                  <div style={{ width: 8, height: 8, borderRadius: '50%', backgroundColor: '#22c55e' }} />
+                  <span style={s.stickyNoteEyebrow}>STICKLE • ANCHORED NOTE</span>
+                </div>
+                <span style={s.stickyNoteBadge}>STRUCTURAL</span>
+              </div>
+              <p style={s.stickyNoteText}>
+                "Alt + Click pinned this note directly to the DOM element. It stays here through reloads, re-renders, and revisits."
+              </p>
+              <div style={s.stickyNoteFooter}>
+                <span>https://docs.github.com/en/get-started</span>
+                <span>Notion Sync Ready ↗</span>
+              </div>
             </div>
 
             {/* Standalone Waitlist Form Component */}
@@ -418,5 +436,61 @@ const s = {
     fontSize: 14,
     marginBottom: 10,
     fontWeight: 330,
+  },
+
+  // Monochrome Floating Sticky Note (DESIGN.md specification)
+  stickyNotePreview: {
+    backgroundColor: '#111111',
+    color: '#ffffff',
+    borderRadius: 16,
+    padding: '24px 28px',
+    maxWidth: 520,
+    width: '100%',
+    margin: '28px auto 0',
+    transform: 'rotate(-2deg)',
+    boxShadow: '0 12px 32px rgba(0,0,0,0.18)',
+    border: '1px solid rgba(255,255,255,0.1)',
+  },
+  stickyNoteHeader: {
+    display: 'flex',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    marginBottom: 14,
+    paddingBottom: 10,
+    borderBottom: '1px solid rgba(255,255,255,0.12)',
+  },
+  stickyNoteEyebrow: {
+    fontFamily: "'JetBrains Mono', monospace",
+    fontSize: 10,
+    fontWeight: 700,
+    letterSpacing: '0.6px',
+    color: '#e5e5e5',
+  },
+  stickyNoteBadge: {
+    fontFamily: "'JetBrains Mono', monospace",
+    fontSize: 9,
+    fontWeight: 700,
+    backgroundColor: '#262626',
+    color: '#a3a3a3',
+    padding: '2px 8px',
+    borderRadius: 50,
+    letterSpacing: '0.5px',
+  },
+  stickyNoteText: {
+    fontSize: 15,
+    lineHeight: 1.5,
+    color: '#f5f5f5',
+    fontWeight: 340,
+    margin: '0 0 16px',
+    fontStyle: 'italic',
+  },
+  stickyNoteFooter: {
+    display: 'flex',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    fontFamily: "'JetBrains Mono', monospace",
+    fontSize: 10,
+    color: '#737373',
+    letterSpacing: '0.4px',
   },
 } as const;

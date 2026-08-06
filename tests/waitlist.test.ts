@@ -47,8 +47,9 @@ describe('Waitlist Service', () => {
     });
 
     it('should successfully process valid email submission and store state in localStorage', async () => {
+      const testEmail = `developer_${Date.now()}@stickle.app`;
       const result = await submitWaitlistEmail({
-        email: 'developer@stickle.app',
+        email: testEmail,
         useCase: 'Developer',
         source: 'homepage_section',
       });
@@ -58,7 +59,7 @@ describe('Waitlist Service', () => {
 
       const state = getWaitlistState();
       expect(state.isJoined).toBe(true);
-      expect(state.email).toBe('developer@stickle.app');
+      expect(state.email).toBe(testEmail);
       expect(state.useCase).toBe('Developer');
       expect(state.joinedAt).toBeDefined();
     });
