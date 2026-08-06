@@ -22,7 +22,7 @@ export default function OnboardingApp() {
     const color = colorKeys[notes.length % colorKeys.length];
     setNotes(prev => [...prev, {
       id: Date.now(),
-      text: 'Edit this note — it stays right where you left it.',
+      text: 'Edit this note - it stays right where you left it.',
       color,
     }]);
   };
@@ -32,6 +32,16 @@ export default function OnboardingApp() {
   const openLandingPage = () => {
     if (typeof chrome !== 'undefined' && chrome.tabs) {
       chrome.tabs.create({ url: chrome.runtime.getURL('landing.html') });
+    } else {
+      window.open('/landing.html', '_blank');
+    }
+  };
+
+  const openPrivacyPage = () => {
+    if (typeof chrome !== 'undefined' && chrome.tabs) {
+      chrome.tabs.create({ url: chrome.runtime.getURL('privacy.html') });
+    } else {
+      window.open('/privacy.html', '_blank');
     }
   };
 
@@ -54,6 +64,7 @@ export default function OnboardingApp() {
             <a href="https://github.com/YOUR_USERNAME/stickle" target="_blank" rel="noreferrer" style={s.navLink}>
               GitHub ↗
             </a>
+            <button style={s.btnSecondary} onClick={openPrivacyPage}>Privacy Policy</button>
             <button style={s.btnSecondary} onClick={openLandingPage}>Product page</button>
             <button style={s.btnPrimary} onClick={() => window.close()}>Start annotating</button>
           </div>
@@ -67,7 +78,7 @@ export default function OnboardingApp() {
           Leave notes in the<br />margins of the web.
         </h1>
         <p style={s.bodyLg}>
-          You just installed Stickle. Hold <kbd style={s.kbd}>Alt</kbd> and click anything on any webpage —
+          You just installed Stickle. Hold <kbd style={s.kbd}>Alt</kbd> and click anything on any webpage:
           a heading, a code block, an image. A sticky note pins right there and stays,
           even when the page re-renders.
         </p>
@@ -87,7 +98,7 @@ export default function OnboardingApp() {
       {/* ── HOW IT WORKS (white canvas) ─────────────────────────────────── */}
       <section style={s.section}>
         <div style={s.container}>
-          <span style={s.eyebrow}>STEP 1 — CORE MECHANICS</span>
+          <span style={s.eyebrow}>STEP 1: CORE MECHANICS</span>
           <h2 style={s.displayLg}>Three ways to attach a stickle.</h2>
           <div style={s.threeGrid}>
             {[
@@ -99,7 +110,7 @@ export default function OnboardingApp() {
               {
                 num: '02',
                 title: 'Text selection pill',
-                body: 'Highlight any text. A floating pill appears above your selection — click it to turn your highlight into an attached note.',
+                body: 'Highlight any text. A floating pill appears above your selection: click it to turn your highlight into an attached note.',
               },
               {
                 num: '03',
@@ -121,7 +132,7 @@ export default function OnboardingApp() {
       <section style={s.section}>
         <div style={s.container}>
           <div style={{ ...s.colorBlock, backgroundColor: '#fff7db' }}>
-            <span style={s.eyebrow}>STEP 2 — INTERACTIVE SANDBOX</span>
+            <span style={s.eyebrow}>STEP 2: INTERACTIVE SANDBOX</span>
             <h2 style={{ ...s.displayLg, maxWidth: 560 }}>
               Try creating notes right here.
             </h2>
@@ -180,7 +191,7 @@ export default function OnboardingApp() {
       <section style={s.section}>
         <div style={s.container}>
           <div style={{ ...s.colorBlock, backgroundColor: '#ffd6e8' }}>
-            <span style={{ ...s.eyebrow, color: '#9d174d' }}>STEP 3 — ANCHORING ENGINE</span>
+            <span style={{ ...s.eyebrow, color: '#9d174d' }}>STEP 3: ANCHORING ENGINE</span>
             <h2 style={{ ...s.displayLg, color: '#500724', maxWidth: 620 }}>
               Notes that stay even when pages change.
             </h2>
@@ -190,10 +201,10 @@ export default function OnboardingApp() {
             </p>
             <div style={s.tierGrid}>
               {[
-                { num: '01', badge: 'TIER 1 — STRUCTURAL', title: 'XPath + CSS selector', body: 'Exact structural match. Used on stable page content and documentation.' },
-                { num: '02', badge: 'TIER 2 — CONTEXTUAL', title: 'Neighbor content hash', body: 'Fingerprints surrounding text context. Survives React, Vue, Twitter re-renders.' },
-                { num: '03', badge: 'TIER 3 — FUZZY', title: 'Trigram similarity', body: 'Searches DOM text nodes when structure changes completely. Threshold ≥ 0.75.' },
-                { num: '↩', badge: 'FALLBACK — RECOVERABLE', title: 'Orphaned note tray', body: 'If content is deleted entirely, your note lands in the tray — zero data loss.' },
+                { num: '01', badge: 'TIER 1: STRUCTURAL', title: 'XPath + CSS selector', body: 'Exact structural match. Used on stable page content and documentation.' },
+                { num: '02', badge: 'TIER 2: CONTEXTUAL', title: 'Neighbor content hash', body: 'Fingerprints surrounding text context. Survives React, Vue, Twitter re-renders.' },
+                { num: '03', badge: 'TIER 3: FUZZY', title: 'Trigram similarity', body: 'Searches DOM text nodes when structure changes completely. Threshold ≥ 0.75.' },
+                { num: '↩', badge: 'FALLBACK: RECOVERABLE', title: 'Orphaned note tray', body: 'If content is deleted entirely, your note lands in the tray: zero data loss.' },
               ].map(t => (
                 <div key={t.badge} style={s.tierCard}>
                   <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: 12 }}>
@@ -209,19 +220,17 @@ export default function OnboardingApp() {
         </div>
       </section>
 
-
-
       {/* ── NOTION (mint color block) ────────────────────────────────────── */}
       <section style={s.section}>
         <div style={s.container}>
           <div style={{ ...s.colorBlock, backgroundColor: '#d1f7c4' }}>
-            <span style={{ ...s.eyebrow, color: '#065f46' }}>STEP 4 — OPTIONAL: NOTION SYNC</span>
+            <span style={{ ...s.eyebrow, color: '#065f46' }}>STEP 4: OPTIONAL NOTION SYNC</span>
             <h2 style={{ ...s.displayLg, color: '#052e16', maxWidth: 580 }}>
               Push your research to Notion in one click.
             </h2>
             <p style={{ ...s.bodyText, color: '#14532d', maxWidth: 560, marginBottom: 32 }}>
               Connect your Notion workspace once in Settings. Every note exports with source URL,
-              page title, and timestamp — right into your existing knowledge base.
+              page title, and timestamp: right into your existing knowledge base.
             </p>
             <ol style={{ ...s.bodyText, color: '#14532d', paddingLeft: 20, margin: 0, lineHeight: 2.2 }}>
               <li>Go to <strong>notion.so/my-integrations</strong> → create an Internal Integration Token.</li>

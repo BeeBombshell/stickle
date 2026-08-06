@@ -1,8 +1,8 @@
 ## Overview
 
-Figma's marketing canvas is, at the system level, an editor-clean black-and-white frame. The chrome — top nav, body type, footer, primary CTA — is monochrome. Headlines are oversized `{typography.display-xl}` set in `figmaSans` with aggressive negative tracking, body copy hovers around weight 320–340 of the same variable family, and small mono `{typography.eyebrow}` and `{typography.caption}` labels (figmaMono, all-caps, positive tracking) act as section markers. Every CTA is a pill — `{rounded.pill}` — and the primary action across the entire site is the same black `{components.button-primary}` paired with the same white `{components.button-secondary}`.
+The vector canvas marketing system is, at the system level, an editor-clean black-and-white frame. The chrome — top nav, body type, footer, primary CTA — is monochrome. Headlines are oversized `{typography.display-xl}` set in `canvasSans` with aggressive negative tracking, body copy hovers around weight 320–340 of the same variable family, and small mono `{typography.eyebrow}` and `{typography.caption}` labels (canvasMono, all-caps, positive tracking) act as section markers. Every CTA is a pill — `{rounded.pill}` — and the primary action across the entire site is the same black `{components.button-primary}` paired with the same white `{components.button-secondary}`.
 
-What makes the design unique is what happens **between** those monochrome bookends: the page repeatedly drops into oversized pastel **color-block sections** — lime, lavender, cream, mint, pink, coral, and a deep navy — that span the full content width with `{rounded.lg}` corners and `{spacing.xxl}` interior padding. These blocks are where the storytelling lives. They aren't accents tucked into a card; they take over a whole viewport's worth of vertical space, like a designer arranging giant sticky notes on a clean wall. FigJam is the most pastel-saturated, the home page rotates through the full set, and the pricing page ends with a lime FAQ panel — same vocabulary, different rhythm per route.
+What makes the design unique is what happens **between** those monochrome bookends: the page repeatedly drops into oversized pastel **color-block sections** — lime, lavender, cream, mint, pink, coral, and a deep navy — that span the full content width with `{rounded.lg}` corners and `{spacing.xxl}` interior padding. These blocks are where the storytelling lives. They aren't accents tucked into a card; they take over a whole viewport's worth of vertical space, like a designer arranging giant sticky notes on a clean wall. Canvas Whiteboard views are the most pastel-saturated, the home page rotates through the full set, and the pricing page ends with a lime FAQ panel — same vocabulary, different rhythm per route.
 
 This is a system built on contrast: the monochrome chrome makes the color blocks feel intentional rather than decorative, and the color blocks make the monochrome chrome feel like editorial paper rather than enterprise SaaS. Density is generous, line-heights are tight on display sizes, and the interface never reaches for shadows or gradients to do the work that color blocks and confident typography already do.
 
@@ -10,14 +10,14 @@ This is a system built on contrast: the monochrome chrome makes the color blocks
 - Monochrome system core: `{colors.primary}` (black) and `{colors.canvas}` (white) carry every CTA, every body line, every footer link.
 - Oversized pastel **color-block sections** (`{colors.block-lime}`, `{colors.block-lilac}`, `{colors.block-cream}`, `{colors.block-mint}`, `{colors.block-pink}`, `{colors.block-coral}`, `{colors.block-navy}`) define the narrative rhythm of every long-form page.
 - Pill is the only button shape — `{rounded.pill}` for text CTAs, `{rounded.full}` for icon buttons. No square buttons anywhere.
-- `figmaSans` variable typeface used at unusually fine weight increments (320, 330, 340, 450, 480, 540) — the type system reads as a single voice that flexes rather than a multi-weight family.
+- `canvasSans` variable typeface used at unusually fine weight increments (320, 330, 340, 450, 480, 540) — the type system reads as a single voice that flexes rather than a multi-weight family.
 - Tight negative letter-spacing on display sizes (-1.72px at 86px, -0.96px at 64px) creates a confident editorial cadence.
-- `figmaMono` reserved for category labels, eyebrows, and captions — always uppercase, positive tracking — to flag taxonomy without competing with display type.
+- `canvasMono` reserved for category labels, eyebrows, and captions — always uppercase, positive tracking — to flag taxonomy without competing with display type.
 - Color-block page rhythm (home): white hero → marquee strip → white feature → lime systems block → navy ship-products block → coral developer block → white template grid → white footer.
 
 ## Colors
 
-> Source pages: figma.com (home), /design/, /figjam/brainstorming-tool/, /pricing/, /contact/.
+> Source specifications: vector canvas design system guidelines (/design, /whiteboard, /pricing).
 
 ### Brand & Accent
 - **Black** ({colors.primary}): The system primary. Every primary CTA, every headline, every body line, the marquee strip, the inverse canvas of dark sections.
@@ -32,9 +32,9 @@ This is a system built on contrast: the monochrome chrome makes the color blocks
 - **Hairline Soft** ({colors.hairline-soft}): Even subtler dividers — comparison-table row separators and footer column rules.
 - **Block Lime** ({colors.block-lime}): The signature **systems / FAQ / contact-form** color block. Recurs across home, pricing, contact.
 - **Block Lilac** ({colors.block-lilac}): Hero block on `/design/`; also the inline Release Notes promo banner.
-- **Block Cream** ({colors.block-cream}): Soft warm background — FigJam hero strip, template-grid section.
-- **Block Mint** ({colors.block-mint}): FigJam pastel section.
-- **Block Pink** ({colors.block-pink}): FigJam pastel section.
+- **Block Cream** ({colors.block-cream}): Soft warm background — Whiteboard hero strip, template-grid section.
+- **Block Mint** ({colors.block-mint}): Whiteboard pastel section.
+- **Block Pink** ({colors.block-pink}): Whiteboard pastel section.
 - **Block Coral** ({colors.block-coral}): "Ship products" coral story block on home.
 - **Block Navy** ({colors.block-navy}): Deep indigo story block — only place dark surfaces appear above the footer.
 
@@ -51,8 +51,8 @@ This is a system built on contrast: the monochrome chrome makes the color blocks
 
 ### Font Family
 
-- **figmaSans** — Figma's proprietary variable typeface; fallback stack `figmaSans Fallback, SF Pro Display, system-ui, helvetica`. Variable weight axis is exercised at unusually fine increments (320, 330, 340, 450, 480, 540, 700) — the design system reads as a single voice modulating rather than a stepped weight family.
-- **figmaMono** — Proprietary monospace; fallback `figmaMono Fallback, SF Mono, menlo`. Used exclusively for eyebrow labels and captions, always uppercase with positive letter-spacing.
+- **canvasSans** — Canvas variable typeface; fallback stack `canvasSans Fallback, Inter, SF Pro Display, system-ui, helvetica`. Variable weight axis is exercised at unusually fine increments (320, 330, 340, 450, 480, 540, 700) — the design system reads as a single voice modulating rather than a stepped weight family.
+- **canvasMono** — Monospace family; fallback `canvasMono Fallback, JetBrains Mono, SF Mono, menlo`. Used exclusively for eyebrow labels and captions, always uppercase with positive letter-spacing.
 
 OpenType `kern` is enabled across every role.
 
@@ -60,7 +60,7 @@ OpenType `kern` is enabled across every role.
 
 | Token | Size | Weight | Line Height | Letter Spacing | Use |
 |---|---|---|---|---|---|
-| `{typography.display-xl}` | 86px | 340 | 1.00 | -1.72px | Hero headlines (home, FigJam) |
+| `{typography.display-xl}` | 86px | 340 | 1.00 | -1.72px | Hero headlines (home, Whiteboard) |
 | `{typography.display-lg}` | 64px | 340 | 1.10 | -0.96px | Section opener headlines |
 | `{typography.headline}` | 26px | 540 | 1.35 | -0.26px | Story-block titles inside color blocks |
 | `{typography.subhead}` | 26px | 340 | 1.35 | -0.26px | Long-form intro paragraphs that sit at near-headline scale |
@@ -70,19 +70,19 @@ OpenType `kern` is enabled across every role.
 | `{typography.body-sm}` | 16px | 330 | 1.45 | -0.14px | Card body, footer link list |
 | `{typography.link}` | 20px | 480 | 1.40 | -0.10px | Inline link emphasis |
 | `{typography.button}` | 20px | 480 | 1.40 | -0.10px | All pill buttons, primary and secondary |
-| `{typography.eyebrow}` | 18px | 400 | 1.30 | 0.54px | figmaMono uppercase section eyebrows |
-| `{typography.caption}` | 12px | 400 | 1.00 | 0.60px | figmaMono uppercase captions, footer column heads |
+| `{typography.eyebrow}` | 18px | 400 | 1.30 | 0.54px | canvasMono uppercase section eyebrows |
+| `{typography.caption}` | 12px | 400 | 1.00 | 0.60px | canvasMono uppercase captions, footer column heads |
 
 ### Principles
 
 - **Weight, not size, carries hierarchy on body copy.** A 20px paragraph at weight 330 sits next to a 20px link at weight 480 — the eye reads emphasis without scale change.
 - **Negative letter-spacing scales with size.** Display-xl pulls -1.72px; subhead pulls only -0.26px. Body copy stays near-zero. The result is editorial-feeling display type without sacrificing readability at body size.
-- **Mono is taxonomy, not body.** figmaMono is reserved for eyebrows and captions — never used to set a paragraph.
+- **Mono is taxonomy, not body.** canvasMono is reserved for eyebrows and captions — never used to set a paragraph.
 - **Tight line-heights on display, generous on body.** Display sizes run 1.00–1.10; body runs 1.40–1.45. The contrast reinforces that headlines are graphics and body copy is for reading.
 
 ### Note on Font Substitutes
 
-If implementing without access to figmaSans / figmaMono, suitable open-source substitutes are **Inter** (or **Geist**) for the sans, and **JetBrains Mono** (or **Geist Mono**) for the mono. Inter at variable weights closely matches the fine-grained weight axis figmaSans uses; expect to manually adjust line-heights down by ~0.02 to compensate for Inter's slightly taller x-height.
+If implementing without access to custom canvas fonts, suitable open-source substitutes are **Inter** (or **Geist**) for the sans, and **JetBrains Mono** (or **Geist Mono**) for the mono. Inter at variable weights closely matches the fine-grained weight axis canvasSans uses; expect to manually adjust line-heights down by ~0.02 to compensate for Inter's slightly taller x-height.
 
 ## Layout
 
@@ -94,12 +94,12 @@ If implementing without access to figmaSans / figmaMono, suitable open-source su
 - Card interior padding: `{spacing.lg}` (24px) on pricing cards and template tiles.
 - Form input padding: `{spacing.sm}` 12px vertical · 14px horizontal.
 - Button padding: `{spacing.xs}` 8px vertical · `{spacing.lg}` 24px horizontal for pill buttons (the asymmetric `8px 18px 10px` extracted on `button-secondary` nudges the type optically inside the pill).
-- Universal rhythm constant: `{spacing.section}` (96px) — the vertical gap between major content sections holds across home, pricing, and FigJam pages.
+- Universal rhythm constant: `{spacing.section}` (96px) — the vertical gap between major content sections holds across home, pricing, and whiteboard pages.
 
 ### Grid & Container
 
 - Max content width sits around 1280px (one of the explicit breakpoints), with side gutters that scale from `{spacing.xxl}` on desktop down to `{spacing.lg}` on mobile.
-- Three- and four-column grids on the desktop pricing comparison and FigJam template galleries.
+- Three- and four-column grids on the desktop pricing comparison and template galleries.
 - Color-block sections break the column grid — they span content width with full bleed inside the rounded `{rounded.lg}` corners, then place a single editorial column of headline + body inside.
 
 ### Whitespace Philosophy
@@ -115,13 +115,13 @@ White space is used to make the color blocks feel deliberate. Between every colo
 | 2 (soft elevation) | Subtle drop shadow approx 0 4px 16px rgba(0,0,0,0.06) | Floating template tiles, dropdown menus |
 | 3 (modal) | Stronger shadow + `{colors.overlay-scrim}` behind | Video / image lightbox overlays |
 
-Figma's marketing system is shadow-light by design — the color blocks substitute for traditional elevation. Where most SaaS sites use a shadowed white card to draw attention, Figma uses a saturated background panel. This makes the rare actual shadow (e.g., a floating template card hovering over a cream section) feel like an exception worth noticing.
+The vector canvas marketing system is shadow-light by design — the color blocks substitute for traditional elevation. Where most SaaS sites use a shadowed white card to draw attention, saturated background panels are used. This makes the rare actual shadow (e.g., a floating template card hovering over a cream section) feel like an exception worth noticing.
 
 ### Decorative Depth
 
 - **Color-block sections** are the primary depth device. The change from white canvas to lime / lavender / cream is the section break.
-- **Sticky-note style component thumbnails** in FigJam — slightly off-axis pastel rectangles arranged like notes on a board — read as collage, not card-stack.
-- **Embedded product UI mocks** (Figma Design panels, FigJam canvas snippets) appear as flat compositions on color blocks; their internal shadows are subtle and stay within the mock.
+- **Sticky-note style component thumbnails** — slightly off-axis pastel rectangles arranged like notes on a board — read as collage, not card-stack.
+- **Embedded product UI mocks** (Canvas Design panels, Whiteboard snippets) appear as flat compositions on color blocks; their internal shadows are subtle and stay within the mock.
 
 ## Shapes
 
@@ -141,8 +141,8 @@ Figma's marketing system is shadow-light by design — the color blocks substitu
 
 - Image frames use `{rounded.md}` (8px) — generous enough to feel friendly, conservative enough to read as editorial.
 - Template thumbnails on the home grid sit in `{rounded.md}` tiles with `{spacing.md}` interior padding around the embedded preview.
-- FigJam pastel sticky-note component thumbnails preserve a small `{rounded.sm}` corner that mimics actual sticky paper.
-- No avatar circles appear in marketing surfaces — Figma's marketing avoids personification.
+- Pastel sticky-note component thumbnails preserve a small `{rounded.sm}` corner that mimics actual sticky paper.
+- No avatar circles appear in marketing surfaces.
 
 ## Components
 
@@ -164,7 +164,7 @@ Figma's marketing system is shadow-light by design — the color blocks substitu
 **`button-icon-circular-inverse`** — Same shape, used on inverse-canvas / dark color blocks.
 - Background `{colors.on-inverse-soft}` (translucent white), text `{colors.inverse-ink}`, rounded `{rounded.full}`, size 40px.
 
-**`button-magenta-promo`** — Saturated pink pill used only inside promotional surfaces such as the lilac "Save your spot" Release Notes banner. Reserved for moments where Figma's product team wants the CTA to pop against an already-colored panel.
+**`button-magenta-promo`** — Saturated pink pill used only inside promotional surfaces such as the lilac "Save your spot" Release Notes banner. Reserved for moments where the CTA needs to pop against an already-colored panel.
 - Background `{colors.accent-magenta}`, text `{colors.on-primary}`, type `{typography.button}`, rounded `{rounded.pill}`, padding 10px 18px.
 
 ### Pricing Tabs
@@ -187,7 +187,7 @@ Figma's marketing system is shadow-light by design — the color blocks substitu
 **`pricing-card-feature-row`** — Single row inside the comparison table.
 - Background `{colors.canvas}`, text `{colors.ink}`, type `{typography.body-sm}`. Row separator is `{colors.hairline-soft}`.
 
-**`template-card`** — Thumbnail tile in the home "Explore what people are making" grid and the FigJam template gallery.
+**`template-card`** — Thumbnail tile in the home "Explore what people are making" grid and the template gallery.
 - Background `{colors.surface-soft}`, text `{colors.ink}`, type `{typography.body-sm}`, rounded `{rounded.md}`, padding `{spacing.md}`.
 
 **`feature-illustration-tile`** — Larger composition tile that holds a product UI mock or pastel illustration.
@@ -195,12 +195,12 @@ Figma's marketing system is shadow-light by design — the color blocks substitu
 
 ### Color-Block Sections (signature)
 
-The defining surface of Figma's marketing. Each is a full-content-width panel with `{rounded.lg}` corners and `{spacing.xxl}` interior padding. Variants:
+The defining surface of vector canvas marketing. Each is a full-content-width panel with `{rounded.lg}` corners and `{spacing.xxl}` interior padding. Variants:
 
 **`color-block-section`** — lime ground for "systems" stories (home), pricing FAQ, and the contact form.
 - Background `{colors.block-lime}`, text `{colors.ink}`, type `{typography.subhead}`, rounded `{rounded.lg}`, padding `{spacing.xxl}`.
 
-**`color-block-section-lilac`** — lavender ground for `/design/` hero and FigJam highlight sections.
+**`color-block-section-lilac`** — lavender ground for `/design/` hero and highlight sections.
 - Background `{colors.block-lilac}`, otherwise identical structure.
 
 **`color-block-section-navy`** — deep indigo ground for the home "Ship products" story block. The only inverse color-block surface above the footer.
@@ -229,7 +229,7 @@ The defining surface of Figma's marketing. Each is a full-content-width panel wi
 
 ### Footer
 
-**`footer`** — Dense link grid on white canvas with the wordmark "Figma" set in display weight at the top-left.
+**`footer`** — Dense link grid on white canvas with the wordmark set in display weight at the top-left.
 - Background `{colors.canvas}`, text `{colors.ink}`, type `{typography.caption}` for column headings and small links, padding `{spacing.section}` top/bottom · `{spacing.xl}` sides.
 
 ## Product Pages & Layout Rhythms
@@ -266,21 +266,22 @@ First-run installation tutorial page:
 
 - Reserve `{colors.primary}` for genuine primary CTAs and selected states (e.g., `pricing-tab-selected`). Don't use it as a decorative accent.
 - When introducing a story section, choose **one** color block from the `{colors.block-*}` family and let it span full content width with `{rounded.lg}` corners and `{spacing.xxl}` interior padding.
-- Keep type in `figmaSans` at variable weights — pick from 320, 330, 340, 480, 540, 700 to express hierarchy. Avoid intermediate weights outside this set.
-- Use `figmaMono` only for eyebrows and captions, always uppercase, with the documented positive letter-spacing.
+- Keep type in `canvasSans` at variable weights — pick from 320, 330, 340, 480, 540, 700 to express hierarchy. Avoid intermediate weights outside this set.
+- Use `canvasMono` only for eyebrows and captions, always uppercase, with the documented positive letter-spacing.
 - Compose every CTA as a pill (`{rounded.pill}`) and every icon button as a circle (`{rounded.full}`).
 - Allow the page to **return to white canvas** between every two color blocks so each block reads as deliberate.
 - Pair `button-primary` and `button-secondary` whenever a section needs both a primary action and a sales / secondary action — the black-and-white pair is the brand signature.
 
 ### Don't
 
-- Don't introduce mid-gray text. Body hierarchy comes from `figmaSans` weight, not from opacity.
+- Don't introduce mid-gray text. Body hierarchy comes from `canvasSans` weight, not from opacity.
 - Don't add drop shadows to color-block sections — the color is the depth device.
 - Don't introduce new accent colors outside the documented `{colors.block-*}` palette and `{colors.accent-magenta}`. Adding, e.g., a saturated brand orange would break the system.
-- Don't combine more than one color block visible inside a single viewport — Figma's pacing always lets the white canvas separate them.
+- Don't combine more than one color block visible inside a single viewport — white canvas always separates them.
 - Don't square off CTAs. Square buttons read as a different brand.
-- Don't put `figmaMono` in body copy — it's a taxonomy tool, not a reading typeface.
+- Don't put `canvasMono` in body copy — it's a taxonomy tool, not a reading typeface.
 - Don't replace the `pricing-tab-selected` black fill with a colored tab; the brand pattern is "selected = primary surface".
+
 
 ## Responsive Behavior
 

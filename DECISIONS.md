@@ -54,9 +54,9 @@ This log records non-trivial decisions made during the development of Stickle.
 - **Decision:** Clicking a note card in `NoteSidebar.tsx` checks open tabs via `chrome.tabs.query` and focuses the matching tab/window if open, or creates a new tab if not.
 - **Rationale:** Prevents tab duplication and delivers seamless navigation back to anchored context on any webpage.
 
-### 11. Notion Credentials Storage Pattern
-- **Decision:** Saved Notion integration credentials (`notionApiKey`, `notionDatabaseId`) in `chrome.storage.local` with fallback to `localStorage`.
-- **Rationale:** Prepares credential persistence for Phase 4 Notion export integration.
+### 11. Notion Credentials Storage Pattern & Security Hardening
+- **Decision:** Saved Notion integration credentials (`notionApiKey`, `notionDatabaseId`) exclusively in extension-isolated `chrome.storage.local`. Completely eliminated `localStorage` API key storage fallback.
+- **Rationale:** Prevents exposing sensitive Notion integration tokens in unencrypted web page `localStorage`. In standalone web/demo contexts, credentials remain in transient memory state only.
 
 ---
 
@@ -146,8 +146,9 @@ This log records non-trivial decisions made during the development of Stickle.
 - **Decision:** Implemented `importNotesFromJson` validating schema structure, creating new notes, and updating existing notes (`id` match) only if the imported note has a strictly newer `updatedAt` timestamp.
 - **Rationale:** Prevents data duplication during backup restoration while avoiding accidental overwrites of newer local edits.
 
-### 30. Dual-Environment Local Disk Sync Helper
-- **Decision:** Created `syncNotesToLocalDisk` and `formatLocalSyncJson` writing to `~/.stickle/notes.json` when running in Node/MCP environments while remaining safe in browser MV3 contexts.
+### 30. Dual-Environment Local Disk Sync & Bundle Hygiene Decoupling
+- **Decision:** Maintained `formatLocalSyncJson` for pure string formatting and decoupled Node.js disk filesystem calls (`fs`/`path`/`os`) from browser export modules.
+- **Rationale:** Ensures browser extension bundles (`wxt build`) remain lightweight, fast, and 100% free of Node.js polyfill stubs or dynamic `require` warnings.
 
 ---
 

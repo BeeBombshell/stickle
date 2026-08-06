@@ -2,44 +2,53 @@ import { useState } from 'preact/hooks';
 
 type FaqItem = { q: string; a: string };
 
-const FAQS: FaqItem[] = [
+const FAQ_ITEMS = [
   {
-    q: 'Does Stickle work offline?',
-    a: 'Yes. Every note is written immediately to IndexedDB on your device. The only feature requiring a connection is Notion sync.',
+    q: 'How does DOM anchoring work if a webpage updates?',
+    a: 'Stickle tries three anchoring methods in sequence: structural XPath, neighbor content hashing, then trigram fuzzy text matching. If a page is deleted entirely the note lands in a recoverable tray. You never lose data.',
   },
   {
-    q: 'What happens when a page re-renders or changes layout?',
-    a: 'Stickle tries three anchoring methods in sequence — structural XPath, neighbor content hashing, then trigram fuzzy text matching. If a page is deleted entirely the note lands in a recoverable tray. You never lose data.',
+    q: 'Is my data private? Does Stickle track my notes?',
+    a: "Stickle v1 sends zero telemetry. When you connect Notion, your API key and note content go directly from your browser to Notion's official API: nothing routes through any Stickle server.",
   },
   {
-    q: 'Is my data private?',
-    a: "Stickle v1 sends zero telemetry. When you connect Notion, your API key and note content go directly from your browser to Notion's official API — nothing routes through any Stickle server.",
-  },
-
-  {
-    q: 'Do I need an account to start?',
-    a: 'No. Install the extension and take notes immediately. Accounts are a v2 feature for optional cloud sync and team sharing.',
+    q: 'Can I export my notes to Notion?',
+    a: 'Yes. Enter your Notion Integration Token and Database ID in Settings to export notes with source URL, title, and timestamp in 1 click.',
   },
   {
     q: 'Which browsers are supported?',
-    a: 'Chrome and all Chromium-based browsers — Brave, Arc, Edge — via the Chrome Web Store. Firefox support is planned.',
+    a: 'Chrome and all Chromium-based browsers (Brave, Arc, Edge) via the Chrome Web Store. Firefox support is planned.',
   },
 ];
 
+const FAQS = FAQ_ITEMS;
+const DEMO_COLORS = ['#e4f579', '#e8d5ff', '#fff7db', '#d1f7c4', '#ffd6e8', '#ffdbcc'];
+
 export default function LandingApp() {
   const [openFaq, setOpenFaq] = useState<number | null>(null);
+  const [pkmTab, setPkmTab] = useState<'notion' | 'obsidian' | 'mcp'>('notion');
   const [demoColor, setDemoColor] = useState('#e4f579');
   const [demoText, setDemoText] = useState(
-    'Alt + Click pinned this note here. Notes survive page reloads and React re-renders — try editing this.'
+    'Alt + Click pinned this note here. Notes survive page reloads and React re-renders: try editing this.'
   );
-  const [pkmTab, setPkmTab] = useState<'notion' | 'obsidian' | 'mcp'>('notion');
-  const [hoverRoadmap, setHoverRoadmap] = useState<number | null>(null);
 
-  const toggleFaq = (i: number) => setOpenFaq(openFaq === i ? null : i);
+  const toggleFaq = (idx: number) => {
+    setOpenFaq(openFaq === idx ? null : idx);
+  };
 
   const openSandbox = () => {
     if (typeof chrome !== 'undefined' && chrome.tabs) {
       chrome.tabs.create({ url: chrome.runtime.getURL('onboarding.html') });
+    } else {
+      window.open('/onboarding.html', '_blank');
+    }
+  };
+
+  const openPrivacy = () => {
+    if (typeof chrome !== 'undefined' && chrome.tabs) {
+      chrome.tabs.create({ url: chrome.runtime.getURL('privacy.html') });
+    } else {
+      window.open('/privacy.html', '_blank');
     }
   };
 
@@ -81,7 +90,7 @@ export default function LandingApp() {
               GitHub ↗
             </a>
             <button style={s.btnSecondary} onClick={openSandbox}>Sandbox</button>
-            <button style={s.btnPrimary} onClick={openSandbox}>Add to Chrome — Free</button>
+            <button style={s.btnPrimary} onClick={openSandbox}>Add to Chrome - Free</button>
           </div>
         </div>
       </nav>
@@ -89,19 +98,19 @@ export default function LandingApp() {
       {/* ══ 2. HERO ══════════════════════════════════════════════════════════ */}
       <section style={s.hero}>
         <div style={s.wrap}>
-          <span style={s.eyebrow}>NEW — V1.0 IS LIVE &amp; OPEN SOURCE</span>
+          <span style={s.eyebrow}>NEW: V1.0 IS LIVE &amp; OPEN SOURCE</span>
           <h1 style={s.displayXL}>
             Leave notes in the<br />margins of the web.
           </h1>
           <p style={s.heroSub}>
-            Alt&nbsp;+&nbsp;Click any element on any webpage to drop a sticky note.
-            It stays pinned there — through reloads, re-renders, and revisits —
+            Alt + Click any element on any webpage to drop a sticky note.
+            It stays pinned there: through reloads, re-renders, and revisits:
             and syncs to Notion in one click.
           </p>
 
           <div style={s.ctaRow}>
             <button style={{ ...s.btnPrimary, fontSize: 16, padding: '12px 28px' }} onClick={openSandbox}>
-              Add to Chrome — Free
+              Add to Chrome - Free
             </button>
             <a
               href="https://github.com/YOUR_USERNAME/stickle"
@@ -185,12 +194,12 @@ export default function LandingApp() {
               Stop losing your thinking<br />in app-switching context collapse.
             </h2>
             <p style={{ fontSize: 20, fontWeight: 330, lineHeight: 1.4, letterSpacing: '-0.14px', color: '#9a3412', maxWidth: 720, margin: '0 0 28px' }}>
-              You read something interesting, have a thought — then alt-tab to Notion, lose the reading
-              flow, and paste a raw URL you'll never fully remember.
+              You read something interesting, have a thought, then alt-tab to Notion, lose the reading
+              flow, and paste a raw URL you will never fully remember.
               Highlighters only capture text you select. Web clippers save the page, not your thinking.
             </p>
             <div style={s.problemCallout}>
-              <strong>Stickle closes the gap:</strong>&nbsp;write floating notes directly on the webpage — right where your thoughts happen.
+              <strong>Stickle closes the gap:</strong>&nbsp;write floating notes directly on the webpage, right where your thoughts happen.
             </div>
           </div>
         </div>
@@ -209,7 +218,7 @@ export default function LandingApp() {
                 bg: '#e8d5ff',
                 eyebrow: 'WRITE WHERE YOU READ',
                 headline: 'Drop a note on any element without leaving the page.',
-                body: 'Alt + Click any DOM element — heading, code block, image, paragraph — to attach a note. No toolbar. No text selection friction.',
+                body: 'Alt + Click any DOM element (heading, code block, image, paragraph) to attach a note. No toolbar. No text selection friction.',
               },
               {
                 bg: '#fff7db',
@@ -251,7 +260,7 @@ export default function LandingApp() {
               {
                 eyebrow: 'DESIGN SYSTEM',
                 title: 'Five signature pastel colors.',
-                body: 'Lime, lilac, cream, mint, pink — each with a crisp monochrome frame that reads on light and dark pages without competing with the site.',
+                body: 'Lime, lilac, cream, mint, pink: each with a crisp monochrome frame that reads on light and dark pages without competing with the site.',
               },
               {
                 eyebrow: 'NOTE MANAGEMENT',
@@ -287,13 +296,13 @@ export default function LandingApp() {
               Notes that stay right<br />where you left them.
             </h2>
             <p style={{ fontSize: 18, fontWeight: 330, lineHeight: 1.45, letterSpacing: '-0.26px', color: '#831843', maxWidth: 640, margin: '0 0 36px' }}>
-              Webpages update. React re-renders. Layouts shift. Stickle uses a 3-layer anchoring engine to keep your notes pinned exactly where you put them — zero silent data loss.
+              Webpages update. React re-renders. Layouts shift. Stickle uses a 3-layer anchoring engine to keep your notes pinned exactly where you put them: zero silent data loss.
             </p>
 
             <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(240px, 1fr))', gap: 20 }}>
               {[
                 {
-                  badge: 'TIER 1 • EXACT',
+                  badge: 'TIER 1: EXACT',
                   title: 'Pins to exact page elements',
                   desc: 'Attaches directly to headings, paragraphs, code blocks, or images on documentation, wikis, and articles.',
                   icon: (
@@ -305,7 +314,7 @@ export default function LandingApp() {
                   ),
                 },
                 {
-                  badge: 'TIER 2 • RESILIENT',
+                  badge: 'TIER 2: RESILIENT',
                   title: 'Survives dynamic re-renders',
                   desc: 'Fingerprints surrounding content so notes stay attached even when Twitter, Reddit, or GitHub update in real time.',
                   icon: (
@@ -315,7 +324,7 @@ export default function LandingApp() {
                   ),
                 },
                 {
-                  badge: 'TIER 3 • FUZZY',
+                  badge: 'TIER 3: FUZZY',
                   title: 'Handles layout refactors',
                   desc: 'Scans page text nodes to relocate your notes even if HTML structure or CSS styling changes completely.',
                   icon: (
@@ -326,9 +335,9 @@ export default function LandingApp() {
                   ),
                 },
                 {
-                  badge: 'FALLBACK • SAFE',
+                  badge: 'FALLBACK: SAFE',
                   title: 'Zero lost thoughts',
-                  desc: 'If a section is deleted entirely, notes land safely in a corner recovery tray — never silently lost.',
+                  desc: 'If a section is deleted entirely, notes land safely in a corner recovery tray: never silently lost.',
                   icon: (
                     <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#500724" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
                       <polyline points="22 12 16 12 14 15 10 15 8 12 2 12" />
@@ -742,7 +751,7 @@ export default function LandingApp() {
                 ))}
               </ul>
               <button style={{ ...s.btnPrimary, width: '100%', marginTop: 'auto' }} onClick={openSandbox}>
-                Add to Chrome — Free
+                Add to Chrome - Free
               </button>
             </div>
 
@@ -834,7 +843,7 @@ export default function LandingApp() {
           </p>
           <div style={{ ...s.ctaRow, justifyContent: 'center' }}>
             <button style={{ ...s.btnPrimary, fontSize: 16, padding: '14px 32px' }} onClick={openSandbox}>
-              Add to Chrome — Free
+              Add to Chrome - Free
             </button>
             <a
               href="https://github.com/YOUR_USERNAME/stickle"
@@ -884,6 +893,7 @@ export default function LandingApp() {
                 head: 'RESOURCES',
                 links: [
                   { label: 'Sandbox Tutorial', href: '#', onClick: openSandbox },
+                  { label: 'Privacy Policy', href: '#', onClick: openPrivacy },
                   { label: 'GitHub Repository', href: 'https://github.com/YOUR_USERNAME/stickle' },
                   { label: 'FAQ', href: '#faq' },
                 ],
