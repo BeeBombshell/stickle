@@ -1,7 +1,7 @@
 # 🚀 Stickle — Product Hunt & Marketing Launch Plan (v1)
 
 > **Status**: Pre-Launch Working Doc — update URLs before going live  
-> **Repository**: [github.com/YOUR_USERNAME/stickle](https://github.com/YOUR_USERNAME/stickle) ← **replace before launch**  
+> **Repository**: [github.com/BeeBombshell/stickle](https://github.com/BeeBombshell/stickle)  
 > **Version**: v1.0 (Local-First Chrome MV3 Extension)
 
 ---
@@ -129,7 +129,7 @@ KEY FEATURES
 PRIVACY
 Stickle does not track your browsing, read your note content, or send any data to external servers. Notion sync goes directly from your browser to Notion's official API using your own API key.
 
-Open source: github.com/YOUR_USERNAME/stickle
+Open source: github.com/BeeBombshell/stickle
 ```
 
 ---
