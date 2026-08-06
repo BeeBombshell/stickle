@@ -55,10 +55,10 @@ export default function PrivacyApp() {
               </p>
             </div>
             <div style={s.card}>
-              <span style={s.cardEyebrow}>02 • ZERO TELEMETRY</span>
-              <h3 style={s.cardTitle}>No Analytics or Tracking</h3>
+              <span style={s.cardEyebrow}>02 • ANONYMOUS METRICS</span>
+              <h3 style={s.cardTitle}>Privacy-Preserving Telemetry</h3>
               <p style={s.bodyText}>
-                Stickle contains zero tracking scripts, telemetry, or analytics software. We do not inspect your browsing history, web activity, or note contents.
+                Stickle collects anonymized aggregate usage metrics (such as note creation counts and export success rates) via PostHog to improve app performance. We never collect note contents, webpage titles, browsing history, or personal identifiers.
               </p>
             </div>
             <div style={s.card}>
