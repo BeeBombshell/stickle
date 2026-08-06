@@ -55,12 +55,9 @@
   --space-section: 96px;
 }
 
-/* Base Styles */
-* {
-  box-sizing: border-box;
-}
-
-body {
+/* Base Styles (Scoped to standalone extension pages like popup/onboarding/landing) */
+#app,
+.stickle-standalone {
   margin: 0;
   padding: 0;
   font-family: var(--font-sans);
