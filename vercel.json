@@ -5,6 +5,7 @@
   "cleanUrls": true,
   "rewrites": [
     { "source": "/", "destination": "/landing.html" },
+    { "source": "/waitlist", "destination": "/waitlist.html" },
     { "source": "/privacy", "destination": "/privacy.html" },
     { "source": "/onboarding", "destination": "/onboarding.html" }
   ]
