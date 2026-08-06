@@ -417,8 +417,8 @@
   width: 22px;
   height: 22px;
   border-radius: var(--radius-full);
-  background-color: #10b981;
-  color: white;
+  background-color: var(--color-block-lime);
+  color: #111111;
   font-weight: 800;
   font-size: 12px;
 }

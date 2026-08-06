@@ -72,18 +72,18 @@ export default function PrivacyApp() {
         </div>
       </section>
 
-      {/* ── NOTION INTEGRATION & SECURITY (mint color block) ────────────── */}
+      {/* ── NOTION INTEGRATION & SECURITY (Block Lime: #e4f579) ───────────── */}
       <section style={s.section}>
         <div style={s.container}>
-          <div style={{ ...s.colorBlock, backgroundColor: '#d1f7c4' }}>
-            <span style={{ ...s.eyebrow, color: '#065f46' }}>CREDENTIAL SAFETY & NOTION API</span>
-            <h2 style={{ ...s.displayLg, color: '#052e16', maxWidth: 640 }}>
+          <div style={{ ...s.colorBlock, backgroundColor: '#e4f579' }}>
+            <span style={{ ...s.eyebrow, color: '#111111' }}>CREDENTIAL SAFETY & NOTION API</span>
+            <h2 style={{ ...s.displayLg, color: '#111111', maxWidth: 640 }}>
               How Notion integration tokens are handled.
             </h2>
-            <p style={{ ...s.bodyText, color: '#14532d', maxWidth: 640, marginBottom: 24 }}>
+            <p style={{ ...s.bodyText, color: '#333333', maxWidth: 640, marginBottom: 24 }}>
               If you choose to sync research to Notion, your integration token is saved strictly inside extension-isolated storage (`chrome.storage.local`).
             </p>
-            <ul style={{ ...s.bodyText, color: '#14532d', paddingLeft: 20, margin: 0, lineHeight: 1.8 }}>
+            <ul style={{ ...s.bodyText, color: '#333333', paddingLeft: 20, margin: 0, lineHeight: 1.8 }}>
               <li><strong>No unencrypted web storage:</strong> Integration tokens are never stored in unencrypted web page `localStorage`.</li>
               <li><strong>Background worker proxying:</strong> Requests to `https://api.notion.com/*` are dispatched strictly by the extension's background service worker to satisfy Manifest V3 security rules.</li>
               <li><strong>Full user control:</strong> You can disconnect or revoke your integration token at any time in Settings or via your Notion Integrations dashboard.</li>
@@ -92,11 +92,11 @@ export default function PrivacyApp() {
         </div>
       </section>
 
-      {/* ── PERMISSIONS POLICY (navy color block) ───────────────────────── */}
+      {/* ── PERMISSIONS POLICY (Dark Inverse #111 color block) ──────────── */}
       <section style={s.section}>
         <div style={s.container}>
-          <div style={{ ...s.colorBlock, backgroundColor: '#1e2038', color: '#ffffff' }}>
-            <span style={{ ...s.eyebrow, color: '#94a3b8' }}>CHROME EXTENSION PERMISSIONS POLICY</span>
+          <div style={{ ...s.colorBlock, backgroundColor: '#111111', color: '#ffffff' }}>
+            <span style={{ ...s.eyebrow, color: '#e4f579' }}>CHROME EXTENSION PERMISSIONS POLICY</span>
             <h2 style={{ ...s.displayLg, color: '#ffffff', maxWidth: 680 }}>
               Why permissions are requested.
             </h2>

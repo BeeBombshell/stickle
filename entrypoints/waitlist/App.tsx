@@ -20,8 +20,14 @@ const WAITLIST_FAQS = [
   },
 ];
 
+const NOTE_COLOR_SWATCHES = ['#111111', '#e4f579', '#e8d5ff', '#fff7db', '#d1f7c4', '#ffdbcc'];
+
 export default function WaitlistApp() {
   const [openFaq, setOpenFaq] = useState<number | null>(null);
+  const [noteColor, setNoteColor] = useState('#111111');
+  const [noteText, setNoteText] = useState(
+    'Alt + Click pinned this note directly to the DOM element. Notes survive reloads, re-renders, and revisits.'
+  );
 
   const toggleFaq = (idx: number) => {
     setOpenFaq(openFaq === idx ? null : idx);
@@ -62,35 +68,86 @@ export default function WaitlistApp() {
         </div>
       </nav>
 
-      {/* ══ 2. HERO / WAITLIST COLOR BLOCK (Coral: #ffdbcc) ═══════════════════ */}
+      {/* ══ 2. HERO / WAITLIST SECTION (monochrome container with pop stickle) ═ */}
       <section style={s.heroSection}>
         <div style={s.wrap}>
-          <div style={{ ...s.colorBlock, backgroundColor: '#ffdbcc', padding: '56px 48px', position: 'relative' as const }}>
+          <div style={{ ...s.colorBlock, backgroundColor: '#f8f8f6', border: '1px solid #e5e5e0', padding: '56px 48px', position: 'relative' as const }}>
             <div style={s.heroHeader}>
-              <span style={{ ...s.eyebrow, color: '#9a3412', marginBottom: 12 }}>STICKLE LAUNCH ROLLOUT</span>
-              <h1 style={{ ...s.displayXL, color: '#7c2d12', margin: '0 0 20px' }}>
+              <span style={{ ...s.eyebrow, color: '#52514e', marginBottom: 12 }}>STICKLE LAUNCH ROLLOUT</span>
+              <h1 style={{ ...s.displayXL, color: '#111111', margin: '0 0 20px' }}>
                 Be first in line<br />when Stickle launches.
               </h1>
-              <p style={{ ...s.heroSub, color: '#9a3412' }}>
+              <p style={{ ...s.heroSub, color: '#52514e' }}>
                 Leave persistent sticky notes in the margins of the web. Enter your email to get notified the exact moment Stickle is released on the Chrome Web Store.
               </p>
             </div>
 
-            {/* Monochrome Floating Sticky Note Preview */}
-            <div style={s.stickyNotePreview}>
-              <div style={s.stickyNoteHeader}>
-                <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
-                  <div style={{ width: 8, height: 8, borderRadius: '50%', backgroundColor: '#22c55e' }} />
-                  <span style={s.stickyNoteEyebrow}>STICKLE • ANCHORED NOTE</span>
+            {/* Interactive Sticky Note Preview matching Landing & Onboarding design */}
+            <div style={{ display: 'flex', justifyContent: 'center', marginTop: 28 }}>
+              <div style={{
+                width: 320,
+                borderRadius: 12,
+                padding: 16,
+                boxShadow: '0 8px 24px rgba(0,0,0,0.12)',
+                border: noteColor === '#111111' ? '1px solid rgba(255,255,255,0.15)' : '1px solid rgba(0,0,0,0.08)',
+                backgroundColor: noteColor,
+                color: noteColor === '#111111' ? '#ffffff' : '#111111',
+                transform: 'rotate(-2deg)',
+                transition: 'background-color 0.2s ease',
+              }}>
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 10 }}>
+                  <span style={{ fontFamily: "'JetBrains Mono', monospace", fontSize: 9, fontWeight: 700, letterSpacing: '0.8px', color: noteColor === '#111111' ? '#e5e5e5' : '#111111' }}>
+                    STICKLE • TIER 1
+                  </span>
+                  <span style={{
+                    fontFamily: "'JetBrains Mono', monospace",
+                    fontSize: 9,
+                    fontWeight: 700,
+                    backgroundColor: noteColor === '#111111' ? 'rgba(255,255,255,0.15)' : 'rgba(0,0,0,0.08)',
+                    color: noteColor === '#111111' ? '#ffffff' : '#111111',
+                    padding: '2px 8px',
+                    borderRadius: 50,
+                    letterSpacing: '0.4px',
+                  }}>
+                    STRUCTURAL
+                  </span>
                 </div>
-                <span style={s.stickyNoteBadge}>STRUCTURAL</span>
-              </div>
-              <p style={s.stickyNoteText}>
-                "Alt + Click pinned this note directly to the DOM element. It stays here through reloads, re-renders, and revisits."
-              </p>
-              <div style={s.stickyNoteFooter}>
-                <span>https://docs.github.com/en/get-started</span>
-                <span>Notion Sync Ready ↗</span>
+                <textarea
+                  style={{
+                    width: '100%',
+                    height: 72,
+                    border: 'none',
+                    background: 'transparent',
+                    resize: 'none' as const,
+                    fontFamily: "Inter, -apple-system, sans-serif",
+                    fontSize: 13,
+                    color: noteColor === '#111111' ? '#ffffff' : '#111111',
+                    outline: 'none',
+                    boxSizing: 'border-box' as const,
+                    lineHeight: 1.5,
+                  }}
+                  value={noteText}
+                  onInput={(e) => setNoteText((e.target as HTMLTextAreaElement).value)}
+                />
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginTop: 10, paddingTop: 8, borderTop: noteColor === '#111111' ? '1px solid rgba(255,255,255,0.12)' : '1px solid rgba(0,0,0,0.06)' }}>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
+                    {NOTE_COLOR_SWATCHES.map(c => (
+                      <button
+                        key={c}
+                        onClick={() => setNoteColor(c)}
+                        style={{
+                          width: 12, height: 12, borderRadius: '50%',
+                          backgroundColor: c,
+                          border: noteColor === c ? (noteColor === '#111111' ? '2px solid #ffffff' : '2px solid #111111') : '1px solid rgba(0,0,0,0.2)',
+                          cursor: 'pointer', padding: 0,
+                        }}
+                      />
+                    ))}
+                  </div>
+                  <span style={{ fontFamily: "'JetBrains Mono', monospace", fontSize: 9, color: noteColor === '#111111' ? '#a3a3a3' : '#52514e', letterSpacing: '0.4px' }}>
+                    notion sync ready
+                  </span>
+                </div>
               </div>
             </div>
 
@@ -119,40 +176,36 @@ export default function WaitlistApp() {
           <div style={s.fourGrid}>
             {[
               {
-                bg: '#d1f7c4',
                 eyebrow: 'ROBUST ANCHORING',
                 title: '3-Tier DOM Anchoring',
                 desc: 'Notes stay pinned through reloads, ad reflows, and layout shifts using structural XPath, fingerprinting & trigram matching.',
                 badge: 'CORE TECH',
               },
               {
-                bg: '#e8d5ff',
                 eyebrow: 'NOTION SYNC',
                 title: '1-Click Notion Export',
                 desc: 'Push individual notes or batch-export web annotations with source URL, title, and timestamp directly into Notion.',
                 badge: 'NOTION API',
               },
               {
-                bg: '#fff7db',
                 eyebrow: 'LOCAL-FIRST',
                 title: '100% Private & Offline',
                 desc: 'Zero telemetry, zero external tracking servers. Complete privacy for your reading thoughts and research notes.',
                 badge: 'LOCAL-FIRST',
               },
               {
-                bg: '#ffd6e8',
                 eyebrow: 'AI CONTEXT',
                 title: 'AI Assistant Context (MCP)',
                 desc: 'Expose your web notes to Claude Desktop, Cursor, and AI agents via local Model Context Protocol.',
                 badge: 'MCP READY',
               },
             ].map((card) => (
-              <div key={card.title} style={{ ...s.colorBlock, backgroundColor: card.bg, flex: 1, minWidth: 260 }}>
+              <div key={card.title} style={{ ...s.colorBlock, backgroundColor: '#ffffff', border: '1px solid #e5e5e0', flex: 1, minWidth: 260 }}>
                 <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 16 }}>
-                  <span style={{ ...s.eyebrow, fontSize: 10, color: '#52514e' }}>{card.eyebrow}</span>
-                  <span style={s.cardBadge}>{card.badge}</span>
+                  <span style={{ ...s.eyebrow, fontSize: 10, color: '#111111' }}>{card.eyebrow}</span>
+                  <span style={{ ...s.cardBadge, backgroundColor: '#e4f579', color: '#111111' }}>{card.badge}</span>
                 </div>
-                <h3 style={{ fontSize: 20, fontWeight: 700, color: '#111', margin: '0 0 10px', letterSpacing: '-0.3px' }}>
+                <h3 style={{ fontSize: 20, fontWeight: 700, color: '#111111', margin: '0 0 10px', letterSpacing: '-0.3px' }}>
                   {card.title}
                 </h3>
                 <p style={{ fontSize: 14, color: '#52514e', lineHeight: 1.5, margin: 0, fontWeight: 330 }}>
@@ -164,12 +217,12 @@ export default function WaitlistApp() {
         </div>
       </section>
 
-      {/* ══ 4. WAITLIST FAQ (Lime Color Block) ════════════════════════════════ */}
+      {/* ══ 4. WAITLIST FAQ (Block Lime: #e4f579) ═════════════════════════════ */}
       <section style={s.sectionSpacing}>
         <div style={s.wrap}>
           <div style={{ ...s.colorBlock, backgroundColor: '#e4f579' }}>
-            <span style={{ ...s.eyebrow, color: '#3f6212', marginBottom: 12 }}>WAITLIST FAQ</span>
-            <h2 style={{ ...s.displayLg, color: '#14290a', maxWidth: 520, marginBottom: 36 }}>
+            <span style={{ ...s.eyebrow, color: '#111111', marginBottom: 12 }}>WAITLIST FAQ</span>
+            <h2 style={{ ...s.displayLg, color: '#111111', maxWidth: 520, marginBottom: 36 }}>
               Frequently asked questions
             </h2>
             <div style={{ maxWidth: 760, display: 'flex', flexDirection: 'column' as const, gap: 2 }}>
@@ -403,12 +456,12 @@ const s = {
     fontWeight: 600,
     textAlign: 'left' as const,
     cursor: 'pointer',
-    color: '#14290a',
+    color: '#111111',
   },
   faqA: {
     padding: '0 24px 20px',
     fontSize: 15,
-    color: '#365314',
+    color: '#333333',
     lineHeight: 1.6,
     fontWeight: 330,
   },
