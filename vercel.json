@@ -1,0 +1,10 @@
+{
+  "buildCommand": "pnpm run build",
+  "outputDirectory": ".output/chrome-mv3",
+  "cleanUrls": true,
+  "rewrites": [
+    { "source": "/", "destination": "/landing.html" },
+    { "source": "/privacy", "destination": "/privacy.html" },
+    { "source": "/onboarding", "destination": "/onboarding.html" }
+  ]
+}
