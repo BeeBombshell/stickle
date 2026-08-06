@@ -232,6 +232,34 @@ The defining surface of Figma's marketing. Each is a full-content-width panel wi
 **`footer`** — Dense link grid on white canvas with the wordmark "Figma" set in display weight at the top-left.
 - Background `{colors.canvas}`, text `{colors.ink}`, type `{typography.caption}` for column headings and small links, padding `{spacing.section}` top/bottom · `{spacing.xl}` sides.
 
+## Product Pages & Layout Rhythms
+
+### Product Landing Page (`landing.html`)
+The flagship marketing page follows an editorial rhythm alternating between white canvas and oversized signature pastel color blocks:
+1. **Nav Bar**: Sticky white canvas bar (`{colors.canvas}`) with wordmark, version badge, page links, and pill CTAs.
+2. **Hero Section**: Eyebrow `NEW — V1.0 IS LIVE & OPEN SOURCE`, Display XL headline *"Leave notes in the margins of the web."*, dual pill CTAs, and interactive sandbox preview.
+3. **Problem Statement**: Coral color block (`{colors.block-coral}`) framing app-switching friction vs spatial web annotation.
+4. **Value Props Grid**: Lilac (`{colors.block-lilac}`), Cream (`{colors.block-cream}`), and Mint (`{colors.block-mint}`) value prop cards.
+5. **Core Feature Showcase**: Soft surface cards highlighting keyboard shortcuts, design swatches, and popup note manager.
+6. **3-Tier Anchoring Engine**: Navy color block (`{colors.block-navy}`) visualizing structural XPath, neighbor content hashing, and trigram fuzzy matching.
+7. **Second Brain Integration**: Mint color block (`{colors.block-mint}`) featuring 1-click Notion database export, Obsidian frontmatter, and local MCP schema.
+8. **Product Roadmap**: Signature Lime color block (`{colors.block-lime}`) featuring a clean 4-card grid with SVG vector icons, benefit-driven marketing copy, and status badges (`NOW • V1.0`, `NEXT`, `SOON`, `FUTURE VISION`).
+9. **Comparison Matrix**: White canvas table comparing Stickle with Hypothes.is, Notion Clipper, and Readwise.
+10. **Pricing Tiers**: 3-up pricing cards featuring Free Open-Core, Pro Supporter Early Access, and Teams waitlist.
+11. **FAQ Accordion**: Clean Q&A accordion covering offline support, layout refactors, privacy, and accounts.
+12. **Footer**: Minimalist dark footer with wordmark, links, license, and GitHub repository links.
+
+### Onboarding Tutorial Page (`onboarding.html`)
+First-run installation tutorial page:
+1. **Header & Tagline**: Monochrome lockup with version badge and positioning.
+2. **Branding Banner**: Lilac color block (`{colors.block-lilac}`) summarizing local-first positioning.
+3. **Core Mechanics**: 3-step grid for Alt+Click, selection pill, and context menu.
+4. **Interactive Sandbox**: Warm cream color block (`{colors.block-cream}`) with live interactive sticky note playground.
+5. **Anchoring Engine Overview**: Navy color block (`{colors.block-navy}`) with tier badges.
+6. **Product Roadmap**: Lime color block (`{colors.block-lime}`) featuring 4 clean milestone cards with SVG vector icons and benefit-focused copy.
+7. **Closing CTA**: White canvas CTA to start annotating the web.
+
+
 ## Do's and Don'ts
 
 ### Do

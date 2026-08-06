@@ -82,14 +82,14 @@ What's in v1:
 📖 Interactive onboarding sandbox on first install
 
 What I'm building next:
-☁️ Cloud sync for cross-device access
-👥 Team shared annotations
-🤖 Remote MCP server — so AI agents like Claude and Cursor can read your web notes as context
-📊 Web dashboard with search, timeline, and team activity
+• Cloud sync for cross-device access
+• Team shared annotations & workspaces
+• AI assistant context (Claude, Cursor, ChatGPT)
+• Central web dashboard & analytics
 
 Stickle is fully open source. If you're a fellow Notion nerd or just someone who annotates a lot of tabs — would love your feedback in the comments!
 
-Happy note-taking 📌
+Happy note-taking!
 ```
 
 ---
@@ -143,7 +143,7 @@ Open source: github.com/YOUR_USERNAME/stickle
 | **Gallery 2 — Anchoring** | 1270×760 PNG | Diagram: "How notes survive page changes" — 3 tiers visualized (XPath → Hash → Fuzzy). |
 | **Gallery 3 — Notion Export** | 1270×760 PNG | Side by side: extension popup with notes + resulting Notion database with URL/title/timestamp columns. |
 | **Gallery 4 — Popup Manager** | 1270×760 PNG | Extension popup: search bar, filter tabs (Today / This Week / All Time), note list, "jump to tab" button. |
-| **Gallery 5 — Coming Soon** | 1270×760 PNG | Clean "What's Next" slide: Cloud Sync · Team Notes · MCP for AI Agents · Web Dashboard. |
+| **Gallery 5 — Coming Soon** | 1270×760 PNG | Clean "What's Next" slide: Cross-Device Sync · Team Workspaces · AI Context · Web Dashboard. |
 | **Demo Video** | 30–45s MP4 | Flow: Alt+Click doc page → type note → change color → close tab → reopen (note persists) → batch Notion export. |
 
 > **Demo video tip**: Record at 2x resolution, export 1080p. Show the note "snapping" back to position on re-open — this is the most impressive thing Stickle does and most viewers won't expect it.
@@ -161,7 +161,7 @@ Open source: github.com/YOUR_USERNAME/stickle
 4. Features        — 3-column value props + expanded feature cards
 5. Anchoring Tech  — How the 3-tier engine works (appeals to PKM & dev audiences)
 6. Notion Demo     — GIF or screenshot of Notion export result
-7. Coming Soon     — Teaser for cloud sync, team sharing, MCP, dashboard
+7. Coming Soon     — Teaser for cloud sync, team sharing, AI context, dashboard
 8. Open Source     — GitHub section with star count badge
 9. Comparison      — Stickle vs alternatives table
 10. FAQ            — 4–5 questions
@@ -191,7 +191,7 @@ Open source: github.com/YOUR_USERNAME/stickle
 
 #### Value Props (3-column grid)
 
-| 📍 Write where you read | 🎯 Notes that don't drift | ⚡ Into Notion, instantly |
+| Write where you read | Notes that don't drift | Into Notion, instantly |
 |---|---|---|
 | Drop a note on any element — heading, paragraph, code block, image — without leaving the page or selecting text first. | A 3-tier anchoring engine keeps notes attached to the right spot even when React re-renders, ads reload, or you revisit weeks later. | Push individual notes or batch-export your research to any Notion database. URL, title, and timestamp included automatically. |
 
@@ -199,16 +199,16 @@ Open source: github.com/YOUR_USERNAME/stickle
 
 #### Feature Cards
 
-**🖱️ Alt + Click to annotate**
+**Alt + Click to annotate**
 > One shortcut. Hold Alt (or Option on Mac), click anything on the page, and a sticky note appears. No toolbar, no selection, no friction. Right-click also works for those who prefer a context menu.
 
-**🎨 Designed to live on any site**
+**Designed to live on any site**
 > Five signature pastel colors — lime, lilac, cream, mint, pink — with high-contrast monochrome frames that stay readable on light and dark pages.
 
-**🔍 Central note manager**
+**Central note manager**
 > Search every note you've ever taken across the entire web. Filter by domain, by active tab, or by date (Today / This Week / All Time). Jump directly back to the exact tab and position in one click.
 
-**🔒 Local-first & private**
+**Local-first & private**
 > Your notes never leave your device without your action. Stored in IndexedDB. Works completely offline. When you do sync to Notion, it goes directly from your browser to Notion's API — nothing passes through our servers.
 
 ---
@@ -227,14 +227,14 @@ Open source: github.com/YOUR_USERNAME/stickle
 
 #### Coming Soon — What's Next
 
-> We're building the cloud backend layer for v2. No timelines yet — but here's what's coming:
+> We're building the cloud & AI layer for v2. Here's our product roadmap:
 
-| Feature | What it means |
-|---|---|
-| **👤 User Accounts & Cloud Sync** | Access your web notes from any Chrome device, signed in to your account. |
-| **👥 Team Sharing** | Share annotated views of web pages with teammates. See who noted what and when. |
-| **🤖 Remote MCP for AI Agents** | Expose your web notes as context over Model Context Protocol — so Cursor, Claude Desktop, and other LLM tools can query your annotations. |
-| **📊 Web Dashboard** | Full browser-based UI for searching, sorting, filtering, and reviewing notes across all sites. Timeline view, user attribution, export tools. |
+| Phase | Feature | What it gives you |
+|---|---|---|
+| **Now (v1.0)** | **Instant Web Notes & Notion Export** | Drop notes on any webpage. 100% local-first, zero setup, 1-click Notion sync. |
+| **Next** | **Cross-Device Sync** | Access your web notes seamlessly across all your computers and browsers. |
+| **Soon** | **Team Workspaces** | Share annotated web pages with teammates to discuss articles, docs, and PRs in context. |
+| **Future** | **AI Assistant Context** | Connect your web annotations to Claude, Cursor, or ChatGPT so your AI remembers what you read. |
 
 > [Join the waitlist / follow on GitHub for updates] ← add link before launch
 
