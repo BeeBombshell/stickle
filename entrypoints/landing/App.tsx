@@ -1,4 +1,5 @@
 import { useState } from 'preact/hooks';
+import { WaitlistForm } from './WaitlistForm';
 
 type FaqItem = { q: string; a: string };
 
@@ -77,6 +78,7 @@ export default function LandingApp() {
             {['Features', 'Anchoring', 'Roadmap', 'Pricing', 'FAQ'].map(l => (
               <a key={l} href={`#${l.toLowerCase()}`} style={s.navLink}>{l}</a>
             ))}
+            <a href="/waitlist.html" style={s.navLink}>Waitlist</a>
           </div>
 
           {/* Right: CTAs */}
@@ -109,8 +111,14 @@ export default function LandingApp() {
           </p>
 
           <div style={s.ctaRow}>
-            <button style={{ ...s.btnPrimary, fontSize: 16, padding: '12px 28px' }} onClick={openSandbox}>
-              Add to Chrome - Free
+            <a
+              href="/waitlist.html"
+              style={{ ...s.btnPrimary, fontSize: 16, padding: '12px 28px', textDecoration: 'none' }}
+            >
+              Join Launch Waitlist ↗
+            </a>
+            <button style={{ ...s.btnSecondary, fontSize: 16, padding: '12px 24px' }} onClick={openSandbox}>
+              Try Sandbox
             </button>
             <a
               href="https://github.com/BeeBombshell/stickle"
@@ -118,7 +126,7 @@ export default function LandingApp() {
               rel="noreferrer"
               style={{ ...s.btnSecondary, fontSize: 16, padding: '12px 24px', textDecoration: 'none' }}
             >
-              ⭐ View on GitHub
+              View on GitHub ↗
             </a>
           </div>
 
@@ -798,9 +806,42 @@ export default function LandingApp() {
                   </li>
                 ))}
               </ul>
-              <button style={{ ...s.btnSecondary, width: '100%', marginTop: 'auto' }} onClick={openSandbox}>
+              <button style={{ ...s.btnSecondary, width: '100%', marginTop: 'auto' }} onClick={() => {
+                const el = document.getElementById('waitlist');
+                if (el) el.scrollIntoView({ behavior: 'smooth' });
+              }}>
                 Join Teams Waitlist
               </button>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      {/* ══ 10.5 DEDICATED WAITLIST SECTION (coral: #ffdbcc) ═══════════════════ */}
+      <section id="waitlist" style={s.sectionSpacing}>
+        <div style={s.wrap}>
+          <div style={{ ...s.colorBlock, backgroundColor: '#ffdbcc', padding: '56px 48px', textAlign: 'center' as const }}>
+            <div style={{ maxWidth: 680, margin: '0 auto' }}>
+              <span style={{ ...s.eyebrow, color: '#9a3412', marginBottom: 12 }}>EXTENSION ROLLOUT</span>
+              <h2 style={{ ...s.displayLg, color: '#7c2d12', margin: '0 0 16px' }}>
+                Be first in line when Stickle launches.
+              </h2>
+              <p style={{ fontSize: 18, fontWeight: 330, lineHeight: 1.5, color: '#9a3412', margin: '0 0 28px' }}>
+                We are preparing the extension for public release. Join the waitlist to receive an email notification the exact moment early access builds are live.
+              </p>
+              <div>
+                <a
+                  href="/waitlist.html"
+                  style={{ ...s.btnPrimary, fontSize: 16, padding: '14px 32px', textDecoration: 'none', display: 'inline-block' }}
+                >
+                  Join Rollout Waitlist ↗
+                </a>
+              </div>
+              <div style={{ marginTop: 20 }}>
+                <span style={{ ...s.eyebrow, fontSize: 11, color: '#7c2d12', letterSpacing: '0.8px' }}>
+                  JOIN 500+ RESEARCHERS &amp; DEVELOPERS ALREADY WAITING FOR LAUNCH
+                </span>
+              </div>
             </div>
           </div>
         </div>
@@ -887,6 +928,7 @@ export default function LandingApp() {
                   { label: 'Anchoring Tech', href: '#anchoring' },
                   { label: 'Roadmap', href: '#roadmap' },
                   { label: 'Pricing', href: '#pricing' },
+                  { label: 'Waitlist', href: '/waitlist.html' },
                 ],
               },
               {
