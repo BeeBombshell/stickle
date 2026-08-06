@@ -64,7 +64,7 @@ export function WaitlistForm({ source = 'homepage', variant = 'standalone', defa
     return (
       <div style={styles.successBox}>
         <div style={styles.successBadge}>
-          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#052e16" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#111111" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
             <polyline points="20 6 9 17 4 12" />
           </svg>
           <span>YOU'RE ON THE LIST!</span>
@@ -269,7 +269,7 @@ const styles = {
     backgroundColor: '#ffffff',
     borderRadius: 24,
     padding: '32px 28px',
-    border: '1px solid #d1f7c4',
+    border: '1px solid #e4f579',
     boxShadow: '0 4px 16px rgba(0,0,0,0.03)',
     maxWidth: 600,
     width: '100%',
@@ -280,8 +280,8 @@ const styles = {
     display: 'inline-flex',
     alignItems: 'center',
     gap: 6,
-    backgroundColor: '#d1f7c4',
-    color: '#052e16',
+    backgroundColor: '#e4f579',
+    color: '#111111',
     fontFamily: "'JetBrains Mono', monospace",
     fontSize: 10,
     fontWeight: 700,

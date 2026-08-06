@@ -193,20 +193,20 @@ export default function LandingApp() {
         </div>
       </section>
 
-      {/* ══ 3. PROBLEM (coral) ═══════════════════════════════════════════════ */}
+      {/* ══ 3. PROBLEM (monochrome container with coral callout) ══════════════ */}
       <section style={s.sectionSpacing}>
         <div style={s.wrap}>
-          <div style={{ ...s.colorBlock, backgroundColor: '#ffdbcc' }}>
-            <span style={{ ...s.eyebrow, color: '#9a3412', marginBottom: 12 }}>THE BROKEN WORKFLOW</span>
-            <h2 style={{ ...s.displayLg, color: '#7c2d12', maxWidth: 860 }}>
+          <div style={{ ...s.colorBlock, backgroundColor: '#f8f8f6', border: '1px solid #e5e5e0' }}>
+            <span style={{ ...s.eyebrow, color: '#52514e', marginBottom: 12 }}>THE BROKEN WORKFLOW</span>
+            <h2 style={{ ...s.displayLg, color: '#111111', maxWidth: 860 }}>
               Stop losing your thinking<br />in app-switching context collapse.
             </h2>
-            <p style={{ fontSize: 20, fontWeight: 330, lineHeight: 1.4, letterSpacing: '-0.14px', color: '#9a3412', maxWidth: 720, margin: '0 0 28px' }}>
+            <p style={{ fontSize: 20, fontWeight: 330, lineHeight: 1.4, letterSpacing: '-0.14px', color: '#52514e', maxWidth: 720, margin: '0 0 28px' }}>
               You read something interesting, have a thought, then alt-tab to Notion, lose the reading
               flow, and paste a raw URL you will never fully remember.
               Highlighters only capture text you select. Web clippers save the page, not your thinking.
             </p>
-            <div style={s.problemCallout}>
+            <div style={{ ...s.problemCallout, backgroundColor: '#ffdbcc', color: '#7c2d12', border: '1px solid rgba(124,45,18,0.1)' }}>
               <strong>Stickle closes the gap:</strong>&nbsp;write floating notes directly on the webpage, right where your thoughts happen.
             </div>
           </div>
@@ -223,27 +223,24 @@ export default function LandingApp() {
           <div style={s.threeGrid}>
             {[
               {
-                bg: '#e8d5ff',
                 eyebrow: 'WRITE WHERE YOU READ',
                 headline: 'Drop a note on any element without leaving the page.',
                 body: 'Alt + Click any DOM element (heading, code block, image, paragraph) to attach a note. No toolbar. No text selection friction.',
               },
               {
-                bg: '#fff7db',
                 eyebrow: 'NOTES THAT DON\'T DRIFT',
                 headline: 'A 3-tier anchoring engine keeps notes in place.',
                 body: 'Stickle survives React re-renders, ad reflows, and layout shifts using XPath, content fingerprinting, and fuzzy text matching.',
               },
               {
-                bg: '#d1f7c4',
                 eyebrow: 'INTO NOTION, INSTANTLY',
                 headline: 'Push your research to Notion in one click.',
                 body: 'Batch-export all unsynced notes with source URL, page title, and timestamps into your existing Notion database.',
               },
             ].map(prop => (
-              <div key={prop.eyebrow} style={{ ...s.colorBlock, backgroundColor: prop.bg, flex: 1, minWidth: 260 }}>
-                <span style={{ ...s.eyebrow, fontSize: 10, color: '#52514e', marginBottom: 16 }}>{prop.eyebrow}</span>
-                <h3 style={{ fontSize: 22, fontWeight: 700, lineHeight: 1.25, letterSpacing: '-0.3px', color: '#111', margin: '0 0 12px' }}>
+              <div key={prop.eyebrow} style={{ ...s.colorBlock, backgroundColor: '#ffffff', border: '1px solid #e5e5e0', flex: 1, minWidth: 260 }}>
+                <span style={{ ...s.eyebrow, fontSize: 10, color: '#111111', marginBottom: 16 }}>{prop.eyebrow}</span>
+                <h3 style={{ fontSize: 22, fontWeight: 700, lineHeight: 1.25, letterSpacing: '-0.3px', color: '#111111', margin: '0 0 12px' }}>
                   {prop.headline}
                 </h3>
                 <p style={{ fontSize: 15, fontWeight: 330, lineHeight: 1.55, color: '#52514e', margin: 0 }}>
@@ -295,24 +292,24 @@ export default function LandingApp() {
         </div>
       </section>
 
-      {/* ══ 6. ANCHORING TECH (pink: #ffd6e8) ═════════════════════════════════ */}
+      {/* ══ 6. ANCHORING ENGINE (monochrome section, pink cards) ══════════════ */}
       <section id="anchoring" style={s.sectionSpacing}>
         <div style={s.wrap}>
-          <div style={{ ...s.colorBlock, backgroundColor: '#ffd6e8', padding: '48px 48px' }}>
-            <span style={{ ...s.eyebrow, color: '#9d174d', marginBottom: 12 }}>SMART ANCHORING ENGINE</span>
-            <h2 style={{ ...s.displayLg, color: '#500724', maxWidth: 680 }}>
-              Notes that stay right<br />where you left them.
+          <div style={{ ...s.colorBlock, backgroundColor: '#f8f8f6', border: '1px solid #e5e5e0', padding: '48px 48px' }}>
+            <span style={{ ...s.eyebrow, color: '#52514e', marginBottom: 12 }}>3-TIER ANCHORING ENGINE</span>
+            <h2 style={{ ...s.displayLg, color: '#111111', maxWidth: 720 }}>
+              Notes that don't drift.<br />Ever.
             </h2>
-            <p style={{ fontSize: 18, fontWeight: 330, lineHeight: 1.45, letterSpacing: '-0.26px', color: '#831843', maxWidth: 640, margin: '0 0 36px' }}>
-              Webpages update. React re-renders. Layouts shift. Stickle uses a 3-layer anchoring engine to keep your notes pinned exactly where you put them: zero silent data loss.
+            <p style={{ fontSize: 18, fontWeight: 330, lineHeight: 1.45, letterSpacing: '-0.26px', color: '#52514e', maxWidth: 640, margin: '0 0 36px' }}>
+              Single-method highlighters break when DOM trees shift. Stickle combines three independent fallback tiers so your notes always find their home.
             </p>
 
-            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(240px, 1fr))', gap: 20 }}>
+            <div style={s.tierGrid}>
               {[
                 {
                   badge: 'TIER 1: EXACT',
-                  title: 'Pins to exact page elements',
-                  desc: 'Attaches directly to headings, paragraphs, code blocks, or images on documentation, wikis, and articles.',
+                  title: 'Structural XPath & DOM',
+                  desc: 'Attaches directly to the target element using an optimized selector chain and relative offset vector.',
                   icon: (
                     <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#500724" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
                       <circle cx="12" cy="12" r="10" />
@@ -342,17 +339,6 @@ export default function LandingApp() {
                     </svg>
                   ),
                 },
-                {
-                  badge: 'FALLBACK: SAFE',
-                  title: 'Zero lost thoughts',
-                  desc: 'If a section is deleted entirely, notes land safely in a corner recovery tray: never silently lost.',
-                  icon: (
-                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#500724" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                      <polyline points="22 12 16 12 14 15 10 15 8 12 2 12" />
-                      <path d="M5.45 5.11L2 12v6a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2v-6l-3.45-6.89A2 2 0 0 0 16.76 4H7.24a2 2 0 0 0-1.79 1.11z" />
-                    </svg>
-                  ),
-                },
               ].map(t => (
                 <div
                   key={t.title}
@@ -363,21 +349,20 @@ export default function LandingApp() {
                     display: 'flex',
                     flexDirection: 'column',
                     justifyContent: 'space-between',
-                    border: '1px solid rgba(80,7,36,0.08)',
-                    boxShadow: '0 2px 8px rgba(0,0,0,0.02)',
+                    border: '1px solid #e5e5e0',
                   }}
                 >
                   <div>
                     <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 16 }}>
-                      <div style={{ width: 36, height: 36, borderRadius: 10, backgroundColor: '#ffe4e6', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                      <div style={{ width: 36, height: 36, borderRadius: 10, backgroundColor: '#f0fdf4', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
                         {t.icon}
                       </div>
                       <span
                         style={{
                           ...s.eyebrow,
                           fontSize: 9,
-                          color: '#9d174d',
-                          backgroundColor: '#fff1f2',
+                          color: '#111111',
+                          backgroundColor: '#e4f579',
                           padding: '4px 10px',
                           borderRadius: 50,
                           fontWeight: 700,
@@ -386,10 +371,10 @@ export default function LandingApp() {
                         {t.badge}
                       </span>
                     </div>
-                    <h3 style={{ fontSize: 18, fontWeight: 700, lineHeight: 1.3, color: '#500724', margin: '0 0 8px', letterSpacing: '-0.3px' }}>
+                    <h3 style={{ fontSize: 18, fontWeight: 700, lineHeight: 1.3, color: '#111111', margin: '0 0 8px', letterSpacing: '-0.3px' }}>
                       {t.title}
                     </h3>
-                    <p style={{ fontSize: 14, fontWeight: 330, lineHeight: 1.5, color: '#831843', margin: 0 }}>
+                    <p style={{ fontSize: 14, fontWeight: 330, lineHeight: 1.5, color: '#52514e', margin: 0 }}>
                       {t.desc}
                     </p>
                   </div>
@@ -400,15 +385,15 @@ export default function LandingApp() {
         </div>
       </section>
 
-      {/* ══ 7. NOTION & SECOND BRAIN (mint: #d1f7c4) ══════════════════════════ */}
+      {/* ══ 7. NOTION & SECOND BRAIN (monochrome section, mint cards) ═════════ */}
       <section style={s.sectionSpacing}>
         <div style={s.wrap}>
-          <div style={{ ...s.colorBlock, backgroundColor: '#d1f7c4', padding: '48px 48px' }}>
-            <span style={{ ...s.eyebrow, color: '#065f46', marginBottom: 12 }}>KNOWLEDGE BASE SYNC</span>
-            <h2 style={{ ...s.displayLg, color: '#052e16', maxWidth: 680 }}>
+          <div style={{ ...s.colorBlock, backgroundColor: '#f8f8f6', border: '1px solid #e5e5e0', padding: '48px 48px' }}>
+            <span style={{ ...s.eyebrow, color: '#52514e', marginBottom: 12 }}>KNOWLEDGE BASE SYNC</span>
+            <h2 style={{ ...s.displayLg, color: '#111111', maxWidth: 680 }}>
               Export your web thoughts<br />directly to your Second Brain.
             </h2>
-            <p style={{ fontSize: 18, fontWeight: 330, lineHeight: 1.45, letterSpacing: '-0.26px', color: '#14532d', maxWidth: 620, margin: '0 0 36px' }}>
+            <p style={{ fontSize: 18, fontWeight: 330, lineHeight: 1.45, letterSpacing: '-0.26px', color: '#52514e', maxWidth: 620, margin: '0 0 36px' }}>
               No more lost tabs or forgotten bookmarks. Connect your web annotations directly to Notion, Obsidian, or your local AI notes in one click.
             </p>
 
@@ -557,13 +542,13 @@ export default function LandingApp() {
               ].map(item => (
                 <div key={item.title} style={{ backgroundColor: 'rgba(255,255,255,0.75)', borderRadius: 16, padding: 20 }}>
                   <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 12 }}>
-                    <div style={{ width: 32, height: 32, borderRadius: 8, backgroundColor: '#e6f4ea', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                    <div style={{ width: 32, height: 32, borderRadius: 8, backgroundColor: '#e4f579', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
                       {item.icon}
                     </div>
-                    <span style={{ ...s.eyebrow, fontSize: 9, color: '#065f46' }}>{item.badge}</span>
+                    <span style={{ ...s.eyebrow, fontSize: 9, color: '#111111' }}>{item.badge}</span>
                   </div>
-                  <h3 style={{ fontSize: 16, fontWeight: 700, color: '#052e16', margin: '0 0 6px' }}>{item.title}</h3>
-                  <p style={{ fontSize: 13, color: '#14532d', lineHeight: 1.5, margin: 0 }}>{item.desc}</p>
+                  <h3 style={{ fontSize: 16, fontWeight: 700, color: '#111111', margin: '0 0 6px' }}>{item.title}</h3>
+                  <p style={{ fontSize: 13, color: '#52514e', lineHeight: 1.5, margin: 0 }}>{item.desc}</p>
                 </div>
               ))}
             </div>
@@ -571,15 +556,15 @@ export default function LandingApp() {
         </div>
       </section>
 
-      {/* ══ 8. ROADMAP — WHAT'S COMING IN V2 (lime: #e4f579) ═══════════════════ */}
+      {/* ══ 8. ROADMAP (monochrome section, lime cards) ═══════════════════════ */}
       <section id="roadmap" style={s.sectionSpacing}>
         <div style={s.wrap}>
-          <div style={{ ...s.colorBlock, backgroundColor: '#e4f579', padding: '48px 48px' }}>
-            <span style={{ ...s.eyebrow, color: '#3f6212', marginBottom: 12 }}>PRODUCT ROADMAP</span>
-            <h2 style={{ ...s.displayLg, color: '#14290a', maxWidth: 700 }}>
+          <div style={{ ...s.colorBlock, backgroundColor: '#f8f8f6', border: '1px solid #e5e5e0', padding: '48px 48px' }}>
+            <span style={{ ...s.eyebrow, color: '#52514e', marginBottom: 12 }}>PRODUCT ROADMAP</span>
+            <h2 style={{ ...s.displayLg, color: '#111111', maxWidth: 700 }}>
               The cloud &amp; AI layer<br />is being built next.
             </h2>
-            <p style={{ fontSize: 18, fontWeight: 330, lineHeight: 1.45, letterSpacing: '-0.26px', color: '#365314', maxWidth: 620, margin: '0 0 36px' }}>
+            <p style={{ fontSize: 18, fontWeight: 330, lineHeight: 1.45, letterSpacing: '-0.26px', color: '#52514e', maxWidth: 620, margin: '0 0 36px' }}>
               v1.0 is live as a 100% local-first tool. Here is our roadmap for cross-device syncing, team collaboration, and AI context:
             </p>
 
@@ -592,7 +577,7 @@ export default function LandingApp() {
                   desc: 'Drop floating sticky notes on any webpage. Fully offline, local storage, and 1-click Notion export.',
                   isCurrent: true,
                   icon: (
-                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#14290a" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#111111" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
                       <line x1="12" y1="17" x2="12" y2="22" />
                       <path d="M5 17h14l-1.5-5H6.5L5 17z" />
                       <path d="M9 12V4a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v8" />
@@ -605,7 +590,7 @@ export default function LandingApp() {
                   desc: 'Access your web notes automatically across all your devices and Chromium browsers with cloud backup.',
                   isCurrent: false,
                   icon: (
-                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#14290a" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#111111" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
                       <path d="M17.5 19H9a7 7 0 1 1 6.71-9h1.79a4.5 4.5 0 1 1 0 9Z" />
                       <path d="M12 13l-3-3m0 0l3-3m-3 3h8" />
                     </svg>
@@ -617,7 +602,7 @@ export default function LandingApp() {
                   desc: 'Share annotated web pages with your team. Discuss articles, documentation, and PRs right where they live.',
                   isCurrent: false,
                   icon: (
-                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#14290a" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#111111" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
                       <path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2" />
                       <circle cx="9" cy="7" r="4" />
                       <path d="M22 21v-2a4 4 0 0 0-3-3.87" />
@@ -631,7 +616,7 @@ export default function LandingApp() {
                   desc: 'Connect your web notes to Claude, Cursor, or ChatGPT so your AI assistant remembers what you read.',
                   isCurrent: false,
                   icon: (
-                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#14290a" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#111111" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
                       <path d="m12 3-1.912 5.813a2 2 0 0 1-1.275 1.275L3 12l5.813 1.912a2 2 0 0 1 1.275 1.275L12 21l1.912-5.813a2 2 0 0 1 1.275-1.275L21 12l-5.813-1.912a2 2 0 0 1-1.275-1.275L12 3Z" />
                       <path d="M5 3v4" />
                       <path d="M19 17v4" />
@@ -656,15 +641,15 @@ export default function LandingApp() {
                 >
                   <div>
                     <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 16 }}>
-                      <div style={{ width: 36, height: 36, borderRadius: 10, backgroundColor: '#f4fce3', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                      <div style={{ width: 36, height: 36, borderRadius: 10, backgroundColor: '#e4f579', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
                         {item.icon}
                       </div>
                       <span
                         style={{
                           ...s.eyebrow,
                           fontSize: 9,
-                          color: item.isCurrent ? '#ffffff' : '#3f6212',
-                          backgroundColor: item.isCurrent ? '#14290a' : '#f0fdf4',
+                          color: item.isCurrent ? '#ffffff' : '#111111',
+                          backgroundColor: item.isCurrent ? '#111111' : '#e4f579',
                           padding: '4px 10px',
                           borderRadius: 50,
                           fontWeight: 700,
@@ -673,10 +658,10 @@ export default function LandingApp() {
                         {item.badge}
                       </span>
                     </div>
-                    <h3 style={{ fontSize: 18, fontWeight: 700, lineHeight: 1.3, color: '#14290a', margin: '0 0 8px', letterSpacing: '-0.3px' }}>
+                    <h3 style={{ fontSize: 18, fontWeight: 700, lineHeight: 1.3, color: '#111111', margin: '0 0 8px', letterSpacing: '-0.3px' }}>
                       {item.title}
                     </h3>
-                    <p style={{ fontSize: 14, fontWeight: 330, lineHeight: 1.5, color: '#365314', margin: 0 }}>
+                    <p style={{ fontSize: 14, fontWeight: 330, lineHeight: 1.5, color: '#52514e', margin: 0 }}>
                       {item.desc}
                     </p>
                   </div>
@@ -817,16 +802,16 @@ export default function LandingApp() {
         </div>
       </section>
 
-      {/* ══ 10.5 DEDICATED WAITLIST SECTION (coral: #ffdbcc) ═══════════════════ */}
+      {/* ══ 10.5 DEDICATED WAITLIST SECTION (Block Lime: #e4f579) ══════════════ */}
       <section id="waitlist" style={s.sectionSpacing}>
         <div style={s.wrap}>
-          <div style={{ ...s.colorBlock, backgroundColor: '#ffdbcc', padding: '56px 48px', textAlign: 'center' as const }}>
+          <div style={{ ...s.colorBlock, backgroundColor: '#e4f579', padding: '56px 48px', textAlign: 'center' as const }}>
             <div style={{ maxWidth: 680, margin: '0 auto' }}>
-              <span style={{ ...s.eyebrow, color: '#9a3412', marginBottom: 12 }}>EXTENSION ROLLOUT</span>
-              <h2 style={{ ...s.displayLg, color: '#7c2d12', margin: '0 0 16px' }}>
+              <span style={{ ...s.eyebrow, color: '#111111', marginBottom: 12 }}>EXTENSION ROLLOUT</span>
+              <h2 style={{ ...s.displayLg, color: '#111111', margin: '0 0 16px' }}>
                 Be first in line when Stickle launches.
               </h2>
-              <p style={{ fontSize: 18, fontWeight: 330, lineHeight: 1.5, color: '#9a3412', margin: '0 0 28px' }}>
+              <p style={{ fontSize: 18, fontWeight: 330, lineHeight: 1.5, color: '#333333', margin: '0 0 28px' }}>
                 We are preparing the extension for public release. Join the waitlist to receive an email notification the exact moment early access builds are live.
               </p>
               <div>
@@ -838,7 +823,7 @@ export default function LandingApp() {
                 </a>
               </div>
               <div style={{ marginTop: 20 }}>
-                <span style={{ ...s.eyebrow, fontSize: 11, color: '#7c2d12', letterSpacing: '0.8px' }}>
+                <span style={{ ...s.eyebrow, fontSize: 11, color: '#111111', letterSpacing: '0.8px' }}>
                   JOIN 500+ RESEARCHERS &amp; DEVELOPERS ALREADY WAITING FOR LAUNCH
                 </span>
               </div>
@@ -847,12 +832,12 @@ export default function LandingApp() {
         </div>
       </section>
 
-      {/* ══ 11. FAQ (lime) ════════════════════════════════════════════════════ */}
+      {/* ══ 11. FAQ (Block Lime: #e4f579) ═════════════════════════════════════ */}
       <section id="faq" style={s.sectionSpacing}>
         <div style={s.wrap}>
           <div style={{ ...s.colorBlock, backgroundColor: '#e4f579' }}>
-            <span style={{ ...s.eyebrow, color: '#3f6212', marginBottom: 12 }}>FAQ</span>
-            <h2 style={{ ...s.displayLg, color: '#14290a', maxWidth: 520, marginBottom: 40 }}>
+            <span style={{ ...s.eyebrow, color: '#111111', marginBottom: 12 }}>FAQ</span>
+            <h2 style={{ ...s.displayLg, color: '#111111', maxWidth: 520, marginBottom: 40 }}>
               Got questions?
             </h2>
             <div style={{ maxWidth: 760, display: 'flex', flexDirection: 'column' as const, gap: 2 }}>
@@ -1386,13 +1371,13 @@ const s = {
     fontWeight: 600,
     textAlign: 'left' as const,
     cursor: 'pointer',
-    color: '#14290a',
+    color: '#111111',
     letterSpacing: '-0.2px',
   },
   faqA: {
     padding: '0 24px 20px',
     fontSize: 15,
-    color: '#365314',
+    color: '#333333',
     lineHeight: 1.6,
     fontWeight: 330,
   },
