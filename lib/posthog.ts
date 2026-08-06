@@ -3,28 +3,49 @@ const rawApiHost = import.meta.env.WXT_PUBLIC_POSTHOG_HOST;
 const apiHost = rawApiHost ? rawApiHost.replace(/\/$/, '') : 'https://us.i.posthog.com';
 
 let cachedDistinctId: string | null = null;
+let distinctIdPromise: Promise<string> | null = null;
 
-async function getDistinctId(): Promise<string> {
-  if (cachedDistinctId) return cachedDistinctId;
-
-  if (typeof chrome !== 'undefined' && chrome.storage?.local) {
-    try {
-      const data = await chrome.storage.local.get('stickle_distinct_id');
-      if (data.stickle_distinct_id) {
-        cachedDistinctId = data.stickle_distinct_id;
-        return cachedDistinctId!;
-      }
-      const newId = crypto.randomUUID();
-      await chrome.storage.local.set({ stickle_distinct_id: newId });
-      cachedDistinctId = newId;
-      return newId;
-    } catch {
-      // Fallback
+// Keep memory cache in sync across all extension contexts (Popup, Background, Content Scripts)
+if (typeof chrome !== 'undefined' && chrome.storage?.onChanged) {
+  chrome.storage.onChanged.addListener((changes, areaName) => {
+    if (areaName === 'local' && changes.stickle_distinct_id?.newValue) {
+      cachedDistinctId = changes.stickle_distinct_id.newValue as string;
     }
-  }
+  });
+}
 
-  cachedDistinctId = crypto.randomUUID();
-  return cachedDistinctId;
+export async function getDistinctId(): Promise<string> {
+  if (cachedDistinctId) return cachedDistinctId;
+  if (distinctIdPromise) return distinctIdPromise;
+
+  distinctIdPromise = (async () => {
+    if (typeof chrome !== 'undefined' && chrome.storage?.local) {
+      try {
+        const data = await chrome.storage.local.get('stickle_distinct_id');
+        if (data.stickle_distinct_id) {
+          cachedDistinctId = data.stickle_distinct_id as string;
+          return cachedDistinctId;
+        }
+        const newId = crypto.randomUUID();
+        await chrome.storage.local.set({ stickle_distinct_id: newId });
+        cachedDistinctId = newId;
+        return newId;
+      } catch {
+        // Fallback to in-memory ID if chrome storage fails
+      }
+    }
+
+    if (!cachedDistinctId) {
+      cachedDistinctId = crypto.randomUUID();
+    }
+    return cachedDistinctId;
+  })();
+
+  try {
+    return await distinctIdPromise;
+  } finally {
+    distinctIdPromise = null;
+  }
 }
 
 /**
@@ -86,7 +107,9 @@ const posthog = {
   capture: (eventName: string, properties?: Record<string, any>) => {
     void trackEvent(eventName, properties);
   },
-  init: () => {},
+  init: () => {
+    void getDistinctId();
+  },
 };
 
 export default posthog;

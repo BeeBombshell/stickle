@@ -8,6 +8,7 @@ import {
 
 export default defineBackground(() => {
   console.log('[Stickle Background] Service worker initialized.');
+  posthog.init();
 
   // Create context menu item & handle first-run onboarding on install
   chrome.runtime.onInstalled.addListener((details) => {
