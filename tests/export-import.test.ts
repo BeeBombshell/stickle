@@ -7,7 +7,6 @@ import {
   exportNotesToJson,
   importNotesFromJson,
   formatLocalSyncJson,
-  syncNotesToLocalDisk,
 } from '../lib/export-import';
 import * as fs from 'fs';
 import * as os from 'os';
@@ -140,24 +139,12 @@ describe('Phase 9: Sharable Notes (Import & Export JSON)', () => {
     expect(result.error).toContain('Unsupported export version');
   });
 
-  it('formats local sync JSON and writes to disk when in Node environment', () => {
+  it('formats local sync JSON for disk sync helper', () => {
     const localJson = formatLocalSyncJson(sampleNotes);
     const parsed = JSON.parse(localJson);
     expect(parsed.version).toBe(1);
     expect(parsed.notesCount).toBe(2);
-
-    const tmpDir = path.join(os.tmpdir(), 'stickle_test_' + Date.now());
-    const tmpFile = path.join(tmpDir, 'notes.json');
-
-    const synced = syncNotesToLocalDisk(sampleNotes, tmpFile);
-    expect(synced).toBe(true);
-    expect(fs.existsSync(tmpFile)).toBe(true);
-
-    const contentOnDisk = fs.readFileSync(tmpFile, 'utf8');
-    expect(JSON.parse(contentOnDisk).notes).toHaveLength(2);
-
-    // Cleanup
-    fs.unlinkSync(tmpFile);
-    fs.rmdirSync(tmpDir);
+    expect(parsed.notes).toHaveLength(2);
+    expect(parsed.notes[0].id).toBe('export-note-1');
   });
 });

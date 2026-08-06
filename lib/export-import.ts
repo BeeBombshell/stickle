@@ -177,7 +177,7 @@ export async function importNotesFromJson(jsonString: string): Promise<ImportRes
 
 /**
  * Sync notes payload to local path format (~/.stickle/notes.json or custom path)
- * When executed in Node environments or MCP tools.
+ * Pure JSON string formatting helper.
  */
 export function formatLocalSyncJson(notes: StickleNote[]): string {
   return JSON.stringify(
@@ -190,30 +190,5 @@ export function formatLocalSyncJson(notes: StickleNote[]): string {
     null,
     2
   );
-}
-
-export function syncNotesToLocalDisk(notes: StickleNote[], targetPath?: string): boolean {
-  if (typeof process !== 'undefined' && process.versions && process.versions.node) {
-    try {
-      const fs = require('fs');
-      const path = require('path');
-      const os = require('os');
-      const defaultDir = path.join(os.homedir(), '.stickle');
-      const filePath = targetPath || path.join(defaultDir, 'notes.json');
-      const parentDir = path.dirname(filePath);
-
-      if (!fs.existsSync(parentDir)) {
-        fs.mkdirSync(parentDir, { recursive: true });
-      }
-
-      const content = formatLocalSyncJson(notes);
-      fs.writeFileSync(filePath, content, 'utf8');
-      return true;
-    } catch (err) {
-      console.warn('Local disk sync failed:', err);
-      return false;
-    }
-  }
-  return false;
 }
 
