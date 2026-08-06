@@ -1,4 +1,5 @@
 import { defineBackground } from 'wxt/sandbox';
+import posthog from '../lib/posthog';
 import {
   testNotionConnectionDirect,
   pushNoteToNotionDirect,
@@ -40,6 +41,12 @@ export default defineBackground(() => {
   chrome.runtime.onMessage.addListener((message, _sender, sendResponse) => {
     if (message?.type === 'PING') {
       sendResponse({ type: 'PONG', timestamp: Date.now() });
+      return true;
+    }
+
+    if (message?.type === 'TRACK_ANALYTICS_EVENT') {
+      posthog.capture(message.eventName, message.properties);
+      sendResponse?.({ success: true });
       return true;
     }
 

@@ -1,7 +1,7 @@
 # 📊 Stickle — Analytics & Telemetry Documentation
 
 > **Status**: Production Reference  
-> **Telemetry Engine**: PostHog (`posthog-js`)  
+> **Telemetry Engine**: PostHog Direct HTTP Ingestion API (`lib/posthog.ts`)  
 > **Privacy Philosophy**: Local-first, anonymized action metrics only — **Zero PII, Zero Page Titles, Zero URLs, Zero Note Content**
 
 ---
@@ -13,9 +13,9 @@ Stickle is built local-first. Telemetry is strictly limited to understanding pro
 ### 🔒 Core Privacy Rules
 1. **Zero Content Inspection**: Note text, tag titles, and user custom content are **never** captured.
 2. **Zero URL / Page Title Capture**: Webpage URLs, domain names, page titles, and query parameters are **never** included in event payloads.
-3. **No Session Recording**: Dom/screen recording is explicitly disabled (`disable_session_recording: true`).
-4. **No Host Page Errors**: Exception tracking is disabled in content scripts (`capture_exceptions: false`) to prevent listening to third-party website errors or polluting host console logs.
-5. **Local Package Build**: PostHog SDK is statically bundled into the extension build (`posthog-js` via npm). Zero dynamic `<script src="...">` tags are loaded from external CDNs, complying 100% with Manifest V3 Zero Remote Code Execution (RCE) rules.
+3. **No Session Recording**: Screen/DOM recording is disabled.
+4. **No Host Page Errors**: Exception tracking is disabled in content scripts to prevent listening to third-party website errors or polluting host console logs.
+5. **Zero Remote Code Execution (RCE)**: Uses direct `fetch()` JSON posts to PostHog's `/capture/` REST API. Zero dynamic `<script src="...">` tags or remote JS chunks are ever loaded, complying 100% with Manifest V3 rules.
 
 ---
 

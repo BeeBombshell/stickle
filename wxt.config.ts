@@ -14,7 +14,7 @@ export default defineConfig({
     description: 'Anchor persistent floating sticky notes directly to dynamic web content',
     permissions: ['storage', 'activeTab', 'scripting', 'contextMenus'],
 
-    host_permissions: ['https://api.notion.com/*'],
+    host_permissions: ['https://api.notion.com/*', 'https://*.posthog.com/*'],
     icons: {
       '16': 'icon/16.png',
       '32': 'icon/32.png',
