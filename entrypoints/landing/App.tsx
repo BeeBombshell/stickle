@@ -422,11 +422,11 @@ export default function LandingApp() {
       <section style={s.sectionSpacing}>
         <div style={s.wrap}>
           <div style={{ ...s.colorBlock, backgroundColor: '#ffffff', color: '#111111', border: '1px solid #e5e5e0', padding: '56px 48px', boxShadow: '0 4px 20px rgba(0,0,0,0.03)' }}>
-            <span style={{ ...s.eyebrow, color: '#52514e', marginBottom: 12 }}>THE BROKEN WORKFLOW</span>
+            <span style={{ ...s.eyebrow, color: '#111111', marginBottom: 12 }}>THE BROKEN WORKFLOW</span>
             <h2 style={{ ...s.displayLg, color: '#111111', maxWidth: 860 }}>
               Stop losing your thinking<br />in app-switching context collapse.
             </h2>
-            <p style={{ fontSize: 20, fontWeight: 330, lineHeight: 1.4, letterSpacing: '-0.14px', color: '#52514e', maxWidth: 720, margin: '0 0 28px' }}>
+            <p style={{ fontSize: 20, fontWeight: 330, lineHeight: 1.4, letterSpacing: '-0.14px', color: '#111111', maxWidth: 720, margin: '0 0 28px' }}>
               You read something interesting, have a thought, then alt-tab to Notion, lose the reading
               flow, and paste a raw URL you will never fully remember.
               Highlighters only capture text you select. Web clippers save the page, not your thinking.
@@ -499,7 +499,7 @@ export default function LandingApp() {
                     <h3 style={{ fontSize: 22, fontWeight: 700, lineHeight: 1.25, letterSpacing: '-0.3px', color: '#111111', margin: '14px 0 12px' }}>
                       {prop.headline}
                     </h3>
-                    <p style={{ fontSize: 15, fontWeight: 330, lineHeight: 1.55, color: '#52514e', margin: 0 }}>
+                    <p style={{ fontSize: 15, fontWeight: 330, lineHeight: 1.55, color: '#111111', margin: 0 }}>
                       {prop.body}
                     </p>
                   </div>
@@ -538,10 +538,10 @@ export default function LandingApp() {
             ].map(feat => (
               <div key={feat.eyebrow} style={s.featureCard}>
                 <span style={{ ...s.eyebrow, marginBottom: 12 }}>{feat.eyebrow}</span>
-                <h3 style={{ fontSize: 20, fontWeight: 700, lineHeight: 1.3, letterSpacing: '-0.2px', color: '#111', margin: '0 0 10px' }}>
+                <h3 style={{ fontSize: 20, fontWeight: 700, lineHeight: 1.3, letterSpacing: '-0.2px', color: '#111111', margin: '0 0 10px' }}>
                   {feat.title}
                 </h3>
-                <p style={{ fontSize: 15, fontWeight: 330, lineHeight: 1.55, color: '#52514e', margin: 0 }}>
+                <p style={{ fontSize: 15, fontWeight: 330, lineHeight: 1.55, color: '#111111', margin: 0 }}>
                   {feat.body}
                 </p>
               </div>
@@ -550,15 +550,17 @@ export default function LandingApp() {
         </div>
       </section>
 
+
+
       {/* ══ 6. ANCHORING ENGINE (White block, borderless, distinct pastel tier cards) ═ */}
       <section id="anchoring" style={s.sectionSpacing}>
         <div style={s.wrap}>
           <div style={{ ...s.colorBlock, backgroundColor: '#ffffff', color: '#111111', border: 'none', padding: '56px 48px' }}>
-            <span style={{ ...s.eyebrow, color: '#52514e', marginBottom: 12 }}>3-TIER ANCHORING ENGINE</span>
-            <h2 style={{ ...s.displayLg, color: '#111111', maxWidth: 720 }}>
+            <span style={{ ...s.eyebrow, color: '#111111', marginBottom: 12 }}>3-TIER ANCHORING ENGINE</span>
+            <h2 style={{ ...s.displayLg, color: '#111111', maxWidth: 720, margin: '12px 0 20px' }}>
               Notes that don't drift.<br />Ever.
             </h2>
-            <p style={{ fontSize: 18, fontWeight: 330, lineHeight: 1.45, letterSpacing: '-0.26px', color: '#52514e', maxWidth: 640, margin: '0 0 36px' }}>
+            <p style={{ fontSize: 18, fontWeight: 330, lineHeight: 1.45, letterSpacing: '-0.26px', color: '#111111', maxWidth: 640, margin: '0 0 36px' }}>
               Single-method highlighters break when DOM trees shift. Stickle combines three independent fallback tiers so your notes always find their home.
             </p>
 
@@ -570,9 +572,12 @@ export default function LandingApp() {
                   desc: 'Attaches directly to the target element using an optimized selector chain and relative offset vector.',
                   badgeBg: '#111111',
                   badgeColor: '#ffffff',
-                  cardBg: '#e4f579', // Signature Lime
+                  cardBg: '#e4f579', // Signature Lime Accent
                   cardBorder: '1px solid rgba(0,0,0,0.08)',
+                  textColor: '#111111',
+                  descColor: '#111111',
                   iconBg: '#ffffff',
+                  strokeColor: '#111111',
                   icon: (
                     <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#111111" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
                       <circle cx="12" cy="12" r="10" />
@@ -585,13 +590,16 @@ export default function LandingApp() {
                   badge: 'TIER 2: RESILIENT',
                   title: 'Survives dynamic re-renders',
                   desc: 'Fingerprints surrounding content so notes stay attached even when Twitter, Reddit, or GitHub update in real time.',
-                  badgeBg: '#111111',
-                  badgeColor: '#ffffff',
-                  cardBg: '#e8d5ff', // Pastel Lilac
-                  cardBorder: '1px solid rgba(0,0,0,0.08)',
-                  iconBg: '#ffffff',
+                  badgeBg: '#e4f579',
+                  badgeColor: '#111111',
+                  cardBg: '#111111', // Monochrome Dark
+                  cardBorder: '1px solid rgba(255,255,255,0.15)',
+                  textColor: '#ffffff',
+                  descColor: '#d4d4d8',
+                  iconBg: '#1c1c1e',
+                  strokeColor: '#e4f579',
                   icon: (
-                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#111111" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#e4f579" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
                       <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z" />
                     </svg>
                   ),
@@ -602,9 +610,12 @@ export default function LandingApp() {
                   desc: 'Scans page text nodes to relocate your notes even if HTML structure or CSS styling changes completely.',
                   badgeBg: '#111111',
                   badgeColor: '#ffffff',
-                  cardBg: '#bae6fd', // Pastel Sky Blue
-                  cardBorder: '1px solid rgba(0,0,0,0.08)',
+                  cardBg: '#f8f8f6', // Off-white
+                  cardBorder: '1px solid #e5e5e0',
+                  textColor: '#111111',
+                  descColor: '#111111',
                   iconBg: '#ffffff',
+                  strokeColor: '#111111',
                   icon: (
                     <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#111111" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
                       <circle cx="11" cy="11" r="8" />
@@ -645,10 +656,10 @@ export default function LandingApp() {
                         {t.badge}
                       </span>
                     </div>
-                    <h3 style={{ fontSize: 20, fontWeight: 800, lineHeight: 1.25, color: '#111111', margin: '0 0 8px', letterSpacing: '-0.3px' }}>
+                    <h3 style={{ fontSize: 20, fontWeight: 800, lineHeight: 1.25, color: t.textColor, margin: '0 0 8px', letterSpacing: '-0.3px' }}>
                       {t.title}
                     </h3>
-                    <p style={{ fontSize: 14, fontWeight: 400, lineHeight: 1.55, color: '#27272a', margin: 0 }}>
+                    <p style={{ fontSize: 14, fontWeight: 330, lineHeight: 1.55, color: t.descColor, margin: 0 }}>
                       {t.desc}
                     </p>
                   </div>
@@ -659,7 +670,7 @@ export default function LandingApp() {
         </div>
       </section>
 
-      {/* ══ 7. KNOWLEDGE BASE SYNC (Black block, signature Stickle pastel accents) ══════════════════ */}
+      {/* ══ 7. KNOWLEDGE BASE SYNC (Monochrome Dark block + Lime Accents) ══════════════════ */}
       <section style={s.sectionSpacing}>
         <div style={s.wrap}>
           <div style={{ ...s.colorBlock, backgroundColor: '#111111', color: '#ffffff', padding: '48px 48px' }}>
@@ -671,7 +682,7 @@ export default function LandingApp() {
                 <h2 style={{ ...s.displayLg, color: '#ffffff', margin: '0 0 16px' }}>
                   Export your web thoughts<br />directly to your Second Brain.
                 </h2>
-                <p style={{ fontSize: 18, fontWeight: 330, lineHeight: 1.45, letterSpacing: '-0.26px', color: '#a1a1aa', margin: 0 }}>
+                <p style={{ fontSize: 18, fontWeight: 330, lineHeight: 1.45, letterSpacing: '-0.26px', color: '#d4d4d8', margin: 0 }}>
                   No more lost tabs or forgotten bookmarks. Connect your web annotations directly to Notion, Obsidian, or your local AI notes in one click.
                 </p>
               </div>
@@ -681,63 +692,76 @@ export default function LandingApp() {
                 {/* ambient glow */}
                 <div className="sync-glow" style={{ position: 'absolute', left: '10%', top: '50%', marginTop: -80, width: 160, height: 160, borderRadius: '50%', backgroundColor: '#e4f579', pointerEvents: 'none' }} />
 
-                {/* ── SVG connector lines — in signature Stickle colors ── */}
+                {/* ── SVG connector lines — strictly Lime & White Monochrome ── */}
                 <svg width="100%" height="220" viewBox="0 0 380 220" style={{ position: 'absolute', top: 0, left: 0, pointerEvents: 'none' }}>
                   {/* line to Notion — Lime */}
                   <path className="sync-connector" d="M 130 70 C 200 70 240 45 295 38" fill="none" stroke="#e4f579" strokeWidth="1.8" strokeLinecap="round" />
-                  {/* line to Obsidian — Lilac */}
-                  <path className="sync-connector sync-connector-2" d="M 130 110 C 210 110 250 110 295 108" fill="none" stroke="#e8d5ff" strokeWidth="1.8" strokeLinecap="round" />
-                  {/* line to AI — Sky Blue */}
-                  <path className="sync-connector sync-connector-3" d="M 130 150 C 200 150 240 170 295 178" fill="none" stroke="#bae6fd" strokeWidth="1.8" strokeLinecap="round" />
+                  {/* line to Obsidian — White */}
+                  <path className="sync-connector sync-connector-2" d="M 130 110 C 210 110 250 110 295 108" fill="none" stroke="#ffffff" strokeWidth="1.8" strokeLinecap="round" />
+                  {/* line to AI — Lime */}
+                  <path className="sync-connector sync-connector-3" d="M 130 150 C 200 150 240 170 295 178" fill="none" stroke="#e4f579" strokeWidth="1.8" strokeLinecap="round" />
                 </svg>
 
-                {/* ── SOURCE: 3 bobbing sticky notes in signature Stickle pastel colors ── */}
-                {/* Note 1 – Signature Lime */}
+                {/* ── SOURCE: 3 bobbing sticky notes in Monochrome + Lime palette ── */}
+                {/* Note 1 – Signature Lime Accent */}
                 <div className="sync-note-1" style={{ position: 'absolute', left: 0, top: 38, width: 110, backgroundColor: '#e4f579', borderRadius: 10, padding: '8px 10px', boxShadow: '0 6px 20px rgba(228,245,121,0.25)', border: '1px solid rgba(0,0,0,0.1)' }}>
-                  <div style={{ fontFamily: "'JetBrains Mono', monospace", fontSize: 8, fontWeight: 700, color: '#111', marginBottom: 4, opacity: 0.6 }}>stickle://note</div>
+                  <div style={{ fontFamily: "'JetBrains Mono', monospace", fontSize: 8, fontWeight: 700, color: '#111', marginBottom: 4, opacity: 0.7 }}>stickle://note</div>
                   <div style={{ fontSize: 11, fontWeight: 600, color: '#111', lineHeight: 1.4 }}>Found great insight on page 3!</div>
                 </div>
-                {/* Note 2 – Pastel Lilac */}
-                <div className="sync-note-2" style={{ position: 'absolute', left: 8, top: 94, width: 110, backgroundColor: '#e8d5ff', borderRadius: 10, padding: '8px 10px', boxShadow: '0 6px 20px rgba(232,213,255,0.25)', border: '1px solid rgba(0,0,0,0.1)' }}>
-                  <div style={{ fontFamily: "'JetBrains Mono', monospace", fontSize: 8, fontWeight: 700, color: '#111', marginBottom: 4, opacity: 0.6 }}>stickle://note</div>
+                {/* Note 2 – Sleek White */}
+                <div className="sync-note-2" style={{ position: 'absolute', left: 8, top: 94, width: 110, backgroundColor: '#ffffff', borderRadius: 10, padding: '8px 10px', boxShadow: '0 6px 20px rgba(255,255,255,0.15)', border: '1px solid #e5e5e0' }}>
+                  <div style={{ fontFamily: "'JetBrains Mono', monospace", fontSize: 8, fontWeight: 700, color: '#111', marginBottom: 4, opacity: 0.7 }}>stickle://note</div>
                   <div style={{ fontSize: 11, fontWeight: 600, color: '#111', lineHeight: 1.4 }}>Review this API pattern later</div>
                 </div>
-                {/* Note 3 – Pastel Sky Blue */}
-                <div className="sync-note-3" style={{ position: 'absolute', left: 2, top: 152, width: 110, backgroundColor: '#bae6fd', borderRadius: 10, padding: '8px 10px', boxShadow: '0 6px 20px rgba(186,230,253,0.25)', border: '1px solid rgba(0,0,0,0.1)' }}>
-                  <div style={{ fontFamily: "'JetBrains Mono', monospace", fontSize: 8, fontWeight: 700, color: '#111', marginBottom: 4, opacity: 0.6 }}>stickle://note</div>
-                  <div style={{ fontSize: 11, fontWeight: 600, color: '#111', lineHeight: 1.4 }}>Ask AI about this approach</div>
+                {/* Note 3 – Monochrome Dark with Lime Border */}
+                <div className="sync-note-3" style={{ position: 'absolute', left: 2, top: 152, width: 110, backgroundColor: '#1c1c1e', borderRadius: 10, padding: '8px 10px', boxShadow: '0 6px 20px rgba(0,0,0,0.4)', border: '1px solid #e4f579' }}>
+                  <div style={{ fontFamily: "'JetBrains Mono', monospace", fontSize: 8, fontWeight: 700, color: '#e4f579', marginBottom: 4 }}>stickle://note</div>
+                  <div style={{ fontSize: 11, fontWeight: 600, color: '#ffffff', lineHeight: 1.4 }}>Ask AI about this approach</div>
                 </div>
 
-                {/* ── FLYING PARTICLES — in signature Stickle pastel colors ── */}
-                <div className="sync-fly-1" style={{ position: 'absolute', left: 110, top: 58, width: 20, height: 20, backgroundColor: '#e4f579', borderRadius: 5, border: '1.5px solid #111111', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 10, boxShadow: '0 2px 8px rgba(228,245,121,0.4)' }}>📝</div>
-                <div className="sync-fly-2" style={{ position: 'absolute', left: 110, top: 100, width: 20, height: 20, backgroundColor: '#e8d5ff', borderRadius: 5, border: '1.5px solid #111111', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 10, boxShadow: '0 2px 8px rgba(232,213,255,0.4)' }}>📝</div>
-                <div className="sync-fly-3" style={{ position: 'absolute', left: 110, top: 142, width: 20, height: 20, backgroundColor: '#bae6fd', borderRadius: 5, border: '1.5px solid #111111', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 10, boxShadow: '0 2px 8px rgba(186,230,253,0.4)' }}>📝</div>
+                {/* ── FLYING PARTICLES — strictly Lime and White Monochrome SVG Icons ── */}
+                <div className="sync-fly-1" style={{ position: 'absolute', left: 110, top: 58, width: 22, height: 22, backgroundColor: '#e4f579', borderRadius: 6, border: '1.5px solid #111111', display: 'flex', alignItems: 'center', justifyContent: 'center', boxShadow: '0 2px 8px rgba(228,245,121,0.4)' }}>
+                  <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="#111111" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                    <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z" />
+                    <polyline points="14 2 14 8 20 8" />
+                  </svg>
+                </div>
+                <div className="sync-fly-2" style={{ position: 'absolute', left: 110, top: 100, width: 22, height: 22, backgroundColor: '#ffffff', borderRadius: 6, border: '1.5px solid #111111', display: 'flex', alignItems: 'center', justifyContent: 'center', boxShadow: '0 2px 8px rgba(255,255,255,0.3)' }}>
+                  <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="#111111" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                    <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z" />
+                    <polyline points="14 2 14 8 20 8" />
+                  </svg>
+                </div>
+                <div className="sync-fly-3" style={{ position: 'absolute', left: 110, top: 142, width: 22, height: 22, backgroundColor: '#e4f579', borderRadius: 6, border: '1.5px solid #111111', display: 'flex', alignItems: 'center', justifyContent: 'center', boxShadow: '0 2px 8px rgba(228,245,121,0.4)' }}>
+                  <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="#111111" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                    <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z" />
+                    <polyline points="14 2 14 8 20 8" />
+                  </svg>
+                </div>
 
-                {/* ── DESTINATIONS: Notion, Obsidian, AI — colored borders & badges ── */}
+                {/* ── DESTINATIONS: Notion, Obsidian, AI — Lime & White Monochrome ── */}
                 {/* Notion (Lime) */}
-                <div className="sync-target-notion" style={{ position: 'absolute', right: 0, top: 12, width: 76, borderRadius: 14, backgroundColor: '#1e1e1e', border: '2px solid #e4f579', padding: '10px 8px', display: 'flex', flexDirection: 'column' as const, alignItems: 'center', gap: 5 }}>
+                <div className="sync-target-notion" style={{ position: 'absolute', right: 0, top: 12, width: 76, borderRadius: 14, backgroundColor: '#1c1c1e', border: '2px solid #e4f579', padding: '10px 8px', display: 'flex', flexDirection: 'column' as const, alignItems: 'center', gap: 5 }}>
                   <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#e4f579" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
                     <rect x="3" y="3" width="18" height="18" rx="3" />
                     <path d="M9 9h6M9 12h6M9 15h4" />
                   </svg>
                   <span style={{ fontFamily: "'JetBrains Mono', monospace", fontSize: 8, fontWeight: 700, color: '#e4f579', letterSpacing: '0.5px' }}>NOTION</span>
                 </div>
-                {/* Obsidian (Lilac) */}
-                <div className="sync-target-obsidian" style={{ position: 'absolute', right: 0, top: 84, width: 76, borderRadius: 14, backgroundColor: '#1e1e1e', border: '2px solid #e8d5ff', padding: '10px 8px', display: 'flex', flexDirection: 'column' as const, alignItems: 'center', gap: 5 }}>
-                  <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#e8d5ff" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
+                {/* Obsidian (White Monochrome) */}
+                <div className="sync-target-obsidian" style={{ position: 'absolute', right: 0, top: 84, width: 76, borderRadius: 14, backgroundColor: '#1c1c1e', border: '2px solid #ffffff', padding: '10px 8px', display: 'flex', flexDirection: 'column' as const, alignItems: 'center', gap: 5 }}>
+                  <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#ffffff" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
                     <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z" />
                     <polyline points="14 2 14 8 20 8" />
-                    <line x1="16" y1="13" x2="8" y2="13" />
-                    <line x1="16" y1="17" x2="8" y2="17" />
                   </svg>
-                  <span style={{ fontFamily: "'JetBrains Mono', monospace", fontSize: 8, fontWeight: 700, color: '#e8d5ff', letterSpacing: '0.5px' }}>OBSIDIAN</span>
+                  <span style={{ fontFamily: "'JetBrains Mono', monospace", fontSize: 8, fontWeight: 700, color: '#ffffff', letterSpacing: '0.5px' }}>OBSIDIAN</span>
                 </div>
-                {/* AI (Sky Blue) */}
-                <div className="sync-target-ai" style={{ position: 'absolute', right: 0, top: 154, width: 76, borderRadius: 14, backgroundColor: '#1e1e1e', border: '2px solid #bae6fd', padding: '10px 8px', display: 'flex', flexDirection: 'column' as const, alignItems: 'center', gap: 5 }}>
-                  <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#bae6fd" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
+                {/* AI (Lime Accent) */}
+                <div className="sync-target-ai" style={{ position: 'absolute', right: 0, top: 154, width: 76, borderRadius: 14, backgroundColor: '#1c1c1e', border: '2px solid #e4f579', padding: '10px 8px', display: 'flex', flexDirection: 'column' as const, alignItems: 'center', gap: 5 }}>
+                  <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#e4f579" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
                     <path d="m12 3-1.912 5.813a2 2 0 0 1-1.275 1.275L3 12l5.813 1.912a2 2 0 0 1 1.275 1.275L12 21l1.912-5.813a2 2 0 0 1 1.275-1.275L21 12l-5.813-1.912a2 2 0 0 1-1.275-1.275L12 3Z" />
                   </svg>
-                  <span style={{ fontFamily: "'JetBrains Mono', monospace", fontSize: 8, fontWeight: 700, color: '#bae6fd', letterSpacing: '0.5px' }}>AI CHAT</span>
+                  <span style={{ fontFamily: "'JetBrains Mono', monospace", fontSize: 8, fontWeight: 700, color: '#e4f579', letterSpacing: '0.5px' }}>AI CHAT</span>
                 </div>
               </div>
             </div>
@@ -1343,9 +1367,12 @@ export default function LandingApp() {
               href="https://github.com/BeeBombshell/stickle"
               target="_blank"
               rel="noreferrer"
-              style={{ ...s.btnSecondary, fontSize: 16, padding: '14px 28px', textDecoration: 'none' }}
+              style={{ ...s.btnSecondary, fontSize: 16, padding: '14px 28px', textDecoration: 'none', gap: 8 }}
             >
-              ⭐ Star on GitHub
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor">
+                <polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2" />
+              </svg>
+              Star on GitHub
             </a>
           </div>
         </div>
