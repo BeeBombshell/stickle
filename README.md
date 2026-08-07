@@ -34,6 +34,8 @@
 
 Stickle solves the problem of brittle web annotations on dynamic modern web apps by using a multi-tiered fallback resolution pipeline.
 
+![5-Tier DOM Anchoring Diagram](./assets/anchoring-diagram.svg)
+
 0. **Tier 0 — DOM Element Fingerprint** *(primary)*: O(1) lookup by `domIndex` (absolute ordinal among all same-tag elements, e.g. the 47th `<p>`) validated against a 60-char `textFingerprint`. Uniquely identifies any element on Wikipedia-style pages with hundreds of repeated tags. Scans ±10 neighbours if index has shifted.
 1. **Tier 1 — CSS Selector**: Tries exact DOM matching via optimized CSS selectors (`querySelector`). Fast and precise for stable DOM nodes.
 2. **Tier 2 — Text Fragment Quote**: Uses W3C Text Quote matching with exact text, prefix, and suffix contexts. Survives HTML class changes, layout refactors, and framework DOM rebuilds.

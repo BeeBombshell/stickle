@@ -1,15 +1,5 @@
 <svg width="1200" height="460" viewBox="0 0 1200 460" fill="none" xmlns="http://www.w3.org/2000/svg">
-  <defs>
-    <!-- Modern drop shadows -->
-    <filter id="card-shadow" x="-5%" y="-5%" width="110%" height="120%" filterUnits="userSpaceOnUse">
-      <feDropShadow dx="0" dy="12" stdDeviation="16" flood-color="#000000" flood-opacity="0.12"/>
-    </filter>
-    <filter id="bubble-shadow" x="-10%" y="-10%" width="120%" height="130%" filterUnits="userSpaceOnUse">
-      <feDropShadow dx="0" dy="8" stdDeviation="12" flood-color="#000000" flood-opacity="0.08"/>
-    </filter>
-  </defs>
-
-  <!-- Banner Ground Canvas (Figma Marketing Pure White Frame) -->
+  <!-- Banner Ground Canvas Frame -->
   <rect width="1200" height="460" rx="24" fill="#FFFFFF" stroke="#E5E5E0" stroke-width="2"/>
 
   <!-- Signature Pastel Block Lime Container (Left Half Hero Poster) -->
@@ -17,9 +7,9 @@
 
   <!-- Left Content: Logo Lockup + Typography -->
   <!-- Eyebrow -->
-  <text x="68" y="76" font-family="JetBrains Mono, SF Mono, Menlo, monospace" font-size="11" font-weight="600" letter-spacing="1.2" fill="#3D4400" text-transform="uppercase">DOM ANCHORING • LOCAL-FIRST</text>
+  <text x="68" y="76" font-family="JetBrains Mono, SF Mono, Menlo, monospace" font-size="11" font-weight="600" letter-spacing="1.2" fill="#3D4400">5-TIER DOM ANCHORING • LOCAL-FIRST</text>
 
-  <!-- Logo Lockup (Concept 3: Anchor Pin Mark + stickle wordmark) -->
+  <!-- Logo Lockup (Concept: Anchor Pin Mark + stickle wordmark) -->
   <g transform="translate(68, 100)">
     <rect width="48" height="48" rx="12" fill="#111111"/>
     <circle cx="34" cy="34" r="10" fill="#FFFFFF"/>
@@ -33,9 +23,9 @@
     <tspan x="68" dy="44">to dynamic web content.</tspan>
   </text>
 
-  <text x="68" y="310" font-family="Inter, SF Pro Display, system-ui, sans-serif" font-size="15" font-weight="400" fill="#2B3000" width="460">
+  <text x="68" y="310" font-family="Inter, SF Pro Display, system-ui, sans-serif" font-size="15" font-weight="400" fill="#2B3000">
     <tspan x="68" dy="0">Notes survive DOM shifts, SPA re-renders, and page updates</tspan>
-    <tspan x="68" dy="22">using robust 3-tier fallback DOM anchoring.</tspan>
+    <tspan x="68" dy="22">using robust 5-tier fallback DOM anchoring.</tspan>
   </text>
 
   <!-- Feature Pills -->
@@ -46,12 +36,12 @@
     <rect x="146" y="0" width="124" height="32" rx="16" fill="#FFFFFF" stroke="#3D4400" stroke-width="1.5"/>
     <text x="208" y="20" font-family="Inter, SF Pro Display, sans-serif" font-size="12" font-weight="600" fill="#111111" text-anchor="middle">Manifest V3</text>
 
-    <rect x="280" y="0" width="132" height="32" rx="16" fill="#FFFFFF" stroke="#3D4400" stroke-width="1.5"/>
-    <text x="346" y="20" font-family="Inter, SF Pro Display, sans-serif" font-size="12" font-weight="600" fill="#111111" text-anchor="middle">IndexedDB Sync</text>
+    <rect x="280" y="0" width="154" height="32" rx="16" fill="#FFFFFF" stroke="#3D4400" stroke-width="1.5"/>
+    <text x="357" y="20" font-family="Inter, SF Pro Display, sans-serif" font-size="12" font-weight="600" fill="#111111" text-anchor="middle">5-Tier Anchoring</text>
   </g>
 
   <!-- Right Half: Webpage Preview & Anchored Floating Sticky Notes -->
-  <g transform="translate(604, 32)" filter="url(#card-shadow)">
+  <g transform="translate(604, 32)">
     <!-- Browser Mockup Window -->
     <rect width="564" height="396" rx="16" fill="#FFFFFF" stroke="#E5E5E0" stroke-width="1.5"/>
     
@@ -85,12 +75,12 @@
     <circle cx="280" cy="187" r="2.5" fill="#FFFFFF"/>
 
     <!-- Floating Note Bubble 1 (Pastel Cream Sticky Note) -->
-    <g transform="translate(330, 100)" filter="url(#bubble-shadow)">
-      <rect width="210" height="130" rx="10" fill="#FFF7DB" stroke="#E5E5E0" stroke-width="1"/>
+    <g transform="translate(330, 100)">
+      <rect width="210" height="130" rx="10" fill="#FFF7DB" stroke="#FEF08A" stroke-width="1.5"/>
       <!-- Header -->
-      <rect x="12" y="10" width="90" height="14" rx="3" fill="#FEF08A"/>
-      <text x="16" y="21" font-family="JetBrains Mono, monospace" font-size="8" font-weight="700" fill="#854D0E">TIER: SELECTOR</text>
-      <text x="194" y="22" font-family="sans-serif" font-size="10" fill="#A16207" cursor="pointer">✕</text>
+      <rect x="12" y="10" width="105" height="14" rx="3" fill="#FEF08A"/>
+      <text x="16" y="21" font-family="JetBrains Mono, monospace" font-size="8" font-weight="700" fill="#854D0E">TIER 0: FINGERPRINT</text>
+      <text x="194" y="22" font-family="sans-serif" font-size="10" fill="#A16207">✕</text>
       <!-- Content -->
       <text x="12" y="44" font-family="Inter, sans-serif" font-size="11" font-weight="500" fill="#111111">
         <tspan x="12" dy="0">Check mutation observer</tspan>
@@ -101,16 +91,16 @@
     </g>
 
     <!-- Floating Note Bubble 2 (Pastel Lilac Sticky Note) -->
-    <g transform="translate(180, 260)" filter="url(#bubble-shadow)">
-      <rect width="220" height="106" rx="10" fill="#E8D5FF" stroke="#D8B4FE" stroke-width="1"/>
-      <rect x="12" y="10" width="115" height="14" rx="3" fill="#D8B4FE"/>
-      <text x="16" y="21" font-family="JetBrains Mono, monospace" font-size="8" font-weight="700" fill="#581C87">TIER: TEXT-FRAGMENT</text>
+    <g transform="translate(180, 260)">
+      <rect width="220" height="106" rx="10" fill="#E8D5FF" stroke="#D8B4FE" stroke-width="1.5"/>
+      <rect x="12" y="10" width="125" height="14" rx="3" fill="#D8B4FE"/>
+      <text x="16" y="21" font-family="JetBrains Mono, monospace" font-size="8" font-weight="700" fill="#581C87">TIER 2: TEXT-FRAGMENT</text>
       <text x="204" y="22" font-family="sans-serif" font-size="10" fill="#6B21A8">✕</text>
       <text x="12" y="44" font-family="Inter, sans-serif" font-size="11" font-weight="500" fill="#111111">
         <tspan x="12" dy="0">Export this highlight directly</tspan>
         <tspan x="12" dy="16">to Notion engineering database.</tspan>
       </text>
-      <text x="12" y="92" font-family="JetBrains Mono, monospace" font-size="9" fill="#6B21A8">SynctoNotion: Pending</text>
+      <text x="12" y="92" font-family="JetBrains Mono, monospace" font-size="9" fill="#6B21A8">SyncToNotion: Pending</text>
     </g>
   </g>
 </svg>
