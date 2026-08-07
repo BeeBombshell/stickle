@@ -12,15 +12,15 @@
   <img src="https://img.shields.io/badge/License-MIT-blue?style=flat-square" alt="MIT License" />
 </p>
 
-> A local-first Chrome Extension (MV3) that lets you pin persistent floating sticky notes to dynamic web content using a resilient **3-Tier DOM Anchoring System**.
+> A local-first Chrome Extension (MV3) that lets you pin persistent floating sticky notes to dynamic web content using a resilient **5-Tier DOM Anchoring System**.
 
 ---
 
 ## 📌 Features Overview
 
-- 🎯 **Robust 3-Tier DOM Anchoring**: Notes stay pinned across page refreshes, SPA re-renders, layout refactors, and minor copy edits.
+- 🎯 **Robust 5-Tier DOM Anchoring**: Notes stay pinned across page refreshes, SPA re-renders, Wikipedia DOM shifts, layout refactors, and minor copy edits. Highlight stickles track their `<mark>` element directly for pixel-accurate positioning.
 - 🎨 **Figma-Inspired Color System**: Crisp monochrome frame paired with 7 signature color-block surfaces (`lime`, `lilac`, `cream`, `mint`, `pink`, `coral`, `blue`).
-- ✍️ **Text Selection Highlighting**: Highlight text ranges on any web page with sticky notes attached directly to the selection.
+- ✍️ **Text Selection Highlighting**: Highlight text ranges on any web page with sticky notes attached directly to the `<mark>` element for precise, scroll-independent placement.
 - ⚡ **Interactive Onboarding**: Automatic first-run interactive sandbox page (`onboarding.html`) to test creating and anchoring notes live.
 - 🤖 **Model Context Protocol (MCP) Server**: Built-in STDIO server allowing AI desktop assistants (Claude Desktop, Antigravity, Cursor, Windsurf) to query, search, create, and summarize your web notes directly.
 - 🔒 **Local-First & Private**: Notes stored in Chrome Local Storage + IndexedDB via Dexie.js. Zero tracking or telemetry.
@@ -30,18 +30,22 @@
 
 ---
 
-## 🏗️ 3-Tier DOM Anchoring System
+## 🏗️ 5-Tier DOM Anchoring System
 
 Stickle solves the problem of brittle web annotations on dynamic modern web apps by using a multi-tiered fallback resolution pipeline.
 
-![3-Tier Anchoring System Diagram](./assets/anchoring-diagram.svg)
-
+0. **Tier 0 — DOM Element Fingerprint** *(primary)*: O(1) lookup by `domIndex` (absolute ordinal among all same-tag elements, e.g. the 47th `<p>`) validated against a 60-char `textFingerprint`. Uniquely identifies any element on Wikipedia-style pages with hundreds of repeated tags. Scans ±10 neighbours if index has shifted.
 1. **Tier 1 — CSS Selector**: Tries exact DOM matching via optimized CSS selectors (`querySelector`). Fast and precise for stable DOM nodes.
 2. **Tier 2 — Text Fragment Quote**: Uses W3C Text Quote matching with exact text, prefix, and suffix contexts. Survives HTML class changes, layout refactors, and framework DOM rebuilds.
-3. **Tier 3 — Fuzzy Search**: Uses Levenshtein text similarity matching against page text nodes. Survives minor copy edits, typos, and phrasing tweaks.
-4. **Tier 4 — Unanchored Fallback**: If element is deleted or page structure changes completely, the note degrades gracefully to a floating page-level note in the bottom-right corner—never losing your content.
+3. **Tier 3 — Fuzzy Search**: Uses trigram Dice-coefficient similarity matching against page text nodes. Survives minor copy edits, typos, and phrasing tweaks.
+4. **Tier 4 — Stored Page Coordinates**: Absolute `pageX`/`pageY` coords captured at creation time (scroll-independent). Used as a last resort and as the initial position before the DOM is painted.
+5. **Tier 5 — Unanchored Fallback**: If element is deleted or page structure changes completely, the note degrades gracefully to a floating page-level note—never losing your content.
 
----
+**Highlight stickles** are positioned directly from the `<mark>` element's `getBoundingClientRect()` after restoration, bypassing anchor resolution entirely for pixel-accurate placement.
+
+**Performance**: A structural-only `MutationObserver` (no `characterData`), in-flight guard, and visibility-aware refresh keep CPU near zero on background tabs.
+
+
 
 ## ⌨️ How to Create & Manage Notes
 
@@ -130,7 +134,7 @@ Location: `~/Library/Application Support/Claude/claude_desktop_config.json` (mac
 ```
 stickle/
 ├── README.md             # Project documentation & visual guide
-├── ARCHITECTURE.md       # Technical design of 3-tier DOM anchoring & sync engine
+├── ARCHITECTURE.md       # Technical design of 5-tier DOM anchoring & sync engine
 ├── DECISIONS.md          # Architectural & design decisions log
 ├── DESIGN.md             # Design system specifications & tokens
 ├── LAUNCH.md             # Chrome Web Store submission & launch checklist
@@ -152,7 +156,7 @@ stickle/
 │   └── privacy/          # Privacy policy page
 ├── lib/
 │   ├── db.ts             # Dexie IndexedDB + chrome.storage.local persistence
-│   ├── anchoring.ts      # 3-tier DOM anchor resolution engine
+│   ├── anchoring.ts      # 5-tier DOM anchor resolution engine (fingerprint + CSS + text + fuzzy + coords)
 │   ├── highlighting.ts   # Text range selection highlight manager
 │   ├── notion.ts         # Notion API integration client with retry backoff
 │   ├── posthog.ts        # Privacy-respecting opt-in telemetry helper

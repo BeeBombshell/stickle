@@ -11,6 +11,16 @@ export interface NoteAnchor {
   exactText?: string;
   offsetX: number;
   offsetY: number;
+  /** Absolute document X at time of creation (scroll-independent) */
+  pageX?: number;
+  /** Absolute document Y at time of creation (scroll-independent) */
+  pageY?: number;
+  /** Index of element among all same-tag elements in the document (e.g. 47th <p>) */
+  domIndex?: number;
+  /** Tag name of the anchor element (e.g. 'p', 'li', 'span') */
+  domTag?: string;
+  /** First 60 chars of element's normalized text — used to validate domIndex on restore */
+  textFingerprint?: string;
   tier: AnchorTier;
 }
 

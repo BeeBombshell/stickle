@@ -7,6 +7,10 @@ export interface ResolvedAnchor {
   tier: AnchorTier;
 }
 
+// ---------------------------------------------------------------------------
+// Similarity helper (trigram Dice coefficient)
+// ---------------------------------------------------------------------------
+
 /**
   * Calculates trigram/edit similarity score between two strings (0.0 to 1.0).
   */
@@ -37,6 +41,29 @@ export function calculateSimilarity(s1: string, s2: string): number {
   return (2 * intersection) / (t1.size + t2.size);
 }
 
+// ---------------------------------------------------------------------------
+// DOM readiness guard
+// ---------------------------------------------------------------------------
+
+/**
+ * Returns true when the DOM is fully painted and layout is stable enough for
+ * getBoundingClientRect() to return meaningful values. Prevents all stickles
+ * from accumulating at (0,0) during the initial script injection.
+ */
+function isDomPainted(): boolean {
+  if (typeof document === 'undefined') return false;
+  if (document.readyState !== 'complete' && document.readyState !== 'interactive') return false;
+  // Confirm at least one visible body-level element has non-zero dimensions
+  const probe = document.body?.firstElementChild;
+  if (!probe) return false;
+  const rect = probe.getBoundingClientRect();
+  return rect.width > 0 || rect.height > 0;
+}
+
+// ---------------------------------------------------------------------------
+// Text context extraction
+// ---------------------------------------------------------------------------
+
 /**
   * Extracts text prefix (~40 chars) and suffix (~40 chars) around target element text.
   */
@@ -61,14 +88,41 @@ function getDomTextContext(element: Element, exactText: string): { textPrefix?: 
   return {};
 }
 
+// ---------------------------------------------------------------------------
+// Anchor creation
+// ---------------------------------------------------------------------------
+
 /**
-  * Creates an anchor object capturing CSS selector and text context around a click target.
+  * Creates an anchor capturing: absolute page coords, DOM element fingerprint
+  * (domIndex + textFingerprint + domTag), CSS selector, and text context.
+  *
+  * - pageX/pageY: scroll-independent absolute document coordinates. Used as
+  *   a last-resort fallback if all DOM-matching tiers fail.
+  * - domIndex: ordinal position among all same-tag elements in the document
+  *   (e.g. the 47th <p>). Provides O(1) lookup that uniquely identifies
+  *   elements on content-heavy pages like Wikipedia with many repeated <p> tags.
+  * - textFingerprint: first 60 chars of normalized text, used to validate
+  *   that domIndex still points to the right element after content changes.
   */
 export function createAnchor(element: Element, offsetX: number, offsetY: number): NoteAnchor {
   const cssSelector = getSimpleCssSelector(element);
   const rawText = element.textContent?.trim() || '';
   const exactText = rawText.slice(0, 30) || undefined;
   const context = exactText ? getDomTextContext(element, exactText) : {};
+
+  // Absolute page coordinates (scroll-independent)
+  const rect = element.getBoundingClientRect();
+  const scrollX = typeof window !== 'undefined' ? window.scrollX : 0;
+  const scrollY = typeof window !== 'undefined' ? window.scrollY : 0;
+  const pageX = scrollX + rect.left + offsetX;
+  const pageY = scrollY + rect.top + offsetY;
+
+  // DOM element fingerprint
+  const domTag = element.tagName.toLowerCase();
+  const allSameTag =
+    typeof document !== 'undefined' ? Array.from(document.querySelectorAll(domTag)) : [];
+  const domIndex = allSameTag.indexOf(element);
+  const textFingerprint = rawText.slice(0, 60).replace(/\s+/g, ' ').trim() || undefined;
 
   return {
     cssSelector,
@@ -77,29 +131,118 @@ export function createAnchor(element: Element, offsetX: number, offsetY: number)
     textSuffix: context.textSuffix,
     offsetX,
     offsetY,
+    pageX,
+    pageY,
+    domIndex: domIndex >= 0 ? domIndex : undefined,
+    domTag: domIndex >= 0 ? domTag : undefined,
+    textFingerprint,
     tier: 'selector',
   };
 }
 
+// ---------------------------------------------------------------------------
+// Anchor resolution
+// ---------------------------------------------------------------------------
+
 /**
-  * Resolves an anchor against the current DOM using 3-tier fallback.
+  * Resolves an anchor against the current DOM using a 5-tier fallback strategy.
+  *
+  * Tier 0 — DOM Fingerprint (domIndex + textFingerprint): O(1) lookup via
+  *   querySelectorAll(tagName)[domIndex], fingerprint-validated (similarity >= 0.8).
+  *   If index has shifted, scans +-10 neighbours for best match (>= 0.75).
+  *   Uniquely identifies repeated <p> tags on content-heavy pages like Wikipedia.
+  * Tier 1 — CSS Selector: exact querySelector match.
+  * Tier 2 — Text Fragment: prefix + exact + suffix search across leaf nodes.
+  * Tier 3 — Trigram Fuzzy Match: best similarity match >= 0.75 across full DOM.
+  * Tier 4 — Stored pageX/pageY: absolute scroll-independent coords saved at creation.
+  * Tier 5 — Unanchored: centre of viewport.
+  *
+  * Guard: if the DOM is not yet painted (all rects are zero), returns stored
+  * pageX/pageY immediately to prevent stickles accumulating at (0,0) on load.
   */
 export function resolveAnchor(anchor: NoteAnchor): ResolvedAnchor {
-  const scrollX = typeof window !== 'undefined' ? window.scrollX : 0;
-  const scrollY = typeof window !== 'undefined' ? window.scrollY : 0;
+  if (typeof window === 'undefined' || typeof document === 'undefined') {
+    return {
+      element: null,
+      x: anchor.pageX ?? 60,
+      y: anchor.pageY ?? 60,
+      tier: 'unanchored',
+    };
+  }
 
-  const bodyRect =
-    typeof document !== 'undefined' && (document.body || document.documentElement)
-      ? (document.body || document.documentElement).getBoundingClientRect()
-      : { left: 0, top: 0 };
+  const scrollX = window.scrollX;
+  const scrollY = window.scrollY;
 
+  const bodyRect = (document.body || document.documentElement).getBoundingClientRect();
   const bodyLeft = scrollX + bodyRect.left;
   const bodyTop = scrollY + bodyRect.top;
 
-  const computeX = (rectLeft: number) => Math.max(10, scrollX + rectLeft - bodyLeft + anchor.offsetX);
-  const computeY = (rectTop: number) => Math.max(10, scrollY + rectTop - bodyTop + anchor.offsetY);
+  const computeX = (rectLeft: number) =>
+    Math.max(10, scrollX + rectLeft - bodyLeft + anchor.offsetX);
+  const computeY = (rectTop: number) =>
+    Math.max(10, scrollY + rectTop - bodyTop + anchor.offsetY);
 
-  // Tier 1: Exact CSS selector
+  // If the DOM has not painted yet, return stored absolute coords immediately.
+  // This prevents all stickles accumulating at (0,0) on initial injection.
+  if (!isDomPainted()) {
+    return {
+      element: null,
+      x: anchor.pageX ?? Math.max(20, window.innerWidth / 2 - 120),
+      y: anchor.pageY ?? Math.max(40, window.innerHeight / 4),
+      tier: 'unanchored',
+    };
+  }
+
+  // -- Tier 0: DOM Fingerprint (domIndex + textFingerprint) -----------------
+  if (anchor.domIndex !== undefined && anchor.domTag && document.body) {
+    try {
+      const candidates = document.querySelectorAll(anchor.domTag);
+      const el = candidates[anchor.domIndex];
+      if (el) {
+        const fingerprint = el.textContent?.trim().replace(/\s+/g, ' ').slice(0, 60) || '';
+        const similarity = anchor.textFingerprint
+          ? calculateSimilarity(anchor.textFingerprint, fingerprint)
+          : 0;
+
+        if (!anchor.textFingerprint || similarity >= 0.8) {
+          // Perfect index hit
+          const rect = el.getBoundingClientRect();
+          return { element: el, x: computeX(rect.left), y: computeY(rect.top), tier: 'selector' };
+        }
+
+        // Index may have shifted — scan +-10 neighbours for best match
+        const searchStart = Math.max(0, anchor.domIndex - 10);
+        const searchEnd = Math.min(candidates.length - 1, anchor.domIndex + 10);
+        let bestEl: Element | null = null;
+        let bestScore = 0;
+        for (let i = searchStart; i <= searchEnd; i++) {
+          const candidate = candidates[i];
+          const candidateText =
+            candidate.textContent?.trim().replace(/\s+/g, ' ').slice(0, 60) || '';
+          const score = anchor.textFingerprint
+            ? calculateSimilarity(anchor.textFingerprint, candidateText)
+            : 0;
+          if (score > bestScore) {
+            bestScore = score;
+            bestEl = candidate;
+          }
+        }
+        if (bestEl && bestScore >= 0.75) {
+          const rect = bestEl.getBoundingClientRect();
+          return {
+            element: bestEl,
+            x: computeX(rect.left),
+            y: computeY(rect.top),
+            tier: 'text-fragment',
+          };
+        }
+      }
+    } catch {
+      // Fallthrough to Tier 1
+    }
+  }
+
+  // -- Tier 1: Exact CSS Selector -------------------------------------------
   if (anchor.cssSelector && typeof document !== 'undefined') {
     try {
       const el = document.querySelector(anchor.cssSelector);
@@ -117,16 +260,15 @@ export function resolveAnchor(anchor: NoteAnchor): ResolvedAnchor {
     }
   }
 
-  // Tier 2: Text Fragment match (Prefix + exactText + Suffix or exactText match in DOM)
+  // -- Tier 2: Text Fragment match ------------------------------------------
   if ((anchor.exactText || anchor.textPrefix) && typeof document !== 'undefined' && document.body) {
     const candidates = Array.from(document.body.querySelectorAll('*')).filter((el) => {
-      // Leaf or text container elements
       return el.children.length === 0 || Array.from(el.childNodes).some((n) => n.nodeType === 3);
     });
 
-    const targetFragment = `${anchor.textPrefix || ''} ${anchor.exactText || ''} ${anchor.textSuffix || ''}`.trim();
+    const targetFragment =
+      `${anchor.textPrefix || ''} ${anchor.exactText || ''} ${anchor.textSuffix || ''}`.trim();
 
-    // Look for exact fragment match or exact text match
     for (const candidate of candidates) {
       const text = candidate.textContent?.trim() || '';
       if (!text) continue;
@@ -149,7 +291,7 @@ export function resolveAnchor(anchor: NoteAnchor): ResolvedAnchor {
     }
   }
 
-  // Tier 3: Fuzzy Match (trigram similarity threshold >= 0.75)
+  // -- Tier 3: Trigram Fuzzy Match ------------------------------------------
   if (anchor.exactText && typeof document !== 'undefined' && document.body) {
     const candidates = Array.from(document.body.querySelectorAll('*')).filter((el) => {
       return el.children.length === 0 || Array.from(el.childNodes).some((n) => n.nodeType === 3);
@@ -180,7 +322,17 @@ export function resolveAnchor(anchor: NoteAnchor): ResolvedAnchor {
     }
   }
 
-  // Tier 4 Degraded: Unanchored
+  // -- Tier 4: Stored absolute page coords ----------------------------------
+  if (anchor.pageX !== undefined && anchor.pageY !== undefined) {
+    return {
+      element: null,
+      x: anchor.pageX,
+      y: anchor.pageY,
+      tier: 'unanchored',
+    };
+  }
+
+  // -- Tier 5: Unanchored — centre of viewport ------------------------------
   return {
     element: null,
     x: Math.max(20, (typeof window !== 'undefined' ? window.innerWidth : 800) / 2 - 120),
@@ -223,5 +375,3 @@ function getSimpleCssSelector(el: Element): string {
   }
   return path.length > 0 ? path.join(' > ') : 'body';
 }
-
-

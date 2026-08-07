@@ -21,7 +21,7 @@ export default function OnboardingApp() {
       id: 'sandbox-2',
       url: 'https://stickle.app/onboarding',
       pageTitle: 'Interactive Sandbox',
-      content: 'Notes survive React re-renders, page reloads, and tab closes.',
+      content: 'Notes survive React re-renders, page reloads, and tab closes. 5-tier anchoring keeps them in the right spot.',
       color: 'lilac',
       anchor: { cssSelector: '#sandbox-el-2', offsetX: 0, offsetY: 0, tier: 'text-fragment' },
       createdAt: Date.now(),
@@ -80,7 +80,7 @@ export default function OnboardingApp() {
     id: 'hero-note-2',
     url: 'https://stickle.app/onboarding',
     pageTitle: 'Stickle Onboarding',
-    content: 'Notes survive React re-renders, page reloads, and export straight to Notion with 1 click!',
+    content: 'Notes survive React re-renders, reloads, and Wikipedia DOM shifts. 5-tier anchoring keeps them pinned to the right spot.',
     color: 'lilac',
     anchor: {
       cssSelector: 'p.bodyLg',
@@ -260,7 +260,7 @@ export default function OnboardingApp() {
               boxShadow: '0 4px 14px rgba(0,0,0,0.06)',
               userSelect: 'none',
             }}>
-              ⚡️ 3-TIER ANCHORED
+              ⚡️ 5-TIER ANCHORED
             </div>
 
             {/* Collage Note Stack */}
@@ -434,17 +434,19 @@ export default function OnboardingApp() {
           <div style={{ ...s.colorBlock, backgroundColor: '#f8f8f6', border: '1px solid #e5e5e0' }}>
             <span style={{ ...s.eyebrow, color: '#111111' }}>STEP 3: ANCHORING ENGINE</span>
             <h2 style={{ ...s.displayLg, color: '#111111', maxWidth: 620 }}>
-              Notes that stay even when pages change.
+              5-tier fallback so your note always finds its way back.
             </h2>
             <p style={{ ...s.bodyText, color: '#52514e', maxWidth: 600, marginBottom: 40 }}>
               Most annotation tools break silently when websites update. Stickle uses a
-              3-tier fallback so your note always finds its way back.
+              5-tier fallback so your note always finds its way back.
             </p>
             <div style={s.tierGrid}>
               {[
+                { num: '00', badge: 'TIER 0: FINGERPRINT', title: 'DOM element fingerprint', body: 'O(1) lookup by element index + text fingerprint. Uniquely identifies <p> tags on Wikipedia or any content-heavy page.' },
                 { num: '01', badge: 'TIER 1: STRUCTURAL', title: 'XPath + CSS selector', body: 'Exact structural match. Used on stable page content and documentation.' },
                 { num: '02', badge: 'TIER 2: CONTEXTUAL', title: 'Neighbor content hash', body: 'Fingerprints surrounding text context. Survives React, Vue, Twitter re-renders.' },
                 { num: '03', badge: 'TIER 3: FUZZY', title: 'Trigram similarity', body: 'Searches DOM text nodes when structure changes completely. Threshold ≥ 0.75.' },
+                { num: '04', badge: 'TIER 4: COORDS', title: 'Stored page coordinates', body: 'Absolute scroll-independent coords captured at creation. Last resort before orphan tray.' },
                 { num: '↩', badge: 'FALLBACK: RECOVERABLE', title: 'Orphaned note tray', body: 'If content is deleted entirely, your note lands in the tray: zero data loss.' },
               ].map(t => (
                 <div key={t.badge} style={{ ...s.tierCard, backgroundColor: '#ffffff', border: '1px solid #e5e5e0' }}>

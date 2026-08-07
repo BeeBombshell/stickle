@@ -6,64 +6,102 @@
 
 ## 1. Executive Summary
 
-Web extension sticky note apps historically suffer from "anchor rot": notes placed on dynamic websites disappear when CSS class names change, DOM trees re-render, or content shifts. Stickle solves this through a robust, client-side **3-Tier Fallback Anchoring Strategy**.
+Web extension sticky note apps historically suffer from "anchor rot": notes placed on dynamic websites disappear when CSS class names change, DOM trees re-render, or content shifts. Stickle solves this through a robust, client-side **5-Tier Fallback Anchoring Strategy**.
 
-When a user creates a note, Stickle captures structural, textual, and contextual metadata. When re-attaching notes on page load or dynamic DOM mutation, Stickle executes a progressive resolution pipeline from high-precision exact matching down to low-confidence unanchored degradation.
+When a user creates a note, Stickle captures structural, textual, and contextual metadata. When re-attaching notes on page load or dynamic DOM mutation, Stickle executes a progressive resolution pipeline from high-precision DOM fingerprint matching down to stored absolute page coordinates.
 
 ---
 
 ## 2. Anchor Data Model
 
-Each note contains a `NoteAnchor` metadata structure stored in IndexedDB:
+Each note contains a `NoteAnchor` metadata structure stored in `chrome.storage.local`:
 
 ```typescript
 export interface NoteAnchor {
-  cssSelector: string;     // Tier 1: Resilient CSS selector path
-  textPrefix?: string;     // Tier 2: ~40 chars preceding DOM text context
-  textSuffix?: string;     // Tier 2: ~40 chars following DOM text context
-  exactText?: string;      // Tier 2 & 3: ~15-30 chars target text snippet
-  offsetX: number;         // X coordinate relative to element top-left
-  offsetY: number;         // Y coordinate relative to element top-left
-  tier: AnchorTier;        // 'selector' | 'text-fragment' | 'fuzzy' | 'unanchored'
+  cssSelector: string;       // Tier 1: Resilient CSS selector path
+  textPrefix?: string;       // Tier 2: ~40 chars preceding DOM text context
+  textSuffix?: string;       // Tier 2: ~40 chars following DOM text context
+  exactText?: string;        // Tier 2 & 3: ~15-30 chars target text snippet
+  offsetX: number;           // X coordinate relative to element top-left
+  offsetY: number;           // Y coordinate relative to element top-left
+  pageX?: number;            // Absolute document X at creation (scroll-independent)
+  pageY?: number;            // Absolute document Y at creation (scroll-independent)
+  domIndex?: number;         // Tier 0: index among all same-tag elements (e.g. 47th <p>)
+  domTag?: string;           // Tag name for domIndex lookup (e.g. 'p', 'li')
+  textFingerprint?: string;  // Tier 0: first 60 chars of element text — validates domIndex
+  tier: AnchorTier;          // 'selector' | 'text-fragment' | 'fuzzy' | 'unanchored'
 }
 ```
 
+**Why `domIndex` + `textFingerprint`?** Pages like Wikipedia contain hundreds of `<p>` tags inside `.mw-parser-output`. A CSS selector of the form `div.mw-parser-output > p:nth-of-type(3)` is ambiguous when paragraphs share sub-containers. `domIndex` is the element's **absolute ordinal** among all same-tag elements (`document.querySelectorAll('p')[47]`), providing an O(1) lookup. `textFingerprint` cross-validates the match, and if the index has shifted (content added above it), a ±10 neighbourhood scan finds the correct element.
+
+**Why `pageX`/`pageY`?** These are scroll-independent absolute document coordinates captured at creation time. They serve as a reliable last resort if all DOM-based tiers fail, and also as the **initial position** before the DOM is fully painted (preventing the "top-left accumulation" bug).
+
 ---
 
-## 3. Resolution Pipeline (The 3-Tier Fallback System)
+## 3. Resolution Pipeline (The 5-Tier Fallback System)
 
 ```
                        [ Load / Mutate Page Event ]
                                     │
+                      isDomPainted? ─── NO ──► Return stored pageX/pageY (prevent 0,0 accumulation)
+                                    │
+                                   YES
                                     ▼
-                      ┌───────────────────────────┐
-                      │ Tier 1: Exact CSS Selector│
-                      └─────────────┬─────────────┘
-                                    │
-                       Matches? ────┼────► YES ──► Position Note (Tier 1: Selector)
-                                    │
+                      ┌─────────────────────────────┐
+                      │ Tier 0: DOM Fingerprint      │
+                      │ domIndex + textFingerprint   │
+                      └──────────────┬──────────────┘
+                                     │
+                      Match >=0.8? ──┼──► YES ──► Position Note (Tier 0: Selector)
+                                     │
+                          Shift? Scan ±10 neighbours
+                      Match >=0.75? ─┼──► YES ──► Position Note (Tier 0: Text-Fragment)
+                                     │
                                     NO
-                                    ▼
-                      ┌───────────────────────────┐
-                      │ Tier 2: Text Fragment     │
-                      └─────────────┬─────────────┘
-                                    │
-                       Matches? ────┼────► YES ──► Position Note (Tier 2: Text-Fragment)
-                                    │
+                                     ▼
+                      ┌─────────────────────────────┐
+                      │ Tier 1: Exact CSS Selector   │
+                      └──────────────┬──────────────┘
+                                     │
+                       Matches? ─────┼────► YES ──► Position Note (Tier 1: Selector)
+                                     │
                                     NO
-                                    ▼
-                      ┌───────────────────────────┐
-                      │ Tier 3: Trigram Fuzzy Match│
-                      └─────────────┬─────────────┘
-                                    │
-                      Score >= 0.75? ──┼──► YES ──► Position Note (Tier 3: Fuzzy Match)
-                                    │
+                                     ▼
+                      ┌─────────────────────────────┐
+                      │ Tier 2: Text Fragment        │
+                      └──────────────┬──────────────┘
+                                     │
+                       Matches? ─────┼────► YES ──► Position Note (Tier 2: Text-Fragment)
+                                     │
                                     NO
-                                    ▼
-                      ┌───────────────────────────┐
-                      │ Tier 4: Unanchored Tray   │
-                      └───────────────────────────┘
+                                     ▼
+                      ┌─────────────────────────────┐
+                      │ Tier 3: Trigram Fuzzy Match  │
+                      └──────────────┬──────────────┘
+                                     │
+                      Score >= 0.75? ─┼──► YES ──► Position Note (Tier 3: Fuzzy Match)
+                                     │
+                                    NO
+                                     ▼
+                      ┌─────────────────────────────┐
+                      │ Tier 4: Stored pageX/pageY   │
+                      └──────────────┬──────────────┘
+                                     │
+                      coords exist? ─┼──► YES ──► Position Note (Tier 4: Unanchored)
+                                     │
+                                    NO
+                                     ▼
+                      ┌─────────────────────────────┐
+                      │ Tier 5: Viewport Centre      │
+                      └─────────────────────────────┘
 ```
+
+### Tier 0: DOM Fingerprint Match *(new primary tier)*
+- **Mechanism:** `document.querySelectorAll(domTag)[domIndex]` — O(1) lookup. Validates against `textFingerprint` (first 60 chars, normalized whitespace) using trigram similarity ≥ 0.8. If index has shifted, scans ±10 neighbours for best match ≥ 0.75.
+- **Speed:** ~0.1ms (native querySelectorAll + single similarity check).
+- **Target Catches:** Wikipedia-style pages with hundreds of repeated `<p>` tags, any page where CSS selector is ambiguous due to shared containers.
+- **Guard:** `isDomPainted()` check ensures `getBoundingClientRect()` is not called before layout is stable, preventing the "top-left accumulation" bug on page load.
 
 ### Tier 1: CSS Selector Match
 - **Mechanism:** Evaluates `document.querySelector(anchor.cssSelector)`.
@@ -86,8 +124,13 @@ export interface NoteAnchor {
 - **Threshold Chosen:** `0.75` (empirically determined to eliminate false positives on repetitive UI text like "Read More" while accommodating minor typo fixes, tense changes, or partial text edits).
 - **Target Catches:** Dynamic feed items, live article updates, minor author edits to text.
 
-### Tier 4: Unanchored Degradation (Orphaned Notes)
-- **Mechanism:** If all resolution tiers fall below the `0.75` similarity threshold, the note degrades to `tier: 'unanchored'`.
+### Tier 4: Stored Absolute Page Coordinates
+- **Mechanism:** Returns `anchor.pageX` / `anchor.pageY` — scroll-independent absolute document coordinates captured at note creation time via `scrollX + rect.left + offsetX`.
+- **Target Catches:** Pages where all DOM content has been replaced but the note should still appear at roughly the right position.
+- **Note:** These coords are also used as the **initial placement** before `isDomPainted()` returns true.
+
+### Tier 5: Unanchored Degradation (Orphaned Notes)
+- **Mechanism:** If all resolution tiers fail, the note renders at the viewport centre.
 - **UX Treatment:** Rendered inside a non-intrusive floating "Orphaned Notes" tray in the bottom corner of the viewport rather than silently dropping user data.
 
 ---
@@ -102,11 +145,14 @@ To provide transparent feedback on anchor confidence:
 
 ---
 
-## 5. Performance & Security Considerations
+## 5. Performance & Multi-Tab Considerations
 
 1. **Zero External NLP Overhead:** Fuzzy matching runs entirely via inline trigram set operations, avoiding heavy external NLP packages (keeping extension payload < 100KB).
-2. **DOM Traversal Optimization:** Candidate filtering targets leaf nodes and elements containing text nodes (`nodeType === 3`), bypassing large non-text containers.
-3. **Local First Data Privacy:** All anchor extraction and matching occurs locally within the browser content script context. No DOM text content is transmitted externally.
+2. **DOM Traversal Optimization:** Candidate filtering targets leaf nodes and elements containing text nodes (`nodeType === 3`), bypassing large non-text containers. Tier 0 DOM fingerprint lookup is O(1) and avoids full DOM traversal entirely on most pages.
+3. **In-Flight Guard:** `refreshInFlight` flag prevents concurrent `refreshNotes()` calls from stacking up on busy SPAs or pages that fire many mutation events.
+4. **Visibility-Aware Refresh:** `refreshNotes()` skips re-anchoring entirely when the tab is hidden (`document.hidden === true`), queueing exactly one deferred refresh for when the tab becomes active. This prevents wasted work across multiple open tabs.
+5. **Structural-Only MutationObserver:** `characterData` option is excluded from the observer — it was causing Wikipedia's scroll-linked TOC highlight DOM updates to trigger constant re-anchoring mid-scroll. Only `childList` structural changes trigger debounced re-anchor.
+6. **Local First Data Privacy:** All anchor extraction and matching occurs locally within the browser content script context. No DOM text content is transmitted externally.
 
 ---
 

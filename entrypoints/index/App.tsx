@@ -8,7 +8,7 @@ type FaqItem = { q: string; a: string };
 const FAQ_ITEMS = [
   {
     q: 'How does DOM anchoring work if a webpage updates?',
-    a: 'Stickle tries three anchoring methods in sequence: structural XPath, neighbor content hashing, then trigram fuzzy text matching. If a page is deleted entirely the note lands in a recoverable tray. You never lose data.',
+    a: 'Stickle uses a 5-tier anchoring engine: DOM element fingerprint (tag index + text fingerprint), CSS selector, neighbor content hashing, trigram fuzzy text matching, and stored absolute page coordinates as a last resort. If a page is deleted entirely, the note lands in a recoverable tray. You never lose data.',
   },
   {
     q: 'Is my data private? Does Stickle track my notes?',
@@ -60,7 +60,7 @@ export default function LandingApp() {
       id: 'landing-hero-3',
       url: 'https://docs.github.com/en/get-started',
       pageTitle: 'GitHub Docs',
-      content: '⚡️ 3-Tier fallback yields 99.4% anchor recovery rate on dynamic SPAs.',
+      content: '⚡️ 5-Tier fingerprint anchoring. Works on Wikipedia, SPAs, news feeds, and docs.',
       color: 'mint',
       anchor: { cssSelector: 'div.fakeArticle', offsetX: 0, offsetY: 0, tier: 'fuzzy' },
       createdAt: Date.now(),
@@ -456,8 +456,8 @@ export default function LandingApp() {
                 },
                 {
                   eyebrow: 'NOTES THAT DON\'T DRIFT',
-                  headline: 'A 3-tier anchoring engine keeps notes in place.',
-                  body: 'Stickle survives React re-renders, ad reflows, and layout shifts using XPath, content fingerprinting, and fuzzy text matching.',
+                  headline: 'A 5-tier anchoring engine keeps notes in place.',
+                  body: 'Stickle survives React re-renders, Wikipedia DOM mutations, and layout shifts using DOM element fingerprinting, CSS selectors, content hashing, and trigram fuzzy matching.',
                 },
                 {
                   eyebrow: 'INTO NOTION, INSTANTLY',
@@ -557,26 +557,42 @@ export default function LandingApp() {
       <section id="anchoring" style={s.sectionSpacing}>
         <div style={s.wrap}>
           <div style={{ ...s.colorBlock, backgroundColor: '#ffffff', color: '#111111', border: 'none', padding: '56px 48px' }}>
-            <span style={{ ...s.eyebrow, color: '#111111', marginBottom: 12 }}>3-TIER ANCHORING ENGINE</span>
-            <h2 style={{ ...s.displayLg, color: '#111111', maxWidth: 720, margin: '12px 0 20px' }}>
-              Notes that don't drift.<br />Ever.
-            </h2>
+            <span style={{ ...s.eyebrow, color: '#111111', marginBottom: 12 }}>5-TIER ANCHORING ENGINE</span>
+            <h2 style={{ ...s.displayLg, color: '#111111', marginBottom: 16 }}>Never lose a note.</h2>
             <p style={{ fontSize: 18, fontWeight: 330, lineHeight: 1.45, letterSpacing: '-0.26px', color: '#111111', maxWidth: 640, margin: '0 0 36px' }}>
-              Single-method highlighters break when DOM trees shift. Stickle combines three independent fallback tiers so your notes always find their home.
+              Single-method highlighters break when DOM trees shift. Stickle combines five independent fallback tiers so your notes always find their home — even on Wikipedia articles, SPAs, and live feeds.
             </p>
 
             <div style={s.tierGrid}>
               {[
                 {
-                  badge: 'TIER 1: EXACT',
-                  title: 'Structural XPath & DOM',
-                  desc: 'Attaches directly to the target element using an optimized selector chain and relative offset vector.',
+                  badge: 'TIER 0: FINGERPRINT',
+                  title: 'DOM element fingerprint',
+                  desc: 'O(1) lookup by element index + text fingerprint. Uniquely identifies any <p> on Wikipedia even among hundreds of siblings.',
                   badgeBg: '#111111',
                   badgeColor: '#ffffff',
-                  cardBg: '#e4f579', // Signature Lime Accent
+                  cardBg: '#e4f579',
                   cardBorder: '1px solid rgba(0,0,0,0.08)',
                   textColor: '#111111',
                   descColor: '#111111',
+                  iconBg: '#ffffff',
+                  strokeColor: '#111111',
+                  icon: (
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#111111" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
+                      <path d="M2 12C6.477 12 10 8.477 10 4M22 12c-4.477 0-8 3.523-8 8M12 2a10 10 0 0 1 10 10M12 22A10 10 0 0 1 2 12" />
+                    </svg>
+                  ),
+                },
+                {
+                  badge: 'TIER 1: EXACT',
+                  title: 'CSS selector match',
+                  desc: 'Attaches directly to the target element using an optimized selector chain. Instant on stable pages and docs.',
+                  badgeBg: '#111111',
+                  badgeColor: '#ffffff',
+                  cardBg: '#f8f8f6',
+                  cardBorder: '1px solid #e5e5e0',
+                  textColor: '#111111',
+                  descColor: '#555',
                   iconBg: '#ffffff',
                   strokeColor: '#111111',
                   icon: (
@@ -593,7 +609,7 @@ export default function LandingApp() {
                   desc: 'Fingerprints surrounding content so notes stay attached even when Twitter, Reddit, or GitHub update in real time.',
                   badgeBg: '#e4f579',
                   badgeColor: '#111111',
-                  cardBg: '#111111', // Monochrome Dark
+                  cardBg: '#111111',
                   cardBorder: '1px solid rgba(255,255,255,0.15)',
                   textColor: '#ffffff',
                   descColor: '#d4d4d8',
@@ -608,10 +624,10 @@ export default function LandingApp() {
                 {
                   badge: 'TIER 3: FUZZY',
                   title: 'Handles layout refactors',
-                  desc: 'Scans page text nodes to relocate your notes even if HTML structure or CSS styling changes completely.',
+                  desc: 'Scans page text nodes to relocate notes even if HTML structure or CSS styling changes completely.',
                   badgeBg: '#111111',
                   badgeColor: '#ffffff',
-                  cardBg: '#f8f8f6', // Off-white
+                  cardBg: '#f8f8f6',
                   cardBorder: '1px solid #e5e5e0',
                   textColor: '#111111',
                   descColor: '#111111',

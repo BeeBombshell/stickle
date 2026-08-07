@@ -22,9 +22,17 @@ export default defineContentScript({
 
     const hostContainer = getOrCreateHostContainer();
     const mountedNotes = new Map<string, HTMLElement>();
+    let refreshInFlight = false;
 
-    // Initial load and anchor resolution
-    await refreshNotes();
+    // Defer initial load until DOM is painted to avoid (0,0) accumulation
+    const scheduleInitialRefresh = () => {
+      if (document.readyState === 'complete') {
+        refreshNotes();
+      } else {
+        window.addEventListener('load', () => refreshNotes(), { once: true });
+      }
+    };
+    scheduleInitialRefresh();
 
     // Expose global re-anchoring helper in content script scope
     (window as any).stickleReanchor = refreshNotes;
@@ -83,19 +91,25 @@ export default defineContentScript({
     }
 
     // Debounced automatic re-anchoring on DOM mutation (SPA re-renders, dynamic feeds)
+    // characterData is intentionally excluded: it fires on Wikipedia's scroll-linked
+    // TOC highlight updates and causes constant erroneous re-anchoring mid-scroll.
     let reanchorTimeout: any = null;
     const debouncedReanchor = () => {
       if (reanchorTimeout) clearTimeout(reanchorTimeout);
       reanchorTimeout = setTimeout(() => {
         refreshNotes();
-      }, 250);
+      }, 400);
     };
 
     const observer = new MutationObserver((mutations) => {
-      const isInternalMutation = mutations.every(
-        (m) => hostContainer.contains(m.target) || m.target === hostContainer
+      // Only re-anchor on structural changes (nodes added/removed), not attribute/text mutations
+      const hasStructuralChange = mutations.some(
+        (m) =>
+          m.type === 'childList' &&
+          !hostContainer.contains(m.target) &&
+          m.target !== hostContainer
       );
-      if (!isInternalMutation) {
+      if (hasStructuralChange) {
         debouncedReanchor();
       }
     });
@@ -104,11 +118,11 @@ export default defineContentScript({
       observer.observe(document.body, {
         childList: true,
         subtree: true,
-        characterData: true,
+        // characterData deliberately omitted — causes false re-anchors on Wikipedia
       });
     }
 
-    // Re-anchor on scroll or window resize
+    // Re-anchor on window resize only (not scroll — absolute positioned notes scroll naturally)
     window.addEventListener('resize', debouncedReanchor, { passive: true });
 
     // Listen for Alt + Click to spawn a new note at cursor position (use capture phase)
@@ -325,6 +339,18 @@ export default defineContentScript({
     });
 
     async function refreshNotes() {
+      // Skip if a refresh is already running (prevents queuing storms on busy pages)
+      if (refreshInFlight) return;
+      // Skip re-anchoring entirely when tab is hidden — queue one refresh on visibility
+      if (document.hidden) {
+        document.addEventListener(
+          'visibilitychange',
+          () => { if (!document.hidden) refreshNotes(); },
+          { once: true }
+        );
+        return;
+      }
+      refreshInFlight = true;
       try {
         const settings = await loadSettings();
         const rootContainer = getOrCreateHostContainer();
@@ -351,29 +377,52 @@ export default defineContentScript({
             restoreHighlightOverlay(note.highlightRange, note.id, note.color);
           }
 
-          const resolved = resolveAnchor(note.anchor);
-          if (resolved.tier !== note.anchor.tier) {
-            note.anchor.tier = resolved.tier;
-            await updateNote(note.id, { anchor: note.anchor });
+          let resolvedX: number;
+          let resolvedY: number;
+
+          // For highlight notes, position directly from the <mark> element.
+          // This is more accurate than the anchor's element+offsetX/Y computation
+          // because the mark is inserted into the exact text position.
+          if (note.highlightRange) {
+            const markEl = document.querySelector(`mark[data-stickle-id="${note.id}"]`);
+            if (markEl) {
+              const markRect = markEl.getBoundingClientRect();
+              const bodyRect = (document.body || document.documentElement).getBoundingClientRect();
+              const sx = window.scrollX;
+              const sy = window.scrollY;
+              resolvedX = Math.max(10, sx + markRect.left - (sx + bodyRect.left));
+              resolvedY = Math.max(10, sy + markRect.top - (sy + bodyRect.top));
+            } else {
+              const resolved = resolveAnchor(note.anchor);
+              resolvedX = resolved.x;
+              resolvedY = resolved.y;
+            }
+          } else {
+            const resolved = resolveAnchor(note.anchor);
+            if (resolved.tier !== note.anchor.tier) {
+              note.anchor.tier = resolved.tier;
+              await updateNote(note.id, { anchor: note.anchor });
+            }
+            resolvedX = resolved.x;
+            resolvedY = resolved.y;
           }
+
           const wrapper = mountedNotes.get(note.id);
           const isFocused = wrapper && wrapper.contains(document.activeElement);
           if (!isFocused) {
-            renderNoteWrapper(note, resolved.x, resolved.y);
+            renderNoteWrapper(note, resolvedX, resolvedY);
           }
         }
       } catch (err) {
         console.error('[Stickle] Failed to load notes:', err);
+      } finally {
+        refreshInFlight = false;
       }
     }
 
-    if (typeof chrome !== 'undefined' && chrome.storage?.onChanged) {
-      chrome.storage.onChanged.addListener((changes, areaName) => {
-        if (areaName === 'local' && (changes.stickle_notes || changes.sticklesEnabled || changes.defaultBorderStyle)) {
-          refreshNotes();
-        }
-      });
-    }
+    // Note: the storage change listener above (line ~33) already covers stickle_notes.
+    // This block is intentionally removed to avoid the duplicate listener that caused
+    // double refreshes and compounding re-anchor storms across multiple open tabs.
 
     function renderNoteWrapper(note: StickleNote, initialX?: number, initialY?: number) {
       let wrapper = mountedNotes.get(note.id);
@@ -391,9 +440,10 @@ export default defineContentScript({
         mountedNotes.set(note.id, wrapper);
       }
 
-      const resolved = resolveAnchor(note.anchor);
-      let posX = initialX ?? resolved.x;
-      let posY = initialY ?? resolved.y;
+      // Use coords passed from refreshNotes() directly — avoids double resolveAnchor call
+      // which previously raced with layout when DOM wasn't fully painted.
+      let posX = initialX ?? note.anchor.pageX ?? 60;
+      let posY = initialY ?? note.anchor.pageY ?? 60;
 
       wrapper.style.left = `${posX}px`;
       wrapper.style.top = `${posY}px`;

@@ -178,10 +178,41 @@ This log records non-trivial decisions made during the development of Stickle.
 - **Decision:** Implemented `list_stickle_notes`, `search_stickle_notes`, `get_notes_for_url`, `add_stickle_note`, and `export_stickle_summary` returning Markdown reports and JSON data models.
 - **Rationale:** Gives AI agents complete read, search, write, and summary capabilities over browser sticky notes.
 
+---
 
+## Phase 12 — Positioning Accuracy & Multi-Tab Performance
 
+### 36. DOM Element Fingerprint for Unique Anchor Identification
+- **Decision:** Added `domIndex` (absolute ordinal among all same-tag elements) and `textFingerprint` (first 60 chars of normalized text) to `NoteAnchor`. Resolution uses `querySelectorAll(domTag)[domIndex]` as a new **Tier 0** before the existing CSS selector tier.
+- **Rationale:** Pages like Wikipedia contain hundreds of `<p>` tags sharing the same `.mw-parser-output` container. The old CSS selector (`div.mw-parser-output > p:nth-of-type(3)`) was ambiguous and caused notes to snap to the wrong paragraph. `domIndex` provides an O(1) unambiguous lookup; `textFingerprint` cross-validates it and triggers a ±10 neighbour scan if the index has shifted due to content changes.
 
+### 37. Absolute Page Coordinates (pageX/pageY)
+- **Decision:** Added `pageX` and `pageY` to `NoteAnchor`, storing `scrollX + rect.left + offsetX` at creation time (scroll-independent).
+- **Rationale:** The previous coordinate system stored only element-relative offsets and recomputed absolute position via `getBoundingClientRect()` on every resolve. On Wikipedia, body margin/padding caused `bodyLeft`/`bodyTop` to be non-zero, introducing drift on each recalculation. Storing absolute coords at creation time eliminates this drift and provides a reliable fallback (Tier 4) when all DOM-based tiers fail.
 
+### 38. isDomPainted() Guard on resolveAnchor
+- **Decision:** Added a `isDomPainted()` check at the top of `resolveAnchor()`. If the DOM is not yet fully laid out (readyState not complete/interactive, or probe element has zero dimensions), resolution skips `getBoundingClientRect()` and returns `pageX`/`pageY` directly.
+- **Rationale:** `refreshNotes()` was called immediately on content script injection, before the browser had painted the page. All elements returned `getBoundingClientRect() = {0,0}`, placing every stickle at the top-left corner. They then redistributed after the first `MutationObserver` callback. The guard eliminates this accumulation artefact.
+
+### 39. Deferred Initial Load via scheduleInitialRefresh
+- **Decision:** Replaced `await refreshNotes()` on injection with `scheduleInitialRefresh()`, which calls `refreshNotes()` immediately if `readyState === 'complete'`, or waits for the `load` event otherwise.
+- **Rationale:** Complements the `isDomPainted()` guard by ensuring the initial anchor resolution is not attempted before the DOM is available, without adding an arbitrary `setTimeout`.
+
+### 40. Structural-Only MutationObserver (Remove characterData)
+- **Decision:** Removed `characterData: true` from the `MutationObserver` options and changed the trigger condition from `!isInternalMutation` (all mutations) to `hasStructuralChange` (`childList` mutations only).
+- **Rationale:** Wikipedia uses `characterData` DOM mutations to update its scrolling TOC section highlight on every scroll event. This caused `debouncedReanchor()` to fire constantly as the user scrolled, triggering unnecessary `getBoundingClientRect()` calls and producing coordinate drift mid-scroll. Filtering to structural changes only eliminates this noise.
+
+### 41. In-Flight Guard & Visibility-Aware Refresh
+- **Decision:** Added `refreshInFlight` boolean flag and `document.hidden` check to `refreshNotes()`. When a refresh is in-flight, subsequent calls are no-ops. When the tab is hidden, refresh is deferred until the next `visibilitychange` event.
+- **Rationale:** With multiple tabs open, each tab's `MutationObserver` and `chrome.storage.onChanged` listener could stack up concurrent `refreshNotes()` calls. The in-flight guard prevents these from compounding. The visibility check prevents hidden tabs from performing expensive DOM traversal (Tiers 2 & 3) while the user is on a different tab, keeping background CPU usage near zero.
+
+### 42. Removed Duplicate chrome.storage.onChanged Listener
+- **Decision:** Removed the second `chrome.storage.onChanged` listener (lines 370–376) that was registered inside `main()` after `refreshNotes()` was already defined. The first listener (lines 33–39) remains.
+- **Rationale:** Both listeners triggered `refreshNotes()` on `stickle_notes` changes, causing every storage write to fire two refreshes — doubling DOM traversal work and triggering the accumulation bug twice on each note create/update.
+
+### 43. Removed Redundant resolveAnchor Call in renderNoteWrapper
+- **Decision:** Removed the `resolveAnchor(note.anchor)` call inside `renderNoteWrapper()` and replaced the `initialX ?? resolved.x` pattern with `initialX ?? note.anchor.pageX ?? 60`.
+- **Rationale:** `renderNoteWrapper()` received `initialX`/`initialY` from `refreshNotes()`, which had already called `resolveAnchor()`. The internal re-resolve was redundant and, when called during the not-yet-painted phase, returned `(0,0)` — overriding the correct coords passed in from the caller.
 
 
 
