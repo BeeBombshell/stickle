@@ -2,6 +2,8 @@ export type AnchorTier = 'selector' | 'text-fragment' | 'fuzzy' | 'unanchored';
 
 export type NoteColorBlock = 'lime' | 'lilac' | 'cream' | 'mint' | 'pink' | 'coral' | 'blue';
 
+export type NoteBorderStyle = 'none' | 'dashed' | 'solid';
+
 export interface NoteAnchor {
   cssSelector: string;
   textPrefix?: string;
@@ -31,6 +33,7 @@ export interface StickleNote {
   syncedToNotion: boolean;
   notionPageId?: string;
   color?: NoteColorBlock;
+  borderStyle?: NoteBorderStyle;
   collapsed?: boolean;
   highlightRange?: NoteHighlightRange;
   tags?: string[];

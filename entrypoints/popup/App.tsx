@@ -2,7 +2,7 @@ import { useState, useEffect } from 'preact/hooks';
 import type { StickleNote } from '../../lib/types';
 import { getAllNotes } from '../../lib/db';
 import { NoteSidebar } from '../../components/NoteSidebar';
-import { Settings } from '../../components/Settings';
+import { Settings, loadSettings, saveSettings } from '../../components/Settings';
 import { exportNotesToJson, importNotesFromJson } from '../../lib/export-import';
 import posthog from '../../lib/posthog';
 
@@ -15,11 +15,15 @@ export function App() {
   const [currentTabUrl, setCurrentTabUrl] = useState<string>('');
   const [pingStatus, setPingStatus] = useState<string>('Connecting...');
   const [statusMsg, setStatusMsg] = useState<string | null>(null);
+  const [enabled, setEnabled] = useState<boolean>(true);
 
   const reloadNotes = async () => {
     try {
       const all = await getAllNotes();
       setNotes(all);
+
+      const s = await loadSettings();
+      if (s.enabled !== undefined) setEnabled(s.enabled);
 
       if (typeof chrome !== 'undefined' && chrome.tabs) {
         chrome.tabs.query({ active: true, currentWindow: true }, (tabs) => {
@@ -35,6 +39,14 @@ export function App() {
     } catch (err) {
       console.error('[Stickle Popup] Failed to load notes:', err);
     }
+  };
+
+  const handleToggleEnabled = async () => {
+    const next = !enabled;
+    setEnabled(next);
+    const config = await loadSettings();
+    await saveSettings({ ...config, enabled: next });
+    setStatusMsg(next ? 'Stickles enabled on webpages' : 'Stickles disabled on webpages');
   };
 
   useEffect(() => {
@@ -120,12 +132,21 @@ export function App() {
       {/* Header Bar */}
       <header style={popupStyles.header}>
         <div style={popupStyles.logoLockup}>
-          {/* Anchor Pin Mark SVG */}
-          <svg width="22" height="22" viewBox="0 0 44 44" fill="none" xmlns="http://www.w3.org/2000/svg">
-            <rect width="44" height="44" rx="10" fill="#1A1A1A" />
-            <circle cx="31" cy="31" r="9" fill="#FFFFFF" />
-            <circle cx="31" cy="31" r="3.5" fill="#1A1A1A" />
-          </svg>
+          <div style={{
+            width: '24px',
+            height: '24px',
+            borderRadius: '6px',
+            backgroundColor: '#111111',
+            display: 'inline-flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            flexShrink: 0,
+          }}>
+            <svg width="18" height="18" viewBox="0 0 18 18" fill="none">
+              <circle cx="13" cy="13" r="5" fill="white" opacity="0.95" />
+              <circle cx="13" cy="13" r="2" fill="#111111" />
+            </svg>
+          </div>
           <span style={popupStyles.wordmark}>stickle</span>
           {/* Simple Green Dot Status Indicator */}
           <span style={popupStyles.statusDot} title={`Background Worker: ${pingStatus}`} />
@@ -133,6 +154,27 @@ export function App() {
 
         {/* Header Promo Action Buttons */}
         <div style={{ display: 'flex', gap: '5px', alignItems: 'center' }}>
+          <button
+            onClick={handleToggleEnabled}
+            title={enabled ? 'Stickles are ON. Click to disable.' : 'Stickles are OFF. Click to enable.'}
+            style={{
+              display: 'inline-flex',
+              alignItems: 'center',
+              gap: '4px',
+              padding: '3px 8px',
+              borderRadius: '12px',
+              fontSize: '10px',
+              fontWeight: '700',
+              backgroundColor: enabled ? '#dcfce7' : '#fee2e2',
+              color: enabled ? '#15803d' : '#b91c1c',
+              border: enabled ? '1px solid #bbf7d0' : '1px solid #fca5a5',
+              cursor: 'pointer',
+              transition: 'all 0.15s ease',
+            }}
+          >
+            <span style={{ width: '6px', height: '6px', borderRadius: '50%', backgroundColor: enabled ? '#16a34a' : '#ef4444' }} />
+            {enabled ? 'ON' : 'OFF'}
+          </button>
           <label style={popupStyles.headerPromoBtn} title="Import notes from JSON format">
             <svg
               width="12"

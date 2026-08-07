@@ -1,14 +1,14 @@
 import { useState, useEffect, useRef } from 'preact/hooks';
-import type { StickleNote, AnchorTier, NoteColorBlock } from '../lib/types';
+import type { StickleNote, AnchorTier, NoteColorBlock, NoteBorderStyle } from '../lib/types';
 
-export const COLOR_SWATCHES: Record<NoteColorBlock, { name: string; bg: string; text: string }> = {
-  lime: { name: 'Lime', bg: '#e4f579', text: '#111111' },
-  blue: { name: 'Sky Blue', bg: '#bfdbfe', text: '#111111' },
-  lilac: { name: 'Lilac', bg: '#e8d5ff', text: '#111111' },
-  cream: { name: 'Cream', bg: '#fff7db', text: '#111111' },
-  mint: { name: 'Mint', bg: '#d1f7c4', text: '#111111' },
-  pink: { name: 'Pink', bg: '#ffd6e8', text: '#111111' },
-  coral: { name: 'Coral', bg: '#ffdbcc', text: '#111111' },
+export const COLOR_SWATCHES: Record<NoteColorBlock, { name: string; bg: string; text: string; border: string }> = {
+  lime: { name: 'Lime', bg: '#e4f579', text: '#111111', border: '#84960d' },
+  blue: { name: 'Sky Blue', bg: '#bfdbfe', text: '#111111', border: '#2563eb' },
+  lilac: { name: 'Lilac', bg: '#e8d5ff', text: '#111111', border: '#7c3aed' },
+  cream: { name: 'Cream', bg: '#fff7db', text: '#111111', border: '#d97706' },
+  mint: { name: 'Mint', bg: '#d1f7c4', text: '#111111', border: '#059669' },
+  pink: { name: 'Pink', bg: '#ffd6e8', text: '#111111', border: '#db2777' },
+  coral: { name: 'Coral', bg: '#ffdbcc', text: '#111111', border: '#ea580c' },
 };
 
 interface NoteBubbleProps {
@@ -17,6 +17,7 @@ interface NoteBubbleProps {
   onDelete?: () => void;
   onExportNotion?: () => void;
   onColorChange?: (color: NoteColorBlock) => void;
+  onBorderStyleChange?: (borderStyle: NoteBorderStyle) => void;
   onToggleCollapse?: (collapsed: boolean) => void;
   onTagsChange?: (tags: string[]) => void;
   onDragStart?: () => void;
@@ -30,13 +31,16 @@ export function NoteBubble({
   onDelete,
   onExportNotion,
   onColorChange,
+  onBorderStyleChange,
   onToggleCollapse,
   onTagsChange,
   onDragStart,
   onDrag,
   onDragEnd,
 }: NoteBubbleProps) {
-  const borderStyle = getTierBorderStyle(note.anchor.tier);
+  const noteColor = note.color || 'lime';
+  const theme = COLOR_SWATCHES[noteColor] || COLOR_SWATCHES.lime;
+  const borderStyle = getNoteBorderStyle(note.anchor.tier, noteColor, note.borderStyle);
   const [isDragging, setIsDragging] = useState(false);
   const [content, setContent] = useState(note.content);
   const [showPalette, setShowPalette] = useState(false);
@@ -45,9 +49,6 @@ export function NoteBubble({
   const [tags, setTags] = useState<string[]>(note.tags || []);
   const dragStartRef = useRef<{ x: number; y: number } | null>(null);
   const hasDraggedRef = useRef(false);
-
-  const noteColor = note.color || 'lime';
-  const theme = COLOR_SWATCHES[noteColor] || COLOR_SWATCHES.lime;
 
   useEffect(() => {
     setContent(note.content);
@@ -310,28 +311,98 @@ export function NoteBubble({
 
       {showPalette && (
         <div style={bubbleStyles.palettePopover}>
-          {(Object.keys(COLOR_SWATCHES) as NoteColorBlock[]).map((key) => (
+          <div style={{ display: 'flex', gap: '4px', alignItems: 'center' }}>
+            {(Object.keys(COLOR_SWATCHES) as NoteColorBlock[]).map((key) => (
+              <button
+                key={key}
+                onClick={() => onColorChange?.(key)}
+                title={`Color: ${COLOR_SWATCHES[key].name}`}
+                style={{
+                  width: '12px',
+                  height: '12px',
+                  borderRadius: '50%',
+                  backgroundColor: COLOR_SWATCHES[key].bg,
+                  border: noteColor === key ? '2px solid #111111' : '1px solid rgba(0,0,0,0.18)',
+                  transform: noteColor === key ? 'scale(1.2)' : 'scale(1)',
+                  transition: 'transform 0.12s ease',
+                  cursor: 'pointer',
+                  padding: 0,
+                  boxSizing: 'border-box',
+                }}
+              />
+            ))}
+          </div>
+
+          <div style={{ width: '1px', height: '12px', backgroundColor: 'rgba(0,0,0,0.12)', margin: '0 2px' }} />
+
+          <div style={{ display: 'flex', gap: '3px', alignItems: 'center' }}>
+            {/* Border None Icon */}
             <button
-              key={key}
-              onClick={() => {
-                onColorChange?.(key);
-                setShowPalette(false);
-              }}
-              title={COLOR_SWATCHES[key].name}
+              onClick={() => onBorderStyleChange?.('none')}
+              title="No Border"
               style={{
-                width: '16px',
-                height: '16px',
-                borderRadius: '50%',
-                backgroundColor: COLOR_SWATCHES[key].bg,
-                border: noteColor === key ? '2px solid #111111' : '1px solid rgba(0,0,0,0.15)',
-                transform: noteColor === key ? 'scale(1.2)' : 'scale(1)',
-                transition: 'transform 0.1s ease',
+                width: '18px',
+                height: '18px',
+                borderRadius: '4px',
+                border: note.borderStyle === 'none' ? '1.5px solid #111111' : '1px solid transparent',
+                backgroundColor: note.borderStyle === 'none' ? 'rgba(0,0,0,0.08)' : 'transparent',
+                display: 'inline-flex',
+                alignItems: 'center',
+                justifyContent: 'center',
                 cursor: 'pointer',
                 padding: 0,
-                boxSizing: 'border-box',
               }}
-            />
-          ))}
+            >
+              <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2">
+                <rect x="3" y="3" width="18" height="18" rx="3" strokeDasharray="3 3" strokeOpacity="0.3" />
+                <line x1="4" y1="20" x2="20" y2="4" stroke="#ef4444" strokeWidth="2.5" />
+              </svg>
+            </button>
+
+            {/* Border Dashed Icon */}
+            <button
+              onClick={() => onBorderStyleChange?.('dashed')}
+              title="Dashed Border"
+              style={{
+                width: '18px',
+                height: '18px',
+                borderRadius: '4px',
+                border: note.borderStyle === 'dashed' || (!note.borderStyle && note.anchor?.tier === 'text-fragment') ? '1.5px solid #111111' : '1px solid transparent',
+                backgroundColor: note.borderStyle === 'dashed' || (!note.borderStyle && note.anchor?.tier === 'text-fragment') ? 'rgba(0,0,0,0.08)' : 'transparent',
+                display: 'inline-flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                cursor: 'pointer',
+                padding: 0,
+              }}
+            >
+              <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke={theme.border} strokeWidth="2.5">
+                <rect x="3" y="3" width="18" height="18" rx="3" strokeDasharray="4 3" />
+              </svg>
+            </button>
+
+            {/* Border Solid Icon */}
+            <button
+              onClick={() => onBorderStyleChange?.('solid')}
+              title="Solid Border"
+              style={{
+                width: '18px',
+                height: '18px',
+                borderRadius: '4px',
+                border: (note.borderStyle === 'solid' || (!note.borderStyle && note.anchor?.tier !== 'text-fragment')) ? '1.5px solid #111111' : '1px solid transparent',
+                backgroundColor: (note.borderStyle === 'solid' || (!note.borderStyle && note.anchor?.tier !== 'text-fragment')) ? 'rgba(0,0,0,0.08)' : 'transparent',
+                display: 'inline-flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                cursor: 'pointer',
+                padding: 0,
+              }}
+            >
+              <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                <rect x="3" y="3" width="18" height="18" rx="3" />
+              </svg>
+            </button>
+          </div>
         </div>
       )}
 
@@ -383,17 +454,31 @@ export function NoteBubble({
   );
 }
 
-function getTierBorderStyle(tier: AnchorTier): string {
-  switch (tier) {
-    case 'selector':
-      return '1px solid rgba(0,0,0,0.15)';
-    case 'text-fragment':
-      return '2px dashed #4f46e5';
-    case 'fuzzy':
-      return '2px dotted #d97706';
-    case 'unanchored':
-      return '2px solid #dc2626';
+export function getNoteBorderStyle(
+  tier: AnchorTier,
+  color: NoteColorBlock = 'lime',
+  customBorderStyle?: NoteBorderStyle
+): string {
+  const theme = COLOR_SWATCHES[color] || COLOR_SWATCHES.lime;
+
+  if (customBorderStyle === 'none') {
+    return 'none';
   }
+  if (customBorderStyle === 'dashed') {
+    return `2px dashed ${theme.border}`;
+  }
+  if (customBorderStyle === 'solid') {
+    return `1.5px solid ${theme.border}`;
+  }
+
+  // Tier fallbacks if not explicitly set
+  if (tier === 'text-fragment') {
+    return `2px dashed ${theme.border}`;
+  }
+  if (tier === 'unanchored') {
+    return '2px solid #ef4444';
+  }
+  return `1.5px solid ${theme.border}`;
 }
 
 const chipStyles = {
@@ -510,13 +595,17 @@ const bubbleStyles = {
     gap: '6px',
     alignItems: 'center',
     justifyContent: 'center',
-    padding: '5px 8px',
+    padding: '4px 8px',
     marginBottom: '8px',
-    backgroundColor: 'rgba(255, 255, 255, 0.92)',
-    backdropFilter: 'blur(8px)',
-    borderRadius: '50px',
-    boxShadow: '0 4px 12px rgba(0, 0, 0, 0.1)',
-    border: '1px solid rgba(0, 0, 0, 0.08)',
+    backgroundColor: 'rgba(255, 255, 255, 0.94)',
+    backdropFilter: 'blur(12px)',
+    WebkitBackdropFilter: 'blur(12px)',
+    borderRadius: '24px',
+    boxShadow: '0 4px 14px rgba(0, 0, 0, 0.1)',
+    border: '1px solid rgba(255, 255, 255, 0.8)',
+    maxWidth: '100%',
+    boxSizing: 'border-box' as const,
+    overflow: 'hidden' as const,
   },
   deleteConfirmBar: {
     display: 'flex',

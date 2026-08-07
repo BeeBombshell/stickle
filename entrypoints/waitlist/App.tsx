@@ -175,6 +175,7 @@ export default function WaitlistApp() {
                     note={demoNote}
                     onSave={(updatedContent) => setDemoNote((prev) => ({ ...prev, content: updatedContent }))}
                     onColorChange={(color) => setDemoNote((prev) => ({ ...prev, color }))}
+                    onBorderStyleChange={(borderStyle) => setDemoNote((prev) => ({ ...prev, borderStyle }))}
                     onTagsChange={(tags) => setDemoNote((prev) => ({ ...prev, tags }))}
                     onToggleCollapse={(collapsed) => setDemoNote((prev) => ({ ...prev, collapsed }))}
                   />

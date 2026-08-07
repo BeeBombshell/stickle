@@ -371,6 +371,7 @@ export default function LandingApp() {
                             note={note}
                             onSave={(val) => setLandingNotes(prev => prev.map(n => n.id === note.id ? { ...n, content: val } : n))}
                             onColorChange={(col) => setLandingNotes(prev => prev.map(n => n.id === note.id ? { ...n, color: col } : n))}
+                            onBorderStyleChange={(bs) => setLandingNotes(prev => prev.map(n => n.id === note.id ? { ...n, borderStyle: bs } : n))}
                             onToggleCollapse={(coll) => setLandingNotes(prev => prev.map(n => n.id === note.id ? { ...n, collapsed: coll } : n))}
                             onTagsChange={(tags) => setLandingNotes(prev => prev.map(n => n.id === note.id ? { ...n, tags } : n))}
                             onDelete={() => setLandingNotes(prev => prev.filter(n => n.id !== note.id))}

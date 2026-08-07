@@ -292,6 +292,7 @@ export default function OnboardingApp() {
                   note={heroNote2}
                   onSave={(val) => setHeroNote2(prev => ({ ...prev, content: val }))}
                   onColorChange={(col) => setHeroNote2(prev => ({ ...prev, color: col }))}
+                  onBorderStyleChange={(bs) => setHeroNote2(prev => ({ ...prev, borderStyle: bs }))}
                   onToggleCollapse={(coll) => setHeroNote2(prev => ({ ...prev, collapsed: coll }))}
                   onTagsChange={(tags) => setHeroNote2(prev => ({ ...prev, tags }))}
                   onDragStart={() => handleHeroDragStart('hero-note-2')}
@@ -314,6 +315,7 @@ export default function OnboardingApp() {
                   note={heroNote1}
                   onSave={(val) => setHeroNote1(prev => ({ ...prev, content: val }))}
                   onColorChange={(col) => setHeroNote1(prev => ({ ...prev, color: col }))}
+                  onBorderStyleChange={(bs) => setHeroNote1(prev => ({ ...prev, borderStyle: bs }))}
                   onToggleCollapse={(coll) => setHeroNote1(prev => ({ ...prev, collapsed: coll }))}
                   onTagsChange={(tags) => setHeroNote1(prev => ({ ...prev, tags }))}
                   onDragStart={() => handleHeroDragStart('hero-note-1')}
@@ -409,6 +411,7 @@ export default function OnboardingApp() {
                         note={note}
                         onSave={(val) => setSandboxNotes(prev => prev.map(n => n.id === note.id ? { ...n, content: val } : n))}
                         onColorChange={(col) => setSandboxNotes(prev => prev.map(n => n.id === note.id ? { ...n, color: col } : n))}
+                        onBorderStyleChange={(bs) => setSandboxNotes(prev => prev.map(n => n.id === note.id ? { ...n, borderStyle: bs } : n))}
                         onToggleCollapse={(coll) => setSandboxNotes(prev => prev.map(n => n.id === note.id ? { ...n, collapsed: coll } : n))}
                         onTagsChange={(tags) => setSandboxNotes(prev => prev.map(n => n.id === note.id ? { ...n, tags } : n))}
                         onDelete={() => deleteSandboxNote(note.id)}

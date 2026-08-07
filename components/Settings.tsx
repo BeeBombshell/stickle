@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'preact/hooks';
 import { testNotionConnection } from '../lib/notion';
-import type { NoteColorBlock } from '../lib/types';
+import type { NoteColorBlock, NoteBorderStyle } from '../lib/types';
 import { COLOR_SWATCHES } from './NoteBubble';
 import { getAllNotes } from '../lib/db';
 import { exportNotesToJson, importNotesFromJson } from '../lib/export-import';
@@ -9,24 +9,57 @@ export interface NotionSettings {
   apiKey: string;
   databaseId: string;
   defaultNoteColor?: NoteColorBlock;
+  defaultBorderStyle?: NoteBorderStyle;
+  enabled?: boolean;
 }
+
+const inMemoryStorage: Record<string, string> = {};
 
 export function loadSettings(): Promise<NotionSettings> {
   return new Promise((resolve) => {
     if (typeof chrome !== 'undefined' && chrome.storage?.local) {
-      chrome.storage.local.get(['notionApiKey', 'notionDatabaseId', 'defaultNoteColor'], (res) => {
-        resolve({
-          apiKey: res.notionApiKey || '',
-          databaseId: res.notionDatabaseId || '',
-          defaultNoteColor: (res.defaultNoteColor as NoteColorBlock) || 'lime',
-        });
-      });
+      chrome.storage.local.get(
+        ['notionApiKey', 'notionDatabaseId', 'defaultNoteColor', 'defaultBorderStyle', 'sticklesEnabled'],
+        (res) => {
+          resolve({
+            apiKey: res.notionApiKey || '',
+            databaseId: res.notionDatabaseId || '',
+            defaultNoteColor: (res.defaultNoteColor as NoteColorBlock) || 'lime',
+            defaultBorderStyle: (res.defaultBorderStyle as NoteBorderStyle) || 'solid',
+            enabled: res.sticklesEnabled !== undefined ? Boolean(res.sticklesEnabled) : true,
+          });
+        }
+      );
     } else {
-      // Security: Notion API keys must never be saved in unencrypted web page localStorage.
+      let color: NoteColorBlock = 'lime';
+      let borderStyle: NoteBorderStyle = 'solid';
+      let enabled = true;
+      try {
+        if (typeof localStorage !== 'undefined' && typeof localStorage.getItem === 'function') {
+          color = (localStorage.getItem('defaultNoteColor') as NoteColorBlock) || 'lime';
+          borderStyle = (localStorage.getItem('defaultBorderStyle') as NoteBorderStyle) || 'solid';
+          const savedEnabled = localStorage.getItem('sticklesEnabled');
+          if (savedEnabled !== null) enabled = savedEnabled === 'true';
+        } else {
+          color = (inMemoryStorage['defaultNoteColor'] as NoteColorBlock) || 'lime';
+          borderStyle = (inMemoryStorage['defaultBorderStyle'] as NoteBorderStyle) || 'solid';
+          if (inMemoryStorage['sticklesEnabled'] !== undefined) {
+            enabled = inMemoryStorage['sticklesEnabled'] === 'true';
+          }
+        }
+      } catch {
+        color = (inMemoryStorage['defaultNoteColor'] as NoteColorBlock) || 'lime';
+        borderStyle = (inMemoryStorage['defaultBorderStyle'] as NoteBorderStyle) || 'solid';
+        if (inMemoryStorage['sticklesEnabled'] !== undefined) {
+          enabled = inMemoryStorage['sticklesEnabled'] === 'true';
+        }
+      }
       resolve({
         apiKey: '',
         databaseId: '',
-        defaultNoteColor: 'lime',
+        defaultNoteColor: color,
+        defaultBorderStyle: borderStyle,
+        enabled,
       });
     }
   });
@@ -35,17 +68,36 @@ export function loadSettings(): Promise<NotionSettings> {
 export function saveSettings(settings: NotionSettings): Promise<void> {
   return new Promise((resolve) => {
     const color = settings.defaultNoteColor || 'lime';
+    const borderStyle = settings.defaultBorderStyle || 'solid';
+    const enabled = settings.enabled !== undefined ? settings.enabled : true;
+
     if (typeof chrome !== 'undefined' && chrome.storage?.local) {
       chrome.storage.local.set(
         {
           notionApiKey: settings.apiKey,
           notionDatabaseId: settings.databaseId,
           defaultNoteColor: color,
+          defaultBorderStyle: borderStyle,
+          sticklesEnabled: enabled,
         },
         () => resolve()
       );
     } else {
-      // Security: Notion API keys must never be saved in unencrypted web page localStorage.
+      try {
+        if (typeof localStorage !== 'undefined' && typeof localStorage.setItem === 'function') {
+          localStorage.setItem('defaultNoteColor', color);
+          localStorage.setItem('defaultBorderStyle', borderStyle);
+          localStorage.setItem('sticklesEnabled', String(enabled));
+        } else {
+          inMemoryStorage['defaultNoteColor'] = color;
+          inMemoryStorage['defaultBorderStyle'] = borderStyle;
+          inMemoryStorage['sticklesEnabled'] = String(enabled);
+        }
+      } catch {
+        inMemoryStorage['defaultNoteColor'] = color;
+        inMemoryStorage['defaultBorderStyle'] = borderStyle;
+        inMemoryStorage['sticklesEnabled'] = String(enabled);
+      }
       resolve();
     }
   });
@@ -55,6 +107,8 @@ export function Settings() {
   const [apiKey, setApiKey] = useState('');
   const [databaseId, setDatabaseId] = useState('');
   const [defaultNoteColor, setDefaultNoteColor] = useState<NoteColorBlock>('lime');
+  const [defaultBorderStyle, setDefaultBorderStyle] = useState<NoteBorderStyle>('solid');
+  const [enabled, setEnabled] = useState<boolean>(true);
   const [isTesting, setIsTesting] = useState(false);
   const [status, setStatus] = useState<{ type: 'success' | 'error'; message: string } | null>(null);
   const [isNotionOpen, setIsNotionOpen] = useState(false);
@@ -65,6 +119,8 @@ export function Settings() {
       setApiKey(s.apiKey);
       setDatabaseId(s.databaseId);
       if (s.defaultNoteColor) setDefaultNoteColor(s.defaultNoteColor);
+      if (s.defaultBorderStyle) setDefaultBorderStyle(s.defaultBorderStyle);
+      if (s.enabled !== undefined) setEnabled(s.enabled);
     });
   }, []);
 
@@ -76,6 +132,8 @@ export function Settings() {
       apiKey: apiKey.trim(),
       databaseId: databaseId.trim(),
       defaultNoteColor,
+      defaultBorderStyle,
+      enabled,
     };
     await saveSettings(config);
 
@@ -142,6 +200,8 @@ export function Settings() {
       apiKey: apiKey.trim(),
       databaseId: databaseId.trim(),
       defaultNoteColor: key,
+      defaultBorderStyle,
+      enabled,
     });
     setStatus({
       type: 'success',
@@ -149,12 +209,91 @@ export function Settings() {
     });
   };
 
+  const handleBorderStyleSelect = async (bStyle: NoteBorderStyle) => {
+    setDefaultBorderStyle(bStyle);
+    await saveSettings({
+      apiKey: apiKey.trim(),
+      databaseId: databaseId.trim(),
+      defaultNoteColor,
+      defaultBorderStyle: bStyle,
+      enabled,
+    });
+    setStatus({
+      type: 'success',
+      message: `Default border style updated to ${bStyle}.`,
+    });
+  };
+
+  const handleToggleEnabled = async (nextEnabled: boolean) => {
+    setEnabled(nextEnabled);
+    await saveSettings({
+      apiKey: apiKey.trim(),
+      databaseId: databaseId.trim(),
+      defaultNoteColor,
+      defaultBorderStyle,
+      enabled: nextEnabled,
+    });
+    setStatus({
+      type: 'success',
+      message: nextEnabled ? 'Stickles enabled on webpages.' : 'Stickles disabled on webpages.',
+    });
+  };
+
   return (
     <div style={settingsStyles.container}>
       <h2 style={settingsStyles.title}>Preferences & Settings</h2>
       <p style={settingsStyles.subtitle}>
-        Customize your default note appearance and Notion integration.
+        Customize your default note appearance and extension behavior.
       </p>
+
+      {/* Extension Global Enable/Disable Toggle */}
+      <div style={{
+        display: 'flex',
+        justifyContent: 'space-between',
+        alignItems: 'center',
+        padding: '10px 12px',
+        backgroundColor: 'var(--color-surface-soft, rgba(0,0,0,0.03))',
+        borderRadius: 'var(--radius-md, 8px)',
+        marginBottom: '16px',
+        border: '1px solid var(--color-hairline, rgba(0,0,0,0.08))',
+      }}>
+        <div>
+          <div style={{ fontSize: '13px', fontWeight: '600', color: 'var(--color-ink)' }}>
+            Enable Stickles on Webpages
+          </div>
+          <div style={{ fontSize: '11px', color: 'var(--color-ink-muted)' }}>
+            Toggle in-page floating sticky notes on/off globally
+          </div>
+        </div>
+        <button
+          onClick={() => handleToggleEnabled(!enabled)}
+          style={{
+            position: 'relative',
+            width: '40px',
+            height: '22px',
+            borderRadius: '12px',
+            backgroundColor: enabled ? '#111111' : '#d1d5db',
+            border: 'none',
+            cursor: 'pointer',
+            transition: 'background-color 0.2s ease',
+            padding: 0,
+          }}
+        >
+          <span
+            style={{
+              position: 'absolute',
+              top: '2px',
+              left: enabled ? '20px' : '2px',
+              width: '18px',
+              height: '18px',
+              borderRadius: '50%',
+              backgroundColor: '#ffffff',
+              transition: 'left 0.2s ease',
+              boxShadow: '0 1px 3px rgba(0,0,0,0.2)',
+            }}
+          />
+        </button>
+      </div>
 
       <div style={settingsStyles.formGroup}>
         <label style={settingsStyles.label}>Default Note Theme</label>
@@ -176,6 +315,38 @@ export function Settings() {
               }}
             />
           ))}
+        </div>
+      </div>
+
+      <div style={settingsStyles.formGroup}>
+        <label style={settingsStyles.label}>Default Border Style</label>
+        <div style={{ display: 'flex', gap: '6px', marginTop: '6px', flexWrap: 'wrap' }}>
+          {[
+            { id: 'solid', label: 'Solid' },
+            { id: 'dashed', label: 'Dashed' },
+            { id: 'none', label: 'No Border' },
+          ].map((bOpt) => {
+            const isSelected = defaultBorderStyle === bOpt.id;
+            return (
+              <button
+                key={bOpt.id}
+                onClick={() => handleBorderStyleSelect(bOpt.id as NoteBorderStyle)}
+                style={{
+                  padding: '4px 10px',
+                  borderRadius: '12px',
+                  fontSize: '11px',
+                  fontWeight: isSelected ? '600' : '400',
+                  backgroundColor: isSelected ? '#111111' : 'var(--color-surface-soft, rgba(0,0,0,0.05))',
+                  color: isSelected ? '#ffffff' : 'var(--color-ink)',
+                  border: isSelected ? '1px solid #111111' : '1px solid var(--color-hairline, rgba(0,0,0,0.08))',
+                  cursor: 'pointer',
+                  transition: 'all 0.15s ease',
+                }}
+              >
+                {bOpt.label}
+              </button>
+            );
+          })}
         </div>
       </div>
 

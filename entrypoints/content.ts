@@ -6,7 +6,7 @@ import { createAnchor, resolveAnchor } from '../lib/anchoring';
 import { createNote, getNotesForUrl, updateNote, deleteNote } from '../lib/db';
 import { loadSettings } from '../components/Settings';
 import { pushNoteToNotion } from '../lib/notion';
-import type { StickleNote } from '../lib/types';
+import type { StickleNote, NoteBorderStyle } from '../lib/types';
 import {
   serializeRange,
   applyHighlightOverlay,
@@ -56,6 +56,7 @@ export default defineContentScript({
           const offsetY = Math.max(20, (window.innerHeight || 600) / 3 - rect.top);
           const anchor = createAnchor(target, offsetX, offsetY);
           const settings = await loadSettings();
+          if (settings.enabled === false) return;
           const newNote: StickleNote = {
             id: crypto.randomUUID(),
             url: normalizeUrl(window.location.href),
@@ -63,6 +64,7 @@ export default defineContentScript({
             content: '',
             anchor,
             color: settings.defaultNoteColor || 'lime',
+            borderStyle: settings.defaultBorderStyle || 'solid',
             collapsed: false,
             createdAt: Date.now(),
             updatedAt: Date.now(),
@@ -128,6 +130,8 @@ export default defineContentScript({
 
         const anchor = createAnchor(target, offsetX, offsetY);
         const settings = await loadSettings();
+        if (settings.enabled === false) return;
+
         const newNote: StickleNote = {
           id: crypto.randomUUID(),
           url: normalizeUrl(window.location.href),
@@ -135,6 +139,7 @@ export default defineContentScript({
           content: '',
           anchor,
           color: settings.defaultNoteColor || 'lime',
+          borderStyle: settings.defaultBorderStyle || 'solid',
           collapsed: false,
           createdAt: Date.now(),
           updatedAt: Date.now(),
@@ -321,6 +326,14 @@ export default defineContentScript({
 
     async function refreshNotes() {
       try {
+        const settings = await loadSettings();
+        const rootContainer = getOrCreateHostContainer();
+        if (settings.enabled === false) {
+          rootContainer.style.display = 'none';
+          return;
+        }
+        rootContainer.style.display = 'block';
+
         const notes = await getNotesForUrl(normalizeUrl(window.location.href));
         const currentIds = new Set(notes.map((n) => n.id));
 
@@ -352,6 +365,14 @@ export default defineContentScript({
       } catch (err) {
         console.error('[Stickle] Failed to load notes:', err);
       }
+    }
+
+    if (typeof chrome !== 'undefined' && chrome.storage?.onChanged) {
+      chrome.storage.onChanged.addListener((changes, areaName) => {
+        if (areaName === 'local' && (changes.stickle_notes || changes.sticklesEnabled || changes.defaultBorderStyle)) {
+          refreshNotes();
+        }
+      });
     }
 
     function renderNoteWrapper(note: StickleNote, initialX?: number, initialY?: number) {
@@ -405,6 +426,14 @@ export default defineContentScript({
           m.className = `stickle-highlight-mark stickle-highlight-${color}`;
         });
 
+        renderNoteWrapper(note, posX, posY);
+      };
+
+      const handleBorderStyleChange = async (borderStyle: NoteBorderStyle) => {
+        note.borderStyle = borderStyle;
+        note.updatedAt = Date.now();
+        await updateNote(note.id, { borderStyle, updatedAt: note.updatedAt });
+        posthog.capture('note_border_style_changed', { borderStyle });
         renderNoteWrapper(note, posX, posY);
       };
 
@@ -488,6 +517,7 @@ export default defineContentScript({
           onDelete: handleDelete,
           onExportNotion: handleExportNotion,
           onColorChange: handleColorChange,
+          onBorderStyleChange: handleBorderStyleChange,
           onToggleCollapse: handleToggleCollapse,
           onTagsChange: handleTagsChange,
           onDragStart: handleDragStart,
