@@ -1,0 +1,104 @@
+<svg width="800" height="320" viewBox="0 0 800 320" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <filter id="shadow" x="-5%" y="-5%" width="110%" height="120%" filterUnits="userSpaceOnUse">
+      <feDropShadow dx="0" dy="6" stdDeviation="10" flood-color="#000000" flood-opacity="0.06"/>
+    </filter>
+  </defs>
+
+  <!-- Ground Canvas Frame -->
+  <rect width="800" height="320" rx="16" fill="#FFFFFF" stroke="#E5E5E0" stroke-width="2"/>
+
+  <!-- Title & Subtitle -->
+  <text x="32" y="42" font-family="Inter, SF Pro Display, system-ui, sans-serif" font-size="20" font-weight="700" fill="#111111">3-Tier Resilient DOM Anchoring Pipeline</text>
+  <text x="32" y="64" font-family="Inter, SF Pro Display, system-ui, sans-serif" font-size="13" font-weight="400" fill="#666660">How Stickle guarantees sticky note persistence across page reloads, DOM mutations, and copy updates.</text>
+
+  <!-- Step 1: CSS Selector (Tier 1) -->
+  <g transform="translate(32, 90)" filter="url(#shadow)">
+    <rect width="168" height="190" rx="12" fill="#FFF7DB" stroke="#FEF08A" stroke-width="1.5"/>
+    <!-- Badge -->
+    <rect x="14" y="14" width="70" height="20" rx="10" fill="#FEF08A"/>
+    <text x="49" y="28" font-family="JetBrains Mono, monospace" font-size="9" font-weight="700" fill="#854D0E" text-anchor="middle">TIER 1</text>
+    <!-- Card Title -->
+    <text x="14" y="58" font-family="Inter, sans-serif" font-size="14" font-weight="700" fill="#111111">CSS Selector</text>
+    <!-- Code snippet -->
+    <rect x="14" y="70" width="140" height="28" rx="6" fill="#FFFFFF" stroke="#E5E5E0"/>
+    <text x="22" y="88" font-family="JetBrains Mono, monospace" font-size="10" fill="#854D0E">#hero > h1.title</text>
+    <!-- Description -->
+    <text x="14" y="118" font-family="Inter, sans-serif" font-size="11" fill="#52514E">
+      <tspan x="14" dy="0">Fastest exact DOM match</tspan>
+      <tspan x="14" dy="16">via querySelector.</tspan>
+      <tspan x="14" dy="16">Exact element match.</tspan>
+    </text>
+    <!-- Status Pill -->
+    <rect x="14" y="156" width="140" height="20" rx="4" fill="#FEF08A"/>
+    <text x="84" y="169" font-family="JetBrains Mono, monospace" font-size="9" font-weight="700" fill="#854D0E" text-anchor="middle">⚡ 99.8% Precision</text>
+  </g>
+
+  <!-- Arrow 1 -> 2 -->
+  <g transform="translate(210, 175)">
+    <path d="M 0 0 L 16 0" stroke="#A1A1AA" stroke-width="2" stroke-dasharray="3 3"/>
+    <polygon points="16,-4 24,0 16,4" fill="#71717A"/>
+  </g>
+
+  <!-- Step 2: Text Fragment (Tier 2) -->
+  <g transform="translate(242, 90)" filter="url(#shadow)">
+    <rect width="168" height="190" rx="12" fill="#E8D5FF" stroke="#D8B4FE" stroke-width="1.5"/>
+    <rect x="14" y="14" width="70" height="20" rx="10" fill="#D8B4FE"/>
+    <text x="49" y="28" font-family="JetBrains Mono, monospace" font-size="9" font-weight="700" fill="#581C87" text-anchor="middle">TIER 2</text>
+    <text x="14" y="58" font-family="Inter, sans-serif" font-size="14" font-weight="700" fill="#111111">Text Fragment</text>
+    <rect x="14" y="70" width="140" height="28" rx="6" fill="#FFFFFF" stroke="#E5E5E0"/>
+    <text x="22" y="88" font-family="JetBrains Mono, monospace" font-size="10" fill="#581C87">prefix:exact:suffix</text>
+    <text x="14" y="118" font-family="Inter, sans-serif" font-size="11" fill="#52514E">
+      <tspan x="14" dy="0">W3C Text Quote match.</tspan>
+      <tspan x="14" dy="16">Survives class/id</tspan>
+      <tspan x="14" dy="16">layout refactors.</tspan>
+    </text>
+    <rect x="14" y="156" width="140" height="20" rx="4" fill="#D8B4FE"/>
+    <text x="84" y="169" font-family="JetBrains Mono, monospace" font-size="9" font-weight="700" fill="#581C87" text-anchor="middle">🛡️ Layout Resilient</text>
+  </g>
+
+  <!-- Arrow 2 -> 3 -->
+  <g transform="translate(420, 175)">
+    <path d="M 0 0 L 16 0" stroke="#A1A1AA" stroke-width="2" stroke-dasharray="3 3"/>
+    <polygon points="16,-4 24,0 16,4" fill="#71717A"/>
+  </g>
+
+  <!-- Step 3: Fuzzy Match (Tier 3) -->
+  <g transform="translate(452, 90)" filter="url(#shadow)">
+    <rect width="168" height="190" rx="12" fill="#E4F579" stroke="#CBE636" stroke-width="1.5"/>
+    <rect x="14" y="14" width="70" height="20" rx="10" fill="#CBE636"/>
+    <text x="49" y="28" font-family="JetBrains Mono, monospace" font-size="9" font-weight="700" fill="#3D4400" text-anchor="middle">TIER 3</text>
+    <text x="14" y="58" font-family="Inter, sans-serif" font-size="14" font-weight="700" fill="#111111">Fuzzy Search</text>
+    <rect x="14" y="70" width="140" height="28" rx="6" fill="#FFFFFF" stroke="#E5E5E0"/>
+    <text x="22" y="88" font-family="JetBrains Mono, monospace" font-size="10" fill="#3D4400">Levenshtein similarity</text>
+    <text x="14" y="118" font-family="Inter, sans-serif" font-size="11" fill="#2B3000">
+      <tspan x="14" dy="0">Sub-string similarity.</tspan>
+      <tspan x="14" dy="16">Survives minor copy</tspan>
+      <tspan x="14" dy="16">edits and typos.</tspan>
+    </text>
+    <rect x="14" y="156" width="140" height="20" rx="4" fill="#CBE636"/>
+    <text x="84" y="169" font-family="JetBrains Mono, monospace" font-size="9" font-weight="700" fill="#3D4400" text-anchor="middle">🔍 Copy-Edit Safe</text>
+  </g>
+
+  <!-- Arrow 3 -> 4 -->
+  <g transform="translate(630, 175)">
+    <path d="M 0 0 L 16 0" stroke="#A1A1AA" stroke-width="2" stroke-dasharray="3 3"/>
+    <polygon points="16,-4 24,0 16,4" fill="#71717A"/>
+  </g>
+
+  <!-- Step 4: Graceful Degrade (Tier 4) -->
+  <g transform="translate(662, 90)" filter="url(#shadow)">
+    <rect width="106" height="190" rx="12" fill="#F4F4F5" stroke="#E4E4E7" stroke-width="1.5"/>
+    <rect x="10" y="14" width="86" height="20" rx="10" fill="#E4E4E7"/>
+    <text x="53" y="28" font-family="JetBrains Mono, monospace" font-size="9" font-weight="700" fill="#52525B" text-anchor="middle">FALLBACK</text>
+    <text x="10" y="58" font-family="Inter, sans-serif" font-size="12" font-weight="700" fill="#111111">Unanchored</text>
+    <text x="10" y="80" font-family="Inter, sans-serif" font-size="10" fill="#52525B">
+      <tspan x="10" dy="0">Pinned to page</tspan>
+      <tspan x="10" dy="14">bottom-right.</tspan>
+      <tspan x="10" dy="14">Never loses</tspan>
+      <tspan x="10" dy="14">your note!</tspan>
+    </text>
+    <rect x="10" y="156" width="86" height="20" rx="4" fill="#E4E4E7"/>
+    <text x="53" y="169" font-family="JetBrains Mono, monospace" font-size="8" font-weight="700" fill="#52525B" text-anchor="middle">📌 Safe Pin</text>
+  </g>
+</svg>

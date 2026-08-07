@@ -177,7 +177,7 @@ const ADD_NOTE_TOOL: Tool = {
       },
       color: {
         type: 'string',
-        enum: ['lime', 'lilac', 'cream', 'mint', 'pink', 'coral', 'navy'],
+        enum: ['lime', 'lilac', 'cream', 'mint', 'pink', 'coral', 'blue'],
         description: 'Optional note color theme',
       },
     },

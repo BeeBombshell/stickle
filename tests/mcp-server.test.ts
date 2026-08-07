@@ -47,7 +47,7 @@ describe('Phase 11: MCP Server Integration', () => {
       pageTitle: 'GitHub - facebook/react',
       content: 'The library for web and native user interfaces.',
       anchor: { cssSelector: 'body', offsetX: 0, offsetY: 0, tier: 'unanchored' },
-      color: 'navy',
+      color: 'lilac',
       tags: ['code', 'frontend'],
       createdAt: 1700000100000,
       updatedAt: 1700000100000,

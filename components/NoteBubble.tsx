@@ -249,7 +249,7 @@ export function NoteBubble({
                 height: '11px',
                 borderRadius: '50%',
                 backgroundColor: theme.bg,
-                border: noteColor === 'navy' ? '1.5px solid #ffffff' : '1.5px solid rgba(0,0,0,0.35)',
+                border: '1.5px solid rgba(0,0,0,0.35)',
                 boxSizing: 'border-box',
               }}
             />

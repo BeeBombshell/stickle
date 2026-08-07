@@ -64,7 +64,7 @@ describe('Phase 6: Note Customization & Collapsible UI', () => {
 
     await createNote(note);
 
-    // Update color to navy and collapse
+    // Update color to lilac and collapse
     await updateNote('test-custom-2', { color: 'lilac', collapsed: true });
 
     const all = await getAllNotes();

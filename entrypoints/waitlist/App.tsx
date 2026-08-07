@@ -31,9 +31,10 @@ export default function WaitlistApp() {
     content: 'Alt + Click pinned this note directly to the DOM element. Notes survive reloads, re-renders, and revisits.',
     anchor: {
       cssSelector: 'h1.hero-title',
-      textQuote: { exact: 'Be first in line when Stickle launches' },
+      exactText: 'Be first in line when Stickle launches',
       tier: 'selector',
-      path: '/html/body/main/h1',
+      offsetX: 0,
+      offsetY: 0,
     },
     color: 'lime',
     tags: ['research', 'dom-anchoring'],
