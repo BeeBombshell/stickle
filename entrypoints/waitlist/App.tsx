@@ -1,5 +1,5 @@
 import { useState } from 'preact/hooks';
-import { WaitlistForm } from '../landing/WaitlistForm';
+import { WaitlistForm } from '../index/WaitlistForm';
 import { NoteBubble } from '../../components/NoteBubble';
 import type { StickleNote, NoteColorBlock } from '../../lib/types';
 
@@ -48,7 +48,7 @@ export default function WaitlistApp() {
   };
 
   const goHome = () => {
-    window.location.href = '/landing.html';
+    window.location.href = '/';
   };
 
   return (
@@ -68,9 +68,9 @@ export default function WaitlistApp() {
           </div>
 
           <div style={s.navLinks}>
-            <a href="/landing.html" style={s.navLink}>Home</a>
-            <a href="/landing.html#features" style={s.navLink}>Features</a>
-            <a href="/landing.html#pricing" style={s.navLink}>Pricing</a>
+            <a href="/" style={s.navLink}>Home</a>
+            <a href="/#features" style={s.navLink}>Features</a>
+            <a href="/#pricing" style={s.navLink}>Pricing</a>
             <a href="/privacy.html" style={s.navLink}>Privacy</a>
           </div>
 
@@ -313,7 +313,7 @@ export default function WaitlistApp() {
               </p>
             </div>
             <div>
-              <a href="/landing.html" style={s.footerLink}>Home</a>
+              <a href="/" style={s.footerLink}>Home</a>
               <a href="/waitlist.html" style={s.footerLink}>Waitlist</a>
               <a href="/privacy.html" style={s.footerLink}>Privacy Policy</a>
               <a href="https://github.com/BeeBombshell/stickle" target="_blank" rel="noreferrer" style={s.footerLink}>GitHub Repository ↗</a>

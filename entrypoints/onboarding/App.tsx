@@ -148,9 +148,9 @@ export default function OnboardingApp() {
 
   const openLandingPage = () => {
     if (typeof chrome !== 'undefined' && chrome.tabs) {
-      chrome.tabs.create({ url: chrome.runtime.getURL('landing.html') });
+      chrome.tabs.create({ url: chrome.runtime.getURL('index.html') });
     } else {
-      window.open('/landing.html', '_blank');
+      window.open('/', '_blank');
     }
   };
 

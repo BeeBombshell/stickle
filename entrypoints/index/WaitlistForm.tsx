@@ -205,7 +205,7 @@ const styles = {
   },
   pillToggle: {
     padding: '8px 16px',
-    borderRadius: 50, // {rounded.pill}
+    borderRadius: 50,
     fontSize: 13,
     fontWeight: 500,
     cursor: 'pointer',
@@ -230,7 +230,7 @@ const styles = {
     padding: '12px 18px',
     fontSize: 15,
     fontFamily: 'inherit',
-    borderRadius: 50, // {rounded.pill}
+    borderRadius: 50,
     border: '1px solid #e5e5e0',
     backgroundColor: '#ffffff',
     color: '#111111',
@@ -244,7 +244,7 @@ const styles = {
     fontSize: 15,
     fontWeight: 600,
     padding: '12px 26px',
-    borderRadius: 50, // {rounded.pill}
+    borderRadius: 50,
     border: 'none',
     cursor: 'pointer',
     whiteSpace: 'nowrap' as const,
@@ -263,8 +263,6 @@ const styles = {
     marginTop: 16,
     textAlign: 'center' as const,
   },
-
-  // Success Box styles
   successBox: {
     backgroundColor: '#ffffff',
     borderRadius: 24,

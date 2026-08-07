@@ -392,9 +392,9 @@ export function Settings() {
             style={{ flex: 1, minWidth: '90px', fontSize: '11px', padding: '6px 8px' }}
             onClick={() => {
               if (typeof chrome !== 'undefined' && chrome.tabs) {
-                chrome.tabs.create({ url: chrome.runtime.getURL('landing.html') });
+                chrome.tabs.create({ url: chrome.runtime.getURL('index.html') });
               } else {
-                window.open('/landing.html', '_blank');
+                window.open('/', '_blank');
               }
             }}
           >
