@@ -1,4 +1,4 @@
-import type { Metadata } from "next";
+import type { Metadata, Viewport } from "next";
 import { Inter, JetBrains_Mono } from "next/font/google";
 import Link from "next/link";
 import "./globals.css";
@@ -14,8 +14,58 @@ const jetbrainsMono = JetBrains_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "Stickle — Web Dashboard",
-  description: "Search, filter, and manage your anchored web notes across every device.",
+  title: {
+    default: "Stickle — Web Dashboard & Annotation Explorer",
+    template: "%s | Stickle",
+  },
+  description:
+    "Leave notes in the margins of the web. Search, filter, and manage persistent anchored web sticky notes across every device.",
+  keywords: [
+    "stickle",
+    "web notes",
+    "browser annotations",
+    "dom anchoring",
+    "cross device sync",
+    "notion export",
+    "mcp server",
+    "claude desktop",
+    "local first",
+  ],
+  icons: {
+    icon: [
+      { url: "/icon.svg", type: "image/svg+xml" },
+    ],
+    shortcut: "/icon.svg",
+    apple: "/icon.svg",
+  },
+  openGraph: {
+    title: "Stickle — Web Dashboard & Annotation Explorer",
+    description:
+      "Leave notes in the margins of the web. Search, filter, and manage persistent anchored web sticky notes across every device.",
+    url: "https://stickle.app/notes",
+    siteName: "Stickle",
+    images: [
+      {
+        url: "/og-image.svg",
+        width: 1200,
+        height: 630,
+        alt: "Stickle — Web Dashboard & Cross-Device Notes",
+      },
+    ],
+    locale: "en_US",
+    type: "website",
+  },
+  twitter: {
+    card: "summary_large_image",
+    title: "Stickle — Web Dashboard & Annotation Explorer",
+    description:
+      "Leave notes in the margins of the web. Search, filter, and manage persistent anchored web sticky notes across every device.",
+    images: ["/og-image.svg"],
+  },
+};
+
+export const viewport: Viewport = {
+  themeColor: "#111111",
 };
 
 export default function RootLayout({
@@ -29,12 +79,14 @@ export default function RootLayout({
         {/* Sticky Nav Bar strictly matching landing & onboarding pages */}
         <nav className="sticky top-0 z-50 bg-white border-b border-[#e5e5e0] h-[56px] flex items-center">
           <div className="max-w-[1280px] w-full mx-auto px-6 flex items-center justify-between">
-            {/* Logo Lockup */}
+            {/* Logo Lockup with White Anchor Pin Dot */}
             <Link href="/notes" className="flex items-center gap-2.5 text-decoration-none group">
-              <div className="w-9 h-9 bg-[#111111] rounded-[10px] flex items-center justify-center transition-transform group-hover:scale-105">
-                <svg width="20" height="20" viewBox="0 0 20 20" fill="none">
-                  <circle cx="14" cy="14" r="5" fill="white" opacity="0.9" />
-                  <circle cx="14" cy="14" r="2" fill="#111" />
+              <div className="w-9 h-9 bg-[#111111] rounded-[10px] flex items-center justify-center transition-transform group-hover:scale-105 relative">
+                {/* SVG Anchor Pin Mark with White Dot */}
+                <svg width="20" height="20" viewBox="0 0 44 44" fill="none">
+                  <rect width="44" height="44" rx="10" fill="#111111"/>
+                  <circle cx="31" cy="31" r="9" fill="#FFFFFF"/>
+                  <circle cx="31" cy="31" r="3.5" fill="#111111"/>
                 </svg>
               </div>
               <span className="text-[20px] font-extrabold tracking-[-0.8px] text-[#111111] font-sans">
