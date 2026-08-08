@@ -264,3 +264,12 @@ This log records non-trivial decisions made during the development of Stickle.
 - **Decision:** Added full site metadata (`title`, `description`, `keywords`, `themeColor: #111111`) with Next.js 15 App Router Metadata API, along with OpenGraph (`/og-image.svg`) preview cards and SVG favicons (`/icon.svg`) featuring the official white anchor pin dot on a dark tile (`#111111`).
 - **Rationale:** Ensures high-converting social sharing cards on Twitter/LinkedIn and sharp icon branding in browser tabs.
 
+---
+
+## Phase 15 — Hosted Remote MCP Server (HTTP/SSE)
+
+### 55. Hono-Based Standalone Remote MCP Architecture & Bearer API Key Auth
+- **Decision:** Built `remote-mcp/` as a standalone Hono microservice supporting HTTP/SSE transport (`GET /sse`, `POST /message`) via `@modelcontextprotocol/sdk`. Authenticates Bearer API keys (`sk_stickle_...`) by validating SHA-256 hashes against `public.api_keys` in Supabase using the service role key. Implemented 6 MCP tools: `list_stickle_notes`, `search_stickle_notes`, `get_notes_for_url`, `add_stickle_note`, `export_stickle_summary`, and `get_team_activity_timeline`. Included Cloudflare Workers (`wrangler.toml`) and self-hosting documentation (`README.md`).
+- **Rationale:** Enables AI assistants (Claude Desktop, Cursor, Antigravity) to query, search, create, and summarize web sticky notes over HTTPS without requiring the browser extension or a local stdio process to be running on the user's machine.
+
+

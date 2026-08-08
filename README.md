@@ -95,9 +95,10 @@ Location: `~/Library/Application Support/Claude/claude_desktop_config.json` (mac
 - **Command**: `npx`
 - **Arguments**: `tsx /absolute/path/to/stickle/mcp-server/index.ts`
 
-### Local Data Sync
-- The MCP server reads and updates notes stored at `~/.stickle/notes.json` *(or custom path set via `STICKLE_NOTES_PATH`)*.
-- Click **Export Notes (.json)** in the extension popup (or Settings) to sync your browser notes to `~/.stickle/notes.json`.
+### Local Data Sync (Free Tier)
+- The local MCP server reads and updates notes stored locally at `~/.stickle/notes.json` *(or custom path set via `STICKLE_NOTES_PATH`)*.
+- **Local Setup Requirement**: On the free plan, both the Stickle Chrome Extension and the local MCP server run locally on your machine. Install the extension in Chrome and click **Export Notes (.json)** in the extension popup (or enable local file sync) to sync your browser notes to `~/.stickle/notes.json` for AI tool access.
+- *For remote, cross-device MCP access over HTTPS without local extension requirements, see [remote-mcp/README.md](file:///Users/bhavya/dev/showcase/stickle/remote-mcp/README.md).*
 
 ---
 
