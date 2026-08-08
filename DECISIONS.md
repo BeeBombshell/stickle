@@ -246,8 +246,21 @@ This log records non-trivial decisions made during the development of Stickle.
 
 ---
 
-## Phase 17 — Monetization & Localized Pricing
+## Phase 14 — Central Web Dashboard & Site Metadata
 
-### 44. Dodo Payments Integration & Localized Display Pricing
-- **Decision:** Selected Dodo Payments as the Merchant of Record (MoR) for global payments, tax/VAT handling, and localized multi-currency display pricing (USD $29, EUR €27, GBP £24, INR ₹2,399, CAD C$39, AUD A$44, BRL R$149, JPY ¥4,200) with automatic IP/locale location auto-detection (`detectUserCurrency()`).
-- **Rationale:** Dodo Payments provides built-in global MoR compliance and seamless regional purchasing power pricing out-of-the-box, ensuring optimized conversion rates across global developer and researcher audiences.
+### 51. Standalone Next.js 15 App Router Architecture (`dashboard/`)
+- **Decision:** Scaffolded the Central Web Dashboard in a separate top-level `dashboard/` directory using Next.js 15 App Router, TypeScript, and TailwindCSS with `@supabase/ssr`.
+- **Rationale:** Ensures 100% decoupling between the Chrome extension bundle (`.output/chrome-mv3`, ~153KB) and the web app, maintaining zero bundle inflation or execution latency for extension users.
+
+### 52. Strict Design Tokens & Holygrail Page Alignment
+- **Decision:** Applied the exact `styles/design-tokens.css` system tokens across the dashboard (`display-lg`, `subhead`, `card-title`, `eyebrow`, `.color-block`, `.btn-pill`, `.btn-primary`, `.btn-secondary`, `.btn-lime`). Aligned navbar logo lockups, fonts (`Inter` + `JetBrains Mono`), and button pill radiuses with landing (`index.html`) and onboarding (`onboarding.html`) pages.
+- **Rationale:** Guarantees a cohesive, editorial black-and-white marketing frame with signature pastel color blocks and signature Block Lime (`#e4f579`) active accents.
+
+### 53. Signature Lime Accent Active States & Iconography
+- **Decision:** Styled all active navigation pills, active domain filters, search result counters, active tag badges, and timeline live-pulse indicators with signature Block Lime (`#e4f579`).
+- **Rationale:** Enforces `DESIGN.md` guidelines for active tab states and brand accent identity across the web dashboard UI.
+
+### 54. SEO Metadata, OpenGraph Cards, and SVG Favicon Suite
+- **Decision:** Added full site metadata (`title`, `description`, `keywords`, `themeColor: #111111`) with Next.js 15 App Router Metadata API, along with OpenGraph (`/og-image.svg`) preview cards and SVG favicons (`/icon.svg`) featuring the official white anchor pin dot on a dark tile (`#111111`).
+- **Rationale:** Ensures high-converting social sharing cards on Twitter/LinkedIn and sharp icon branding in browser tabs.
+
