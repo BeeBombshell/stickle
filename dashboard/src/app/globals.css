@@ -1,0 +1,39 @@
+@import "tailwindcss";
+
+:root {
+  --background: #f8f8f6;
+  --foreground: #111111;
+  
+  /* Stickle DESIGN.md Palette Tokens */
+  --color-block-lime: #e4f579;
+  --color-block-lilac: #e8d5ff;
+  --color-block-cream: #fffbeb;
+  --color-block-mint: #d1f7c4;
+  --color-block-pink: #ffd6e8;
+  --color-block-coral: #ffe4e6;
+  --color-block-navy: #111111;
+  --color-surface-soft: #f8f8f6;
+  --color-hairline: #e5e5e5;
+}
+
+body {
+  background-color: var(--background);
+  color: var(--foreground);
+  font-family: var(--font-sans), Inter, system-ui, -apple-system, sans-serif;
+  -webkit-font-smoothing: antialiased;
+}
+
+/* Custom Utility Classes matching DESIGN.md */
+.bg-block-lime { background-color: var(--color-block-lime); }
+.bg-block-lilac { background-color: var(--color-block-lilac); }
+.bg-block-cream { background-color: var(--color-block-cream); }
+.bg-block-mint { background-color: var(--color-block-mint); }
+.bg-block-pink { background-color: var(--color-block-pink); }
+.bg-block-coral { background-color: var(--color-block-coral); }
+.bg-block-navy { background-color: var(--color-block-navy); }
+
+.border-hairline { border-color: var(--color-hairline); }
+
+.font-mono {
+  font-family: var(--font-mono), "JetBrains Mono", SFMono-Regular, Consolas, monospace;
+}
