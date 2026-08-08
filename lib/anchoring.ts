@@ -125,6 +125,7 @@ export function createAnchor(element: Element, offsetX: number, offsetY: number)
     typeof document !== 'undefined' ? Array.from(document.querySelectorAll(domTag)) : [];
   const domIndex = allSameTag.indexOf(element);
   const textFingerprint = rawText.slice(0, 60).replace(/\s+/g, ' ').trim() || undefined;
+  const anchoredText = rawText.replace(/\s+/g, ' ').trim().slice(0, 250) || undefined;
 
   return {
     cssSelector,
@@ -138,6 +139,7 @@ export function createAnchor(element: Element, offsetX: number, offsetY: number)
     domIndex: domIndex >= 0 ? domIndex : undefined,
     domTag: domIndex >= 0 ? domTag : undefined,
     textFingerprint,
+    anchoredText,
     tier: 'selector',
   };
 }

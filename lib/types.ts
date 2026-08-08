@@ -21,6 +21,8 @@ export interface NoteAnchor {
   domTag?: string;
   /** First 60 chars of element's normalized text — used to validate domIndex on restore */
   textFingerprint?: string;
+  /** Full/truncated snippet of webpage element text the note was attached to */
+  anchoredText?: string;
   tier: AnchorTier;
 }
 
@@ -49,6 +51,8 @@ export interface StickleNote {
   collapsed?: boolean;
   highlightRange?: NoteHighlightRange;
   tags?: string[];
+  /** Snippet of webpage element text the note was anchored to (for LLM/MCP reference) */
+  anchoredText?: string;
   // Cloud Sync & Multi-device fields
   syncStatus?: SyncStatus;
   cloudId?: string;

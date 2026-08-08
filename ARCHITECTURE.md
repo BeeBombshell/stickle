@@ -29,6 +29,7 @@ export interface NoteAnchor {
   domIndex?: number;         // Tier 0: index among all same-tag elements (e.g. 47th <p>)
   domTag?: string;           // Tag name for domIndex lookup (e.g. 'p', 'li')
   textFingerprint?: string;  // Tier 0: first 60 chars of element text — validates domIndex
+  anchoredText?: string;     // Target element text snippet (exposed to MCP AI agents & dashboard)
   tier: AnchorTier;          // 'selector' | 'text-fragment' | 'fuzzy' | 'unanchored'
 }
 ```
