@@ -60,54 +60,68 @@ function setStorageNotes(notes: StickleNote[]): Promise<void> {
 
 // CRUD Helpers
 export async function createNote(note: StickleNote): Promise<string> {
+  const noteToSave: StickleNote = {
+    ...note,
+    syncStatus: note.syncStatus || 'pending',
+  };
+
   if (isChromeStorageAvailable()) {
     const notes = await getStorageNotes();
-    const existingIndex = notes.findIndex((n) => n.id === note.id);
+    const existingIndex = notes.findIndex((n) => n.id === noteToSave.id);
     if (existingIndex >= 0) {
-      notes[existingIndex] = note;
+      notes[existingIndex] = noteToSave;
     } else {
-      notes.push(note);
+      notes.push(noteToSave);
     }
     await setStorageNotes(notes);
     try {
-      await db.notes.put(note);
+      await db.notes.put(noteToSave);
     } catch {}
-    return note.id;
+    return noteToSave.id;
   }
-  return await db.notes.add(note);
+  return await db.notes.add(noteToSave);
 }
 
 export async function getNotesForUrl(url: string): Promise<StickleNote[]> {
   if (isChromeStorageAvailable()) {
     const notes = await getStorageNotes();
-    return notes.filter((n) => n.url === url);
+    return notes.filter((n) => n.url === url && !n.deletedAt);
   }
-  return await db.notes.where('url').equals(url).toArray();
+  const dbNotes = await db.notes.where('url').equals(url).toArray();
+  return dbNotes.filter((n) => !n.deletedAt);
 }
 
 export async function getAllNotes(): Promise<StickleNote[]> {
   if (isChromeStorageAvailable()) {
     const notes = await getStorageNotes();
-    return notes.sort((a, b) => b.createdAt - a.createdAt);
+    return notes.filter((n) => !n.deletedAt).sort((a, b) => b.createdAt - a.createdAt);
   }
-  return await db.notes.orderBy('createdAt').reverse().toArray();
+  const dbNotes = await db.notes.orderBy('createdAt').reverse().toArray();
+  return dbNotes.filter((n) => !n.deletedAt);
 }
 
 export async function updateNote(id: string, changes: Partial<StickleNote>): Promise<number> {
+  const syncStatus = changes.syncStatus !== undefined ? changes.syncStatus : 'pending';
+  const updatedChanges = {
+    ...changes,
+    syncStatus,
+    updatedAt: changes.updatedAt || Date.now(),
+  };
+
   if (isChromeStorageAvailable()) {
     const notes = await getStorageNotes();
     const index = notes.findIndex((n) => n.id === id);
     if (index !== -1) {
-      notes[index] = { ...notes[index], ...changes, updatedAt: Date.now() };
+      notes[index] = { ...notes[index], ...updatedChanges };
       await setStorageNotes(notes);
       try {
-        await db.notes.update(id, changes);
+        await db.notes.update(id, updatedChanges);
       } catch {}
       return 1;
     }
     return 0;
   }
-  return await db.notes.update(id, { ...changes, updatedAt: Date.now() });
+  return await db.notes.update(id, updatedChanges);
 }
 
 export async function deleteNote(id: string): Promise<void> {
@@ -122,4 +136,5 @@ export async function deleteNote(id: string): Promise<void> {
   }
   return await db.notes.delete(id);
 }
+
 

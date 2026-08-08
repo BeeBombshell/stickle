@@ -32,6 +32,8 @@ export interface NoteHighlightRange {
   endOffset: number;
 }
 
+export type SyncStatus = 'local' | 'synced' | 'pending' | 'conflict';
+
 export interface StickleNote {
   id: string;
   url: string;
@@ -47,11 +49,26 @@ export interface StickleNote {
   collapsed?: boolean;
   highlightRange?: NoteHighlightRange;
   tags?: string[];
+  // Cloud Sync & Multi-device fields
+  syncStatus?: SyncStatus;
+  cloudId?: string;
+  userId?: string;
+  workspaceId?: string;
+  deletedAt?: number;
 }
 
 export interface NotionConfig {
   apiKey: string;
   databaseId: string;
 }
+
+export interface UserProfile {
+  id: string;
+  email: string;
+  tier: 'free' | 'supporter' | 'team_member';
+  licenseKey?: string;
+  avatarUrl?: string;
+}
+
 
 
