@@ -30,6 +30,15 @@ export default function LandingApp() {
   const [openFaq, setOpenFaq] = useState<number | null>(null);
   const [pkmTab, setPkmTab] = useState<'notion' | 'obsidian' | 'mcp'>('notion');
 
+  // Handle accidental landing on root URL with Supabase auth hash/code
+  if (typeof window !== 'undefined') {
+    const hash = window.location.hash;
+    const search = window.location.search;
+    if ((hash && hash.includes('access_token')) || (search && search.includes('code='))) {
+      window.location.replace(`/auth-callback.html${hash}${search}`);
+    }
+  }
+
   // Authentic Stickle Notes state for Landing Page Hero
   const [landingNotes, setLandingNotes] = useState<StickleNote[]>([
     {
