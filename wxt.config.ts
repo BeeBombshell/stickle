@@ -14,7 +14,7 @@ export default defineConfig({
     description: 'Anchor persistent floating sticky notes directly to dynamic web content',
     permissions: ['storage', 'activeTab', 'scripting', 'contextMenus'],
 
-    host_permissions: ['https://api.notion.com/*', 'https://*.posthog.com/*'],
+    host_permissions: ['https://api.notion.com/*', 'https://*.posthog.com/*', 'https://*.supabase.co/*'],
     icons: {
       '16': 'icon/16.png',
       '32': 'icon/32.png',
@@ -30,5 +30,11 @@ export default defineConfig({
         '128': 'icon/128.png',
       },
     },
+    web_accessible_resources: [
+      {
+        resources: ['auth-callback.html'],
+        matches: ['<all_urls>'],
+      },
+    ],
   },
 });
