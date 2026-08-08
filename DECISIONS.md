@@ -214,6 +214,40 @@ This log records non-trivial decisions made during the development of Stickle.
 - **Decision:** Removed the `resolveAnchor(note.anchor)` call inside `renderNoteWrapper()` and replaced the `initialX ?? resolved.x` pattern with `initialX ?? note.anchor.pageX ?? 60`.
 - **Rationale:** `renderNoteWrapper()` received `initialX`/`initialY` from `refreshNotes()`, which had already called `resolveAnchor()`. The internal re-resolve was redundant and, when called during the not-yet-painted phase, returned `(0,0)` — overriding the correct coords passed in from the caller.
 
+---
+
+## Phase 13 — Feature Flags, Auth & Cross-Device Cloud Sync Engine
+
+### 45. Open-Core Feature Flag Architecture
+- **Decision:** Implemented `lib/flags.ts` with tier-based evaluation (`free`, `supporter`, `team_member`) covering `cloudSync`, `teamSharing`, `remoteMCP`, and `centralDashboard`. Popup UI displays crisp "Coming Soon — Pro" badges based on feature flag status adhering to `DESIGN.md`.
+- **Rationale:** Keeps core offline web note anchoring 100% free and open-source while enforcing server-validated feature access for cloud sync and remote MCP capabilities.
+
+### 46. Supabase Magic Link PKCE Authentication & Extension Callback
+- **Decision:** Integrated Supabase Auth in `lib/auth.ts` with PKCE redirect flow pointing to a dedicated extension HTML entrypoint (`entrypoints/auth-callback/`).
+- **Rationale:** Extension popup environments cannot process standard web OAuth redirects cleanly. Dedicated extension callback pages capture session tokens from the URL hash, store session tokens in extension-isolated storage, and close automatically.
+
+### 47. Local-First Delta Cloud Sync & Last-Write-Wins (LWW) Resolution
+- **Decision:** Built `lib/sync.ts` using a local-first architecture (Dexie / chrome.storage as local source of truth), delta push/pull sequence (`pushPendingNotes`, `pullRemoteNotes`), soft-delete tombstoning (`deletedAt`), and Supabase Realtime WebSocket subscriptions.
+- **Rationale:** Ensures extension functions 100% offline without latency. When online, pending edits queue automatically and push to Supabase, merging changes across devices via Last-Write-Wins with explicit conflict flagging (`syncStatus: 'conflict'`).
+
+### 48. Extension Popup UI Boundaries & Matrix Layout Design
+- **Decision:** Adjusted popup container width to 390px with `overflowX: 'hidden'`, stacked the Magic Link sign-in form vertically with a full-width pill button (`{rounded.pill}`), and redesigned the 2x2 Feature Access Matrix grid to truncate cleanly (`text-overflow: ellipsis`) with short badges (`ON`, `PRO`, `TEAMS`).
+- **Rationale:** Prevents text clipping and horizontal scrollbars in Chrome popup bounds while keeping UI strictly in accordance with `DESIGN.md`.
+
+### 49. Official Anchor Pin Extension List Logo Generation
+- **Decision:** Generated high-resolution, anti-aliased RGBA PNG icon assets for Chrome extension list and toolbar icons (`public/icon/16.png`, `public/icon/32.png`, `public/icon/48.png`, `public/icon/128.png`) matching the official Concept 3 Anchor Pin logo mark (`#111111` dark tile with `cx=31, cy=31` white outer & dark inner pin dot) via `scripts/generate-icons.js`. Updated popup header lockup in `entrypoints/popup/App.tsx` to match.
+- **Rationale:** Ensures Chrome extension list (`chrome://extensions`) and Chrome browser toolbar display the crisp, authentic Stickle logo mark.
+
+### 50. Dropped Magic Link & Password Auth → OAuth-Only (Google + GitHub)
+- **Decision:** Removed `signInWithMagicLink`, `signUpWithPassword`, and all dead code from `lib/auth.ts`. Auth UI in `Settings.tsx` now shows stacked Google and GitHub OAuth buttons with official brand SVG logos (no emojis). Popup UX cleaned up: removed ambiguous green status dot from logo lockup, replaced 📌 emoji empty state with anchor-pin SVG, and added text-overflow protection to the "Add Note" CTA.
+- **Rationale:** Magic link OTP hit Supabase's 2 req/hr/project free-tier limit immediately — non-starter for production. Email/password adds unnecessary complexity (password reset, verification emails) for a developer tool. OAuth-only (Google + GitHub) is rate-limit-free, frictionless, and appropriate for the target audience. `signInWithOAuth` was already correctly implemented for MV3 PKCE flow with `skipBrowserRedirect` + `chrome.tabs.create`. Brand SVG logos maintain visual consistency with the extension's icon-only design system.
 
 
 
+---
+
+## Phase 17 — Monetization & Localized Pricing
+
+### 44. Dodo Payments Integration & Localized Display Pricing
+- **Decision:** Selected Dodo Payments as the Merchant of Record (MoR) for global payments, tax/VAT handling, and localized multi-currency display pricing (USD $29, EUR €27, GBP £24, INR ₹2,399, CAD C$39, AUD A$44, BRL R$149, JPY ¥4,200) with automatic IP/locale location auto-detection (`detectUserCurrency()`).
+- **Rationale:** Dodo Payments provides built-in global MoR compliance and seamless regional purchasing power pricing out-of-the-box, ensuring optimized conversion rates across global developer and researcher audiences.

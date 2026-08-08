@@ -354,7 +354,7 @@ stickle/
 - **Auth**: Supabase Auth with PKCE flow (Chrome MV3 extension-compatible)
 - **Web Dashboard**: Next.js 15 (App Router) + TailwindCSS + Shadcn/UI, hosted on Vercel
 - **Remote MCP**: HTTP/SSE transport via `@modelcontextprotocol/sdk`, hosted on Cloudflare Workers or Railway
-- **Payments**: LemonSqueezy (handles global merchant of record, VAT, license key generation) or Stripe Checkout
+- **Payments**: Dodo Payments (Merchant of Record handling global payments, VAT/tax compliance, localized display pricing, and license keys)
 - **Sync Strategy**: Local-first (Dexie remains source of truth), delta sync to Supabase on changes; Last-Write-Wins conflict resolution keyed on `updatedAt`
 - **Feature Flag evaluation**: Client-side for UX (show "Coming Soon" UI); server-side RLS and API key checks for enforcement — extension codebase stays fully open source
 
@@ -582,7 +582,7 @@ dashboard/                      # Standalone Next.js 15 App Router app
    - List existing keys by name + `last_used_at`. Revoke (delete) by row.
 7. **Settings / Billing** (`/settings`):
    - Show current tier and license key if applicable.
-   - "Manage Billing" → redirect to LemonSqueezy customer portal URL (or Stripe portal).
+   - "Manage Billing" → redirect to Dodo Payments customer portal URL.
 8. Deploy dashboard to Vercel. Set `NEXT_PUBLIC_SUPABASE_URL`, `NEXT_PUBLIC_SUPABASE_ANON_KEY` as environment variables. Add the Vercel domain to Supabase Auth's allowed redirect URLs.
 
 **Acceptance criteria:**
@@ -679,45 +679,63 @@ remote-mcp/
 
 ---
 
-## Phase 17 — Monetization: Payments, License Validation & Waitlist
+## Phase 17 — Monetization: Dodo Payments, Localized Display Pricing & License Validation
 
-**Goal:** Wire up LemonSqueezy (or Stripe) checkout for Pro and Teams tiers, validate license status in the extension and backend, and set up a public-facing waitlist / early-access page on the landing site.
+**Goal:** Wire up Dodo Payments checkout for Pro and Teams tiers with localized display pricing (auto-detecting user currency: USD, EUR, GBP, INR, CAD, AUD, BRL, JPY), validate license status in the extension and backend, and set up a public-facing waitlist / early-access page on the landing site.
 
 **New files / folders:**
 ```
+lib/
+├── currency.ts         # Localized display pricing engine & location auto-detector
+└── dodo-payments.ts    # Dodo Payments checkout generator & SDK integration
+components/
+└── LocalizedPricing.tsx# Preact interactive localized pricing card component
 remote-mcp/src/webhooks/
-└── lemonsqueezy.ts    # Webhook handler: order.created → upsert profile tier
+└── dodopayments.ts     # Webhook handler: payment.succeeded / subscription.active → upsert profile tier
 dashboard/app/
-└── upgrade/page.tsx   # Upgrade / pricing page with checkout links
+└── upgrade/page.tsx   # Upgrade / pricing page with Dodo checkout links & localized pricing
 ```
 
 **Tasks:**
-1. **LemonSqueezy Setup**:
-   - Create two products: "Stickle Pro Supporter" (one-time $29) and "Stickle Teams" (per-seat $9/mo).
-   - Enable License Keys in LemonSqueezy product settings (auto-generates a key per purchase).
-   - Copy webhook secret; configure webhook URL: `https://mcp.stickle.app/webhooks/lemonsqueezy` (or a separate Hono route).
-2. **Webhook handler** (`lemonsqueezy.ts`):
-   - Verify HMAC-SHA256 signature on incoming webhook using the secret.
-   - On `order.created` event: extract `customer_email` and `license_key`. Upsert `profiles` row: set `tier = 'supporter'` (or `'team_member'`) and `license_key`.
-   - On `subscription.cancelled`: set `tier = 'free'` for Teams users.
-3. **License validation in the extension** (`lib/auth.ts`):
+1. **Dodo Payments & Localized Pricing Setup**:
+   - Create products on Dodo Payments merchant dashboard: "Stickle Pro Supporter" (base $29) and "Stickle Teams" (base $9/user/mo).
+   - Configure multi-currency pricing rules in Dodo Payments: USD $29, EUR €27, GBP £24, INR ₹2,399, CAD C$39, AUD A$44, BRL R$149, JPY ¥4,200.
+   - Copy webhook secret; configure webhook URL: `https://mcp.stickle.app/webhooks/dodopayments`.
+2. **Localized Pricing Engine (`lib/currency.ts`)**:
+   - Implement `detectUserCurrency()` via timezone/locale auto-detection with IP geolocation fallback (`ipapi.co`).
+   - Implement `formatPrice(amount, currencyCode)` for formatted regional displays ($29, €27, £24, ₹2,399).
+   - Persist user currency preference in `localStorage` (`stickle_preferred_currency`).
+3. **Dodo Payments Client Service (`lib/dodo-payments.ts`)**:
+   - `createDodoCheckoutUrl({ productId, userEmail, currency })` — generates localized checkout link.
+   - `openDodoCheckoutOverlay({ productId, userEmail, currency })` — triggers Dodo Payments checkout.
+4. **Webhook Handler (`dodopayments.ts`)**:
+   - Verify HMAC-SHA256 signature on incoming Dodo Payments webhooks using `DODO_PAYMENTS_WEBHOOK_SECRET`.
+   - On `payment.succeeded` / `subscription.active` events: extract `customer.email` and `license_key`. Upsert `profiles` row: set `tier = 'supporter'` (or `'team_member'`) and `license_key`.
+   - On `subscription.cancelled` / `subscription.expired`: revert `tier = 'free'`.
+5. **Interactive Localized Pricing UI Component (`components/LocalizedPricing.tsx`)**:
+   - Render pricing cards with interactive currency switcher pill bar (🇺🇸 USD, 🇪🇺 EUR, 🇬🇧 GBP, 🇮🇳 INR, 🇨🇦 CAD, 🇦🇺 AUD, 🇧🇷 BRL, 🇯🇵 JPY).
+   - Display auto-detection badge ("📍 Detected: Europe (EUR €) — Localized via Dodo Payments").
+   - "Buy Pro (Dodo Payments)" CTA button opening Dodo Payments localized checkout.
+6. **License Validation in Extension (`lib/auth.ts`)**:
    - On sign-in, `getProfile()` fetches `tier` and `license_key` from Supabase. Store tier in `chrome.storage.local`.
    - `isEnabled()` in `lib/flags.ts` reads from stored tier — no extra API call needed on every flag check.
    - Re-validate tier on extension startup and once per 24 h (in `background.ts` alarm) to catch subscription cancellations.
-4. **Upgrade page** (`dashboard/app/upgrade/page.tsx`):
-   - Clean pricing card layout: Free / Pro ($29 one-time) / Teams ($9/user/mo).
-   - "Buy Pro" button → direct LemonSqueezy checkout URL with pre-filled email from Supabase session.
-   - After purchase, LemonSqueezy redirects to `dashboard/upgrade?success=true` → page polls `getProfile()` until tier updates, then shows success state.
-5. **Waitlist** (if Teams features not fully built yet):
+7. **Upgrade Page (`dashboard/app/upgrade/page.tsx`)**:
+   - Clean pricing card layout with `LocalizedPricing` component.
+   - "Buy Pro" button → opens Dodo Payments checkout with pre-filled email from Supabase session.
+   - After purchase, Dodo Payments redirects to `dashboard/upgrade?success=true` → page polls `getProfile()` until tier updates, then shows success state.
+8. **Waitlist** (if Teams features not fully built yet):
    - Add a simple `waitlist` table in Supabase (`email`, `source`, `created_at`).
    - Add a "Join Teams Waitlist" form on the landing page (`entrypoints/landing/`) and dashboard upgrade page that inserts a row.
-6. **Early-access badge**: Add a "🎉 Early Access" tag in the extension popup for users who signed up during launch — `profiles.created_at < LAUNCH_CUTOFF_DATE`.
+9. **Early-access badge**: Add a "🎉 Early Access" tag in the extension popup for users who signed up during launch — `profiles.created_at < LAUNCH_CUTOFF_DATE`.
 
 **Acceptance criteria:**
-- [ ] Purchasing Pro via LemonSqueezy checkout → within 10 s, `profiles.tier` updates to `'supporter'` via webhook
+- [ ] Purchasing Pro via Dodo Payments checkout → within 10 s, `profiles.tier` updates to `'supporter'` via webhook
+- [ ] Localized display pricing auto-detects user region and displays regional currency symbols/pricing (USD $29, EUR €27, GBP £24, INR ₹2,399, etc.)
+- [ ] Interactive currency switcher updates display prices across all tiers dynamically
 - [ ] Extension re-validates tier within 24 h; cloud sync and Remote MCP unlock without reinstalling the extension
 - [ ] Invalid / revoked license key causes `isEnabled('cloudSync')` to return `false` after next validation cycle
-- [ ] Upgrade page renders correctly at `dashboard.stickle.app/upgrade` with working checkout links
+- [ ] Upgrade page renders correctly at `dashboard.stickle.app/upgrade` with Dodo Payments checkout links
 - [ ] "Coming Soon" Pro banners in the popup show a "Unlock — $29" CTA that deep-links to the upgrade page
 
 ---
