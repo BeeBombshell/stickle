@@ -14,7 +14,7 @@ const jetbrainsMono = JetBrains_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "Stickle — Web Dashboard & Cross-Device Notes",
+  title: "Stickle — Web Dashboard",
   description: "Search, filter, and manage your anchored web notes across every device.",
 };
 
@@ -25,61 +25,59 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="en">
-      <body className={`${inter.variable} ${jetbrainsMono.variable} bg-[#f8f8f6] text-[#111111] min-h-screen flex flex-col antialiased`}>
-        {/* Top Navbar adhering to DESIGN.md monochrome chrome */}
-        <header className="sticky top-0 z-50 bg-white border-b border-[#e5e5e5]">
-          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-16 flex items-center justify-between">
-            {/* Logo lockup */}
-            <Link href="/notes" className="flex items-center gap-3 group">
-              <div className="w-8 h-8 rounded-lg bg-[#111111] flex items-center justify-center relative shadow-sm group-hover:scale-105 transition-transform">
-                {/* SVG Anchor Pin Logo Mark */}
-                <svg width="20" height="20" viewBox="0 0 40 40" fill="none">
-                  <path fillRule="evenodd" clipRule="evenodd" d="M12 10C12 8.89543 12.8954 8 14 8H26C27.1046 8 28 8.89543 28 10V22C28 23.1046 27.1046 24 26 24H21V29L24 30V32H16V30L19 29V24H14C12.8954 24 12 23.1046 12 22V10ZM14 10H26V22H14V10Z" fill="white" />
-                  <circle cx="31" cy="31" r="5" fill="#e4f579" />
+      <body className={`${inter.variable} ${jetbrainsMono.variable} bg-white text-[#111111] min-h-screen flex flex-col antialiased`}>
+        {/* Sticky Nav Bar strictly matching landing & onboarding pages */}
+        <nav className="sticky top-0 z-50 bg-white border-b border-[#e5e5e0] h-[56px] flex items-center">
+          <div className="max-w-[1280px] w-full mx-auto px-6 flex items-center justify-between">
+            {/* Logo Lockup */}
+            <Link href="/notes" className="flex items-center gap-2.5 text-decoration-none group">
+              <div className="w-9 h-9 bg-[#111111] rounded-[10px] flex items-center justify-center transition-transform group-hover:scale-105">
+                <svg width="20" height="20" viewBox="0 0 20 20" fill="none">
+                  <circle cx="14" cy="14" r="5" fill="white" opacity="0.9" />
+                  <circle cx="14" cy="14" r="2" fill="#111" />
                 </svg>
               </div>
-              <span className="font-semibold text-lg tracking-tight">Stickle</span>
-              <span className="text-xs font-mono tracking-wider uppercase px-2 py-0.5 rounded-full bg-[#e4f579] text-[#111111] font-medium">
+              <span className="text-[20px] font-extrabold tracking-[-0.8px] text-[#111111] font-sans">
+                stickle
+              </span>
+              <span className="eyebrow-lime text-[9px] uppercase tracking-[0.6px] font-mono ml-1">
                 Dashboard
               </span>
             </Link>
 
-            {/* Navigation links with Lime active pill accents */}
-            <nav className="flex items-center gap-2">
+            {/* Nav Links with Pill Styling */}
+            <div className="flex items-center gap-2">
               <Link
                 href="/notes"
-                className="px-4 py-1.5 rounded-full text-sm font-medium transition-all bg-[#e4f579] text-[#111111]"
+                className="btn-pill btn-lime text-xs font-semibold px-4 py-1.5"
               >
-                Notes
+                Notes Explorer
               </Link>
               <Link
                 href="/timeline"
-                className="px-4 py-1.5 rounded-full text-sm font-medium transition-all text-[#111111]/70 hover:text-[#111111] hover:bg-[#f0f0ed]"
+                className="btn-pill text-xs text-[#52514e] hover:text-[#111111] hover:bg-[#f8f8f6] px-4 py-1.5"
               >
                 Timeline
               </Link>
               <Link
                 href="/settings/api-keys"
-                className="px-4 py-1.5 rounded-full text-sm font-medium transition-all text-[#111111]/70 hover:text-[#111111] hover:bg-[#f0f0ed]"
+                className="btn-pill text-xs text-[#52514e] hover:text-[#111111] hover:bg-[#f8f8f6] px-4 py-1.5"
               >
                 API Keys (MCP)
               </Link>
-            </nav>
+            </div>
 
-            {/* Profile / Auth CTA */}
-            <div className="flex items-center gap-3">
-              <Link
-                href="/login"
-                className="px-5 py-2 rounded-full bg-[#111111] text-white text-sm font-medium hover:bg-black/90 transition-colors shadow-sm"
-              >
+            {/* Action Buttons */}
+            <div className="flex items-center gap-2">
+              <Link href="/login" className="btn-pill btn-primary text-xs px-5 py-2">
                 Sign In
               </Link>
             </div>
           </div>
-        </header>
+        </nav>
 
-        {/* Main Content */}
-        <main className="flex-1 max-w-7xl w-full mx-auto px-4 sm:px-6 lg:px-8 py-8">
+        {/* Main Content Container */}
+        <main className="flex-1 max-w-[1280px] w-full mx-auto px-6 py-10">
           {children}
         </main>
       </body>

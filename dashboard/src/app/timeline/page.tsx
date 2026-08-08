@@ -47,19 +47,20 @@ export default function TimelinePage() {
 
   return (
     <div className="max-w-4xl mx-auto space-y-8">
-      {/* Header with Live Pulse Badge */}
-      <div className="bg-white rounded-3xl p-8 border border-[#e5e5e5] shadow-sm flex items-center justify-between">
+      {/* Header Banner */}
+      <div className="color-block color-block-soft border border-[#e5e5e0] flex items-center justify-between">
         <div>
-          <h1 className="text-2xl font-bold tracking-tight text-[#111111] mb-1">
-            Activity Timeline
+          <span className="eyebrow text-[#111111] mb-2">LIVE ACTIVITY STREAM</span>
+          <h1 className="display-lg text-[#111111] mb-2">
+            Timeline Feed
           </h1>
-          <p className="text-sm text-gray-500">
+          <p className="body-lg text-[#52514e]">
             Real-time chronological feed of web annotations across all your browsers & devices.
           </p>
         </div>
 
         {/* Lime Live Pulse Badge */}
-        <div className="flex items-center gap-2 px-4 py-2 rounded-full bg-[#e4f579] text-[#111111] font-mono text-xs uppercase font-medium shadow-sm">
+        <div className="flex items-center gap-2 px-4 py-2 rounded-full bg-[#e4f579] text-[#111111] font-mono text-xs uppercase font-semibold shadow-sm shrink-0">
           <span className="relative flex h-2.5 w-2.5">
             <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-black opacity-75"></span>
             <span className="relative inline-flex rounded-full h-2.5 w-2.5 bg-black"></span>
@@ -69,34 +70,34 @@ export default function TimelinePage() {
       </div>
 
       {/* Timeline Stream */}
-      <div className="relative pl-6 space-y-6 before:absolute before:left-3 before:top-3 before:bottom-3 before:w-0.5 before:bg-gray-200">
+      <div className="relative pl-6 space-y-6 before:absolute before:left-3 before:top-3 before:bottom-3 before:w-0.5 before:bg-[#e5e5e0]">
         {events.map((item) => (
           <div key={item.id} className="relative group">
             {/* Timeline dot */}
-            <div className="absolute -left-6 top-5 w-3 h-3 rounded-full bg-[#e4f579] border-2 border-[#111111] shadow-sm group-hover:scale-125 transition-transform" />
+            <div className="absolute -left-6 top-6 w-3.5 h-3.5 rounded-full bg-[#e4f579] border-2 border-[#111111] shadow-sm group-hover:scale-125 transition-transform" />
 
-            <div className="bg-white rounded-3xl p-6 border border-[#e5e5e5] shadow-sm hover:shadow-md transition-all">
-              <div className="flex items-center justify-between mb-2">
-                <span className="text-xs font-mono px-2.5 py-0.5 rounded-full bg-[#e4f579] text-[#111111] font-medium">
+            <div className="color-block color-block-soft border border-[#e5e5e0] !p-6 transition-transform hover:-translate-y-0.5">
+              <div className="flex items-center justify-between mb-3">
+                <span className="eyebrow-lime text-[10px]">
                   {item.domain}
                 </span>
-                <span className="text-xs font-mono text-gray-400">
+                <span className="font-mono text-xs text-[#52514e]">
                   {new Date(item.created_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
                 </span>
               </div>
 
-              <h3 className="font-bold text-base text-[#111111] mb-2">
+              <h3 className="card-title text-xl mb-2 text-[#111111]">
                 {item.page_title}
               </h3>
 
-              <p className="text-sm text-gray-700 bg-[#f8f8f6] p-4 rounded-2xl border border-gray-100 mb-4">
+              <p className="text-sm font-sans text-[#111111] bg-white p-4 rounded-2xl border border-[#e5e5e0] mb-4">
                 "{item.content}"
               </p>
 
               <div className="flex items-center justify-between text-xs">
-                <div className="flex gap-1.5">
+                <div className="flex gap-2">
                   {item.tags?.map((t) => (
-                    <span key={t} className="font-mono text-gray-500">
+                    <span key={t} className="font-mono text-xs text-[#52514e]">
                       #{t}
                     </span>
                   ))}
@@ -105,7 +106,7 @@ export default function TimelinePage() {
                   href={item.url}
                   target="_blank"
                   rel="noopener noreferrer"
-                  className="px-4 py-1.5 rounded-full bg-[#111111] text-white text-xs font-medium hover:bg-black/90 transition-colors"
+                  className="btn-pill btn-primary text-xs !px-4 !py-1.5"
                 >
                   View Webpage ↗
                 </a>

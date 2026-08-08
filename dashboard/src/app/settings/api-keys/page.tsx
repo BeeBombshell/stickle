@@ -28,7 +28,6 @@ export default function ApiKeysPage() {
     e.preventDefault();
     if (!keyName.trim()) return;
 
-    // Generate pseudo secret key format: sk_stickle_<32 hex chars>
     const randomHex = Array.from({ length: 32 }, () =>
       Math.floor(Math.random() * 16).toString(16)
     ).join("");
@@ -58,27 +57,26 @@ export default function ApiKeysPage() {
 
   return (
     <div className="max-w-4xl mx-auto space-y-8">
-      {/* Header */}
-      <div className="bg-white rounded-3xl p-8 border border-[#e5e5e5] shadow-sm">
-        <div className="flex items-center justify-between mb-2">
-          <h1 className="text-2xl font-bold tracking-tight text-[#111111]">
-            Remote MCP API Keys
-          </h1>
-          <span className="px-3 py-1 rounded-full bg-[#e4f579] text-[#111111] text-xs font-mono font-medium">
-            Pro Feature
-          </span>
+      {/* Header Banner */}
+      <div className="color-block color-block-soft border border-[#e5e5e0]">
+        <div className="flex items-center justify-between mb-3">
+          <span className="eyebrow text-[#111111]">REMOTE MCP INTEGRATION</span>
+          <span className="eyebrow-lime text-[10px]">Pro Feature</span>
         </div>
-        <p className="text-sm text-gray-600 leading-relaxed">
-          Create Bearer API keys to authenticate external AI agents (Claude Desktop, Cursor, Antigravity) with your Stickle Remote MCP server endpoint.
+        <h1 className="display-lg text-[#111111] mb-2">
+          API Key Management
+        </h1>
+        <p className="body-lg text-[#52514e]">
+          Create Bearer secret keys to authenticate external AI agents (Claude Desktop, Cursor, Antigravity) with your Stickle Remote MCP server.
         </p>
       </div>
 
-      {/* Secret Key Modal Banner */}
+      {/* Secret Key Notification Banner */}
       {newlyCreatedKey && (
-        <div className="bg-[#111111] text-white rounded-3xl p-6 border border-black shadow-lg space-y-4">
+        <div className="color-block color-block-navy space-y-4">
           <div className="flex items-center justify-between">
-            <span className="text-xs font-mono tracking-wider uppercase px-2.5 py-0.5 rounded-full bg-[#e4f579] text-[#111111] font-semibold">
-              ⚠️ Save Key Now — Only Shown Once
+            <span className="eyebrow-lime text-[10px]">
+              ⚠️ SAVE KEY NOW — ONLY SHOWN ONCE
             </span>
             <button
               onClick={() => setNewlyCreatedKey(null)}
@@ -88,7 +86,7 @@ export default function ApiKeysPage() {
             </button>
           </div>
 
-          <p className="text-sm text-gray-300">
+          <p className="text-sm font-sans text-gray-300">
             Copy your API key below. For security, it will not be displayed again.
           </p>
 
@@ -96,7 +94,7 @@ export default function ApiKeysPage() {
             <span className="flex-1 truncate select-all">{newlyCreatedKey}</span>
             <button
               onClick={handleCopy}
-              className="px-4 py-1.5 rounded-full bg-[#e4f579] text-[#111111] text-xs font-medium hover:opacity-90 transition-opacity"
+              className="btn-pill btn-lime text-xs !px-4 !py-1.5"
             >
               {copied ? "Copied! ✓" : "Copy Key"}
             </button>
@@ -105,46 +103,42 @@ export default function ApiKeysPage() {
       )}
 
       {/* Key Generation Form */}
-      <div className="bg-white rounded-3xl p-8 border border-[#e5e5e5] shadow-sm">
-        <h2 className="text-sm font-mono tracking-wider uppercase text-gray-500 mb-4">
-          Generate New API Key
-        </h2>
+      <div className="color-block color-block-soft border border-[#e5e5e0]">
+        <span className="eyebrow text-[#52514e] mb-4">GENERATE NEW API KEY</span>
         <form onSubmit={handleGenerateKey} className="flex gap-3">
           <input
             type="text"
             placeholder="e.g. Claude Desktop, Cursor Mac, Team Agent..."
             value={keyName}
             onChange={(e) => setKeyName(e.target.value)}
-            className="flex-1 px-4 py-2.5 rounded-full border border-[#e5e5e5] text-sm text-[#111111] placeholder-gray-400 focus:outline-none focus:border-[#111111]"
+            className="flex-1 px-5 py-3 rounded-full border border-[#e5e5e0] text-sm text-[#111111] placeholder-[#52514e]/60 focus:outline-none focus:border-[#111111] bg-white font-sans"
             required
           />
           <button
             type="submit"
-            className="px-6 py-2.5 rounded-full bg-[#111111] text-white text-sm font-medium hover:bg-black/90 transition-colors shadow-sm"
+            className="btn-pill btn-primary text-sm px-6 py-3"
           >
             Create Key
           </button>
         </form>
       </div>
 
-      {/* Active Keys Table */}
-      <div className="bg-white rounded-3xl p-8 border border-[#e5e5e5] shadow-sm">
-        <h2 className="text-sm font-mono tracking-wider uppercase text-gray-500 mb-6">
-          Active Keys ({keys.length})
-        </h2>
+      {/* Active Keys List */}
+      <div className="color-block color-block-soft border border-[#e5e5e0]">
+        <span className="eyebrow text-[#52514e] mb-6">ACTIVE KEYS ({keys.length})</span>
 
         {keys.length === 0 ? (
-          <p className="text-sm text-gray-500 py-4 text-center">
-            No active API keys found. Generate a key above to get started with Remote MCP.
+          <p className="text-sm text-[#52514e] py-4 text-center">
+            No active API keys found. Generate a key above to get started.
           </p>
         ) : (
-          <div className="divide-y divide-gray-100">
+          <div className="divide-y divide-[#e5e5e0]">
             {keys.map((k) => (
               <div key={k.id} className="py-4 flex items-center justify-between gap-4">
                 <div>
-                  <div className="font-bold text-sm text-[#111111] mb-1">{k.name}</div>
-                  <div className="flex items-center gap-3 text-xs font-mono text-gray-500">
-                    <span className="px-2 py-0.5 rounded bg-gray-100">{k.key_prefix}</span>
+                  <div className="card-title text-base text-[#111111] mb-1">{k.name}</div>
+                  <div className="flex items-center gap-3 text-xs font-mono text-[#52514e]">
+                    <span className="px-2 py-0.5 rounded bg-black/5">{k.key_prefix}</span>
                     <span>Created: {new Date(k.created_at).toLocaleDateString()}</span>
                     {k.last_used_at && (
                       <span>Last used: {new Date(k.last_used_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</span>
@@ -154,7 +148,7 @@ export default function ApiKeysPage() {
 
                 <button
                   onClick={() => handleRevoke(k.id)}
-                  className="px-4 py-1.5 rounded-full text-xs font-medium text-red-600 hover:bg-red-50 border border-red-200 transition-colors"
+                  className="btn-pill btn-secondary text-xs !px-4 !py-1.5 text-red-600 hover:bg-red-50"
                 >
                   Revoke
                 </button>
