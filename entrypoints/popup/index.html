@@ -1,25 +1,32 @@
 <!DOCTYPE html>
-<html lang="en" style="width: 380px; max-width: 380px; overflow-x: hidden;">
+<html lang="en">
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Stickle — Notes Manager</title>
     <style>
-      html, body {
-        width: 380px !important;
-        max-width: 380px !important;
-        margin: 0 !important;
-        padding: 0 !important;
-        overflow-x: hidden !important;
+      *, *::before, *::after {
         box-sizing: border-box !important;
       }
-      *, *:before, *:after {
-        box-sizing: border-box;
+      html, body {
+        width: 380px !important;
+        height: 520px !important;
+        margin: 0 !important;
+        padding: 0 !important;
+        overflow: hidden !important;
+        background-color: #ffffff;
+      }
+      #app {
+        width: 380px !important;
+        height: 520px !important;
+        margin: 0 !important;
+        padding: 0 !important;
+        overflow: hidden !important;
       }
     </style>
   </head>
-  <body style="width: 380px; max-width: 380px; overflow-x: hidden;">
-    <div id="app" style="width: 380px; max-width: 380px; overflow-x: hidden;"></div>
+  <body>
+    <div id="app"></div>
     <script type="module" src="./main.tsx"></script>
   </body>
 </html>

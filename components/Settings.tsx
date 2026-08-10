@@ -322,10 +322,6 @@ export function Settings() {
       defaultBorderStyle,
       enabled,
     });
-    setStatus({
-      type: 'success',
-      message: `Default note theme updated to ${COLOR_SWATCHES[key].name}.`,
-    });
   };
 
   const handleBorderStyleSelect = async (bStyle: NoteBorderStyle) => {
@@ -336,10 +332,6 @@ export function Settings() {
       defaultNoteColor,
       defaultBorderStyle: bStyle,
       enabled,
-    });
-    setStatus({
-      type: 'success',
-      message: `Default border style updated to ${bStyle}.`,
     });
   };
 
@@ -410,7 +402,9 @@ export function Settings() {
         }}
       >
         <div style={{ display: 'flex', alignItems: 'center', gap: '6px', minWidth: 0 }}>
-          <span style={{ fontSize: '13px' }}>☁️</span>
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" style={{ color: '#9ca3af', flexShrink: 0 }}>
+            <path d="M17.5 19H9a7 7 0 1 1 6.71-9h1.79a4.5 4.5 0 1 1 0 9z" />
+          </svg>
           <span style={{ fontSize: '12px', fontWeight: '600', letterSpacing: '-0.1px', whiteSpace: 'nowrap' }}>
             Stickle Cloud
           </span>
@@ -511,7 +505,10 @@ export function Settings() {
                   boxShadow: '0 1px 3px rgba(0,0,0,0.1)',
                 }}
               >
-                <span>🔄</span> {isSyncing ? 'Syncing with Cloud...' : 'Sync Cloud Notes Now'}
+                <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                  <path d="M21.5 2v6h-6M21.34 15.57a10 10 0 1 1-.57-8.38l5.67-5.67" />
+                </svg>
+                {isSyncing ? 'Syncing with Cloud...' : 'Sync Cloud Notes Now'}
               </button>
             </div>
           ) : (
@@ -663,7 +660,13 @@ export function Settings() {
         }}
       >
         <div style={{ display: 'flex', alignItems: 'center', gap: '6px', minWidth: 0 }}>
-          <span style={{ fontSize: '13px' }}>👥</span>
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" style={{ color: '#9ca3af', flexShrink: 0 }}>
+            <path d="M17 21v-2a4 4 0 0 0-3-3.87" />
+            <path d="M9 21v-2a4 4 0 0 0-4-4H3a4 4 0 0 0-4 4v2" />
+            <circle cx="9" cy="7" r="4" />
+            <path d="M23 21v-2a4 4 0 0 0-3-3.87" />
+            <path d="M16 3.13a4 4 0 0 1 0 7.75" />
+          </svg>
           <span style={{ fontSize: '12px', fontWeight: '600', letterSpacing: '-0.1px', whiteSpace: 'nowrap' }}>
             Team Workspaces
           </span>
@@ -754,10 +757,10 @@ export function Settings() {
                 cursor: 'pointer',
               }}
             >
-              <option value="personal">👤 Personal Mode (Only my notes)</option>
+              <option value="personal">Personal Mode (Only my notes)</option>
               {workspaces.map((ws) => (
                 <option key={ws.id} value={ws.id}>
-                  👥 {ws.name} ({ws.role || 'member'})
+                  {ws.name} ({ws.role || 'member'})
                 </option>
               ))}
             </select>
@@ -1174,20 +1177,25 @@ export function Settings() {
         <div style={{ display: 'flex', gap: '6px', flexWrap: 'wrap' as const }}>
           <button
             className="btn-pill btn-secondary"
-            style={{ flex: '1 1 70px', minWidth: 0, fontSize: '11px', padding: '6px 8px', boxSizing: 'border-box' }}
+            style={{ flex: '1 1 70px', minWidth: 0, fontSize: '11px', padding: '6px 8px', boxSizing: 'border-box', display: 'inline-flex', alignItems: 'center', justifyContent: 'center', gap: '4px' }}
             onClick={() => {
               if (typeof chrome !== 'undefined' && chrome.tabs) {
                 chrome.tabs.create({ url: chrome.runtime.getURL('index.html') });
               } else {
-                window.open('/', '_blank');
+                window.open('https://stickle.beebomsbhell.com', '_blank');
               }
             }}
           >
-            🌐 Landing
+            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+              <circle cx="12" cy="12" r="10" />
+              <line x1="2" y1="12" x2="22" y2="12" />
+              <path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z" />
+            </svg>
+            Landing
           </button>
           <button
             className="btn-pill btn-secondary"
-            style={{ flex: '1 1 70px', minWidth: 0, fontSize: '11px', padding: '6px 8px', boxSizing: 'border-box' }}
+            style={{ flex: '1 1 70px', minWidth: 0, fontSize: '11px', padding: '6px 8px', boxSizing: 'border-box', display: 'inline-flex', alignItems: 'center', justifyContent: 'center', gap: '4px' }}
             onClick={() => {
               if (typeof chrome !== 'undefined' && chrome.tabs) {
                 chrome.tabs.create({ url: chrome.runtime.getURL('onboarding.html') });
@@ -1196,11 +1204,14 @@ export function Settings() {
               }
             }}
           >
-            ⚡ Sandbox
+            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+              <polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2" />
+            </svg>
+            Sandbox
           </button>
           <button
             className="btn-pill btn-secondary"
-            style={{ flex: '1 1 70px', minWidth: 0, fontSize: '11px', padding: '6px 8px', boxSizing: 'border-box' }}
+            style={{ flex: '1 1 70px', minWidth: 0, fontSize: '11px', padding: '6px 8px', boxSizing: 'border-box', display: 'inline-flex', alignItems: 'center', justifyContent: 'center', gap: '4px' }}
             onClick={() => {
               if (typeof chrome !== 'undefined' && chrome.tabs) {
                 chrome.tabs.create({ url: chrome.runtime.getURL('privacy.html') });
@@ -1209,7 +1220,11 @@ export function Settings() {
               }
             }}
           >
-            🔒 Privacy
+            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+              <rect x="3" y="11" width="18" height="11" rx="2" ry="2" />
+              <path d="M7 11V7a5 5 0 0 1 10 0v4" />
+            </svg>
+            Privacy
           </button>
         </div>
       </div>
