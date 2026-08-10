@@ -182,9 +182,33 @@ Browsers restrict content scripts from making direct cross-origin HTTP requests 
 
 ---
 
-## 7. Storage & Error Resilience Layer
+---
 
-1. **Dual Persistence System**: Primary persistence via `chrome.storage.local` with automatic fallback to IndexedDB (`Dexie.js`) for non-extension environments.
-2. **Explicit Quota Protection**: `chrome.storage.local.set` catches `chrome.runtime.lastError` and detects storage quota limits (`QuotaExceededError`), preventing silent data loss.
-3. **Restricted Page Injection Handling**: Context menu commands ignore restricted browser internal URLs (`chrome://`, `chrome-extension://`, `about:`) and gracefully handle injection failures.
+## 8. Team Workspace Shared Annotations & Scalable Caching Strategy
+
+```
+  ┌──────────────────────┐        0ms Instant Local Read         ┌────────────────────────┐
+  │                      ├──────────────────────────────────────►│ IndexedDB (Dexie)      │
+  │ Content Script UI    │                                       │ workspaceNotes Table   │
+  │                      │◄──────────────────────────────────────┤                        │
+  └──────────┬───────────┘        Render Cached Team Notes       └────────────────────────┘
+             │
+             │ Background Delta Fetch (updated_at > lastSynced)
+             ▼
+  ┌──────────────────────┐        Supabase Realtime Channel       ┌────────────────────────┐
+  │ Supabase PostgreSQL  ├──────────────────────────────────────►│ (Active Tab Only)      │
+  │ Row-Level Security   │        (document.hidden === false)     │ Live WebSocket Feed    │
+  └──────────────────────┘                                       └────────────────────────┘
+```
+
+1. **0ms Initial Render via IndexedDB (`workspaceNotes`)**:
+   - Workspace annotations are cached locally in IndexedDB (`lib/db.ts`). On webpage load, Stickle immediately reads local workspace cache (`getCachedWorkspaceNotes`), rendering team notes in 0ms without blocking the UI thread or waiting for network roundtrips.
+2. **Background Delta Fetching (`fetchWorkspaceNotesForUrl`)**:
+   - Concurrently triggers background delta queries to Supabase (`updated_at > lastSyncedAt`) for the current page URL, merging remote team edits into IndexedDB and updating the UI smoothly.
+3. **Visibility-Aware WebSocket Channel Lifecycle**:
+   - Real-time Supabase channels (`workspace_notes_${workspaceId}`) are opened **only when the tab is active/visible** (`document.hidden === false`).
+   - Automatically pauses/unsubscribes on `visibilitychange` (switching tabs) and `beforeunload`, preserving backend WebSocket connection limits across 20+ open browser tabs.
+4. **Read-Only Teammate Permission Enforcement**:
+   - Notes authored by teammates (`row.user_id !== currentUserId`) are rendered read-only with explicit author avatar badges (`👥 authorName`), disabled textareas, and 🔒 Read-only status indicators.
+
 

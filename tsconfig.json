@@ -8,5 +8,7 @@
     "jsxImportSource": "preact",
     "strict": true,
     "skipLibCheck": true
-  }
+  },
+  "include": ["**/*", ".wxt/wxt.d.ts"],
+  "exclude": ["dashboard", "node_modules", "dist", ".wxt/output", ".output"]
 }

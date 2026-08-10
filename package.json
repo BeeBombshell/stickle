@@ -13,7 +13,10 @@
     "compile": "tsc --noEmit",
     "test": "vitest run",
     "test:e2e": "playwright test",
+    "dev:dashboard": "pnpm --prefix dashboard dev",
+    "build:dashboard": "pnpm --prefix dashboard build",
     "mcp": "tsx mcp-server/index.ts",
+    "db:setup": "node scripts/apply-schema.js",
     "postinstall": "wxt prepare"
   },
   "dependencies": {

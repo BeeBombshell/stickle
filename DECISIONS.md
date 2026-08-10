@@ -272,4 +272,13 @@ This log records non-trivial decisions made during the development of Stickle.
 - **Decision:** Built `remote-mcp/` as a standalone Hono microservice supporting HTTP/SSE transport (`GET /sse`, `POST /message`) via `@modelcontextprotocol/sdk`. Authenticates Bearer API keys (`sk_stickle_...`) by validating SHA-256 hashes against `public.api_keys` in Supabase using the service role key. Implemented 6 MCP tools: `list_stickle_notes`, `search_stickle_notes`, `get_notes_for_url`, `add_stickle_note`, `export_stickle_summary`, and `get_team_activity_timeline`. Included Cloudflare Workers (`wrangler.toml`) and self-hosting documentation (`README.md`).
 - **Rationale:** Enables AI assistants (Claude Desktop, Cursor, Antigravity) to query, search, create, and summarize web sticky notes over HTTPS without requiring the browser extension or a local stdio process to be running on the user's machine.
 
+---
+
+## Phase 16 — Team Shared In-Page Annotations
+
+### 56. Local-First Workspace Caching & Read-Only Teammate Annotations
+- **Decision:** Implemented `lib/workspace.ts` with local IndexedDB `workspaceNotes` caching (`0ms` instant rendering on page load) paired with background delta fetching (`updated_at > lastSyncedAt`) and visibility-aware Supabase Realtime channel subscriptions (`document.hidden === false`). Teammate notes render read-only with explicit author avatar badges (`👥 authorName`) and 🔒 Read-only indicators.
+- **Rationale:** Ensures 0ms page load latency for team notes, minimizes database bandwidth and network traffic, and respects Supabase Realtime WebSocket connection quotas while guaranteeing read-only security enforcement for teammate notes.
+
+
 

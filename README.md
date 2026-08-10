@@ -26,6 +26,7 @@
 - 🔒 **Local-First & Private**: Notes stored in Chrome Local Storage + IndexedDB via Dexie.js. Zero tracking or telemetry.
 - 🚀 **Notion Sync Integration**: 1-click manual note export or batch unsynced export to your Notion database with exponential backoff retries.
 - 🔍 **Central Extension Manager Popup**: Search across all saved notes, filter by domain/active tab, date (`Today`, `This Week`, `All Time`), tag management, and focus/open target tabs instantly.
+- 👥 **Team Shared In-Page Annotations**: Real-time shared team annotations overlaid on web pages with author avatar badges, read-only permissions enforcement, 0ms local IndexedDB caching, and background delta syncing.
 - 🌐 **Web Landing & Waitlist Web App**: Built-in product landing page (`/`) and waitlist app with position estimation, FAQ, and email signup.
 
 ---
