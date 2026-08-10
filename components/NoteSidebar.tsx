@@ -384,6 +384,50 @@ export function NoteSidebar({ notes, onNoteChange, onSelectNote }: NoteSidebarPr
                           />
                           <span style={sidebarStyles.pageTitle}>{note.pageTitle || 'Untitled Page'}</span>
                         </div>
+                        {note.authorName && (
+                          <span
+                            style={{
+                              display: 'inline-flex',
+                              alignItems: 'center',
+                              gap: '4px',
+                              fontSize: '10px',
+                              fontWeight: '700',
+                              padding: '2px 7px 2px 4px',
+                              borderRadius: '50px',
+                              backgroundColor: '#e8d5ff',
+                              color: '#111111',
+                              flexShrink: 0,
+                            }}
+                            title={`Workspace note by ${note.authorName}`}
+                          >
+                            {note.authorAvatarUrl ? (
+                              <img
+                                src={note.authorAvatarUrl}
+                                alt={note.authorName}
+                                style={{ width: '14px', height: '14px', borderRadius: '50%', objectFit: 'cover' }}
+                              />
+                            ) : (
+                              <span
+                                style={{
+                                  width: '14px',
+                                  height: '14px',
+                                  borderRadius: '50%',
+                                  backgroundColor: '#7c3aed',
+                                  color: '#ffffff',
+                                  fontSize: '8px',
+                                  fontWeight: '800',
+                                  display: 'inline-flex',
+                                  alignItems: 'center',
+                                  justifyContent: 'center',
+                                  lineHeight: 1,
+                                }}
+                              >
+                                {note.authorName.charAt(0).toUpperCase()}
+                              </span>
+                            )}
+                            {note.authorName}
+                          </span>
+                        )}
                         {hasNotionConfig && note.syncedToNotion && (
                           <div style={{ display: 'flex', gap: '4px', alignItems: 'center', flexShrink: 0 }}>
                             <span style={sidebarStyles.syncedTag} title="Synced to Notion">

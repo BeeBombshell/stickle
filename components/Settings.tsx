@@ -7,6 +7,8 @@ import { exportNotesToJson, importNotesFromJson } from '../lib/export-import';
 import { getProfile, signInWithOAuth, signOut } from '../lib/auth';
 import { isEnabled, FEATURE_NAMES, type FeatureFlag } from '../lib/flags';
 import { fullSync } from '../lib/sync';
+import { getActiveWorkspaceId, setActiveWorkspaceId, getUserWorkspaces, createWorkspace, inviteWorkspaceMember } from '../lib/workspace';
+import type { Workspace } from '../lib/types';
 
 export interface NotionSettings {
   apiKey: string;
@@ -123,6 +125,21 @@ export function Settings() {
   const [isSigningIn, setIsSigningIn] = useState<'google' | 'github' | null>(null);
   const [isSyncing, setIsSyncing] = useState(false);
 
+  // Team Workspaces State
+  const [isTeamOpen, setIsTeamOpen] = useState(false);
+  const [workspaces, setWorkspaces] = useState<Workspace[]>([]);
+  const [activeWorkspaceIdState, setActiveWorkspaceIdState] = useState<string | null>(null);
+  const [newWsName, setNewWsName] = useState('');
+  const [inviteEmail, setInviteEmail] = useState('');
+  const [isCreatingWs, setIsCreatingWs] = useState(false);
+
+  const reloadWorkspaces = async () => {
+    const wsId = await getActiveWorkspaceId();
+    setActiveWorkspaceIdState(wsId);
+    const list = await getUserWorkspaces();
+    setWorkspaces(list);
+  };
+
   useEffect(() => {
     loadSettings().then((s) => {
       setApiKey(s.apiKey);
@@ -135,6 +152,8 @@ export function Settings() {
     getProfile().then((p) => {
       setProfile(p);
     });
+
+    reloadWorkspaces();
   }, []);
 
   const handleOAuthSignIn = async (provider: 'google' | 'github') => {
@@ -154,6 +173,59 @@ export function Settings() {
     await signOut();
     setProfile(null);
     setStatus({ type: 'success', message: 'Signed out successfully.' });
+  };
+
+  const handleCreateWorkspace = async (e: Event) => {
+    e.preventDefault();
+    if (!profile) {
+      setStatus({ type: 'error', message: '🔒 Auth Required: Please sign in above with Google or GitHub first.' });
+      return;
+    }
+    if (!isEnabled('teamSharing', profile.tier)) {
+      setStatus({
+        type: 'error',
+        message: `🔒 TEAMS Plan Required: Your current tier is "${profile.tier.toUpperCase()}". Team Workspaces require a TEAMS plan.`,
+      });
+      return;
+    }
+    if (!newWsName.trim()) return;
+
+    setIsCreatingWs(true);
+    const res = await createWorkspace(newWsName.trim());
+    setIsCreatingWs(false);
+
+    if (res.success && res.workspace) {
+      setNewWsName('');
+      await setActiveWorkspaceId(res.workspace.id);
+      await reloadWorkspaces();
+      setStatus({ type: 'success', message: `Workspace "${res.workspace.name}" created and set active!` });
+    } else {
+      setStatus({ type: 'error', message: `Failed to create workspace: ${res.error || 'Unknown error'}` });
+    }
+  };
+
+  const handleInviteMember = async (e: Event) => {
+    e.preventDefault();
+    if (!profile) {
+      setStatus({ type: 'error', message: '🔒 Auth Required: Please sign in above with Google or GitHub first.' });
+      return;
+    }
+    if (!isEnabled('teamSharing', profile.tier)) {
+      setStatus({
+        type: 'error',
+        message: `🔒 TEAMS Plan Required: Your current tier is "${profile.tier.toUpperCase()}". Team Workspaces require a TEAMS plan.`,
+      });
+      return;
+    }
+    if (!activeWorkspaceIdState || !inviteEmail.trim()) return;
+
+    const res = await inviteWorkspaceMember(activeWorkspaceIdState, inviteEmail.trim());
+    if (res.success) {
+      setInviteEmail('');
+      setStatus({ type: 'success', message: `Invited ${inviteEmail} to workspace.` });
+    } else {
+      setStatus({ type: 'error', message: `Invite failed: ${res.error}` });
+    }
   };
 
   const handleTriggerSync = async () => {
@@ -571,6 +643,209 @@ export function Settings() {
               })}
             </div>
           </div>
+        </div>
+      )}
+
+      {/* Team Workspaces Section */}
+      <div
+        onClick={() => setIsTeamOpen(!isTeamOpen)}
+        style={{
+          display: 'flex',
+          justifyContent: 'space-between',
+          alignItems: 'center',
+          cursor: 'pointer',
+          userSelect: 'none',
+          padding: '8px 12px',
+          backgroundColor: '#111111',
+          color: '#ffffff',
+          borderRadius: '12px',
+          marginBottom: '12px',
+        }}
+      >
+        <div style={{ display: 'flex', alignItems: 'center', gap: '6px', minWidth: 0 }}>
+          <span style={{ fontSize: '13px' }}>👥</span>
+          <span style={{ fontSize: '12px', fontWeight: '600', letterSpacing: '-0.1px', whiteSpace: 'nowrap' }}>
+            Team Workspaces
+          </span>
+          <span
+            style={{
+              fontSize: '9px',
+              fontFamily: "'JetBrains Mono', monospace",
+              fontWeight: '700',
+              textTransform: 'uppercase',
+              padding: '2px 7px',
+              borderRadius: '50px',
+              backgroundColor: '#e8d5ff',
+              color: '#111111',
+              flexShrink: 0,
+            }}
+          >
+            {workspaces.length} {workspaces.length === 1 ? 'Workspace' : 'Workspaces'}
+          </span>
+        </div>
+        <svg
+          width="14"
+          height="14"
+          viewBox="0 0 24 24"
+          fill="none"
+          stroke="currentColor"
+          strokeWidth="2"
+          strokeLinecap="round"
+          strokeLinejoin="round"
+          style={{
+            transform: isTeamOpen ? 'rotate(180deg)' : 'rotate(0deg)',
+            transition: 'transform 0.2s ease',
+            color: '#9ca3af',
+            flexShrink: 0,
+          }}
+        >
+          <path d="M6 9l6 6 6-6" />
+        </svg>
+      </div>
+
+      {isTeamOpen && (
+        <div
+          style={{
+            backgroundColor: 'var(--color-surface-soft, rgba(0,0,0,0.03))',
+            padding: '12px',
+            borderRadius: '12px',
+            border: '1px solid var(--color-hairline, rgba(0,0,0,0.08))',
+            marginBottom: '16px',
+            boxSizing: 'border-box',
+          }}
+        >
+          {!profile ? (
+            <div style={{ padding: '8px 10px', borderRadius: '8px', backgroundColor: '#fff7db', border: '1px solid #fcd34d', color: '#92400e', fontSize: '11px', lineHeight: '1.4' }}>
+              <strong>🔒 Authentication Required</strong><br />
+              Please sign in above with Google or GitHub to create or join Team Workspaces.
+            </div>
+          ) : !isEnabled('teamSharing', userTier) ? (
+            <div style={{ padding: '8px 10px', borderRadius: '8px', backgroundColor: '#e8d5ff', border: '1px solid #c084fc', color: '#111111', fontSize: '11px', lineHeight: '1.4' }}>
+              <div style={{ fontWeight: '700', marginBottom: '2px' }}>🔒 TEAMS Plan Required</div>
+              <div>Your current account tier is <strong>{userTier.toUpperCase()}</strong>. Shared Team Workspaces require a <strong>TEAMS ($9/user/mo)</strong> subscription.</div>
+              <div style={{ fontSize: '10px', opacity: 0.8, marginTop: '4px', fontStyle: 'italic' }}>
+                💡 Dev/Testing Tip: Update your profile tier in Supabase (<code>UPDATE profiles SET tier = 'team_member' WHERE id = '{profile.id}';</code>) or upgrade via the Dashboard!
+              </div>
+            </div>
+          ) : null}
+
+          {/* Active Workspace Selector */}
+          <div style={{ marginTop: '10px', marginBottom: '12px' }}>
+            <label style={{ fontSize: '11px', fontWeight: '600', color: 'var(--color-ink)', display: 'block', marginBottom: '4px' }}>
+              Active Workspace Mode
+            </label>
+            <select
+              value={activeWorkspaceIdState || 'personal'}
+              onChange={async (e) => {
+                const val = (e.target as HTMLSelectElement).value;
+                const nextId = val === 'personal' ? null : val;
+                setActiveWorkspaceIdState(nextId);
+                await setActiveWorkspaceId(nextId);
+              }}
+              style={{
+                width: '100%',
+                padding: '6px 10px',
+                borderRadius: '8px',
+                border: '1px solid var(--color-hairline, rgba(0,0,0,0.15))',
+                fontSize: '12px',
+                fontWeight: '600',
+                backgroundColor: '#ffffff',
+                color: '#111111',
+                cursor: 'pointer',
+              }}
+            >
+              <option value="personal">👤 Personal Mode (Only my notes)</option>
+              {workspaces.map((ws) => (
+                <option key={ws.id} value={ws.id}>
+                  👥 {ws.name} ({ws.role || 'member'})
+                </option>
+              ))}
+            </select>
+          </div>
+
+          {/* Create Workspace Form */}
+          <form onSubmit={handleCreateWorkspace} style={{ marginBottom: '12px', paddingTop: '10px', borderTop: '1px solid var(--color-hairline, rgba(0,0,0,0.08))' }}>
+            <label style={{ fontSize: '11px', fontWeight: '600', color: 'var(--color-ink)', display: 'block', marginBottom: '4px' }}>
+              Create New Team Workspace
+            </label>
+            <div style={{ display: 'flex', gap: '6px' }}>
+              <input
+                type="text"
+                placeholder="Workspace Name (e.g. Acme Corp)"
+                value={newWsName}
+                onInput={(e) => setNewWsName((e.target as HTMLInputElement).value)}
+                style={{
+                  flex: 1,
+                  padding: '6px 10px',
+                  borderRadius: '50px',
+                  border: '1px solid var(--color-hairline, rgba(0,0,0,0.15))',
+                  fontSize: '11px',
+                  backgroundColor: '#ffffff',
+                  outline: 'none',
+                }}
+              />
+              <button
+                type="submit"
+                disabled={!profile || !isEnabled('teamSharing', userTier) || isCreatingWs || !newWsName.trim()}
+                style={{
+                  padding: '6px 12px',
+                  borderRadius: '50px',
+                  backgroundColor: '#111111',
+                  color: '#ffffff',
+                  border: 'none',
+                  fontSize: '11px',
+                  fontWeight: '600',
+                  cursor: !profile || !isEnabled('teamSharing', userTier) || isCreatingWs || !newWsName.trim() ? 'not-allowed' : 'pointer',
+                  opacity: !profile || !isEnabled('teamSharing', userTier) || isCreatingWs || !newWsName.trim() ? 0.5 : 1,
+                }}
+              >
+                Create
+              </button>
+            </div>
+          </form>
+
+          {/* Invite Teammates Form (shown when workspace active) */}
+          {activeWorkspaceIdState && (
+            <form onSubmit={handleInviteMember} style={{ paddingTop: '10px', borderTop: '1px solid var(--color-hairline, rgba(0,0,0,0.08))' }}>
+              <label style={{ fontSize: '11px', fontWeight: '600', color: 'var(--color-ink)', display: 'block', marginBottom: '4px' }}>
+                Invite Teammate by Email
+              </label>
+              <div style={{ display: 'flex', gap: '6px' }}>
+                <input
+                  type="email"
+                  placeholder="colleague@company.com"
+                  value={inviteEmail}
+                  onInput={(e) => setInviteEmail((e.target as HTMLInputElement).value)}
+                  style={{
+                    flex: 1,
+                    padding: '6px 10px',
+                    borderRadius: '50px',
+                    border: '1px solid var(--color-hairline, rgba(0,0,0,0.15))',
+                    fontSize: '11px',
+                    backgroundColor: '#ffffff',
+                    outline: 'none',
+                  }}
+                />
+                <button
+                  type="submit"
+                  disabled={!inviteEmail.trim()}
+                  style={{
+                    padding: '6px 12px',
+                    borderRadius: '50px',
+                    backgroundColor: '#e8d5ff',
+                    color: '#111111',
+                    border: '1px solid rgba(0,0,0,0.1)',
+                    fontSize: '11px',
+                    fontWeight: '600',
+                    cursor: !inviteEmail.trim() ? 'not-allowed' : 'pointer',
+                    opacity: !inviteEmail.trim() ? 0.5 : 1,
+                  }}
+                >
+                  Invite
+                </button>
+              </div>
+            </form>
+          )}
         </div>
       )}
 

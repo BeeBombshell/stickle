@@ -25,6 +25,15 @@ interface NoteBubbleProps {
   onDragEnd?: (clientX: number, clientY: number) => void;
 }
 
+const AVATAR_PALETTE = ['#6366f1', '#ec4899', '#10b981', '#f59e0b', '#8b5cf6', '#06b6d4', '#f97316'];
+function getAvatarBg(name: string): string {
+  let hash = 0;
+  for (let i = 0; i < name.length; i++) {
+    hash = name.charCodeAt(i) + ((hash << 5) - hash);
+  }
+  return AVATAR_PALETTE[Math.abs(hash) % AVATAR_PALETTE.length];
+}
+
 export function NoteBubble({
   note,
   onSave,
@@ -47,8 +56,15 @@ export function NoteBubble({
   const [confirmDelete, setConfirmDelete] = useState(false);
   const [tagInput, setTagInput] = useState('');
   const [tags, setTags] = useState<string[]>(note.tags || []);
+  const [imgError, setImgError] = useState(false);
   const dragStartRef = useRef<{ x: number; y: number } | null>(null);
   const hasDraggedRef = useRef(false);
+
+  const displayAuthorName = note.authorName || (note.workspaceId ? 'Alex' : undefined);
+  const displayAuthorAvatarUrl = note.authorAvatarUrl || undefined;
+
+  const authorInitial = (displayAuthorName || 'Alex').charAt(0).toUpperCase();
+  const avatarBg = getAvatarBg(displayAuthorName || 'Alex');
 
   useEffect(() => {
     setContent(note.content);
@@ -156,21 +172,51 @@ export function NoteBubble({
         }}
         title="Click to expand note"
       >
-        <svg
-          width="12"
-          height="12"
-          viewBox="0 0 24 24"
-          fill="none"
-          stroke="currentColor"
-          strokeWidth="2.5"
-          strokeLinecap="round"
-          strokeLinejoin="round"
-          style={{ flexShrink: 0, opacity: 0.65 }}
-        >
-          <circle cx="12" cy="6" r="3" fill="currentColor" />
-          <line x1="12" y1="9" x2="12" y2="20" />
-          <path d="M6 14a6 6 0 0 0 12 0" />
-        </svg>
+        {displayAuthorName ? (
+          displayAuthorAvatarUrl && !imgError ? (
+            <img
+              src={displayAuthorAvatarUrl}
+              alt={displayAuthorName}
+              onError={() => setImgError(true)}
+              style={{ width: '16px', height: '16px', borderRadius: '50%', flexShrink: 0, objectFit: 'cover', border: '1px solid rgba(0,0,0,0.15)' }}
+              title={`Note by ${displayAuthorName}`}
+            />
+          ) : (
+            <span
+              style={{
+                width: '16px',
+                height: '16px',
+                borderRadius: '50%',
+                backgroundColor: avatarBg,
+                color: '#ffffff',
+                fontSize: '9px',
+                fontWeight: '800',
+                display: 'inline-flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                flexShrink: 0,
+                lineHeight: 1,
+                boxShadow: '0 1px 2px rgba(0,0,0,0.15)',
+              }}
+              title={`Note by ${displayAuthorName}`}
+            >
+              {authorInitial}
+            </span>
+          )
+        ) : (
+          <svg
+            width="14"
+            height="14"
+            viewBox="0 0 44 44"
+            fill="none"
+            style={{ flexShrink: 0 }}
+            title="Stickle Note"
+          >
+            <rect width="44" height="44" rx="10" fill={theme.text} />
+            <circle cx="31" cy="31" r="9" fill={theme.bg} />
+            <circle cx="31" cy="31" r="3.5" fill={theme.text} />
+          </svg>
+        )}
         <span style={{ ...chipStyles.snippetText, color: theme.text }}>{snippet}</span>
         {tags.length > 0 && (
           <span style={{ fontSize: '10px', opacity: 0.8, fontFamily: 'monospace' }}>
@@ -227,6 +273,71 @@ export function NoteBubble({
               <circle cx="16" cy="19" r="2.2" />
             </svg>
           </span>
+          {displayAuthorName && (
+            <span
+              style={{
+                display: 'inline-flex',
+                alignItems: 'center',
+                gap: '5px',
+                padding: '2px 8px 2px 4px',
+                borderRadius: '50px',
+                backgroundColor: 'rgba(0,0,0,0.06)',
+                border: '1px solid rgba(0,0,0,0.08)',
+                fontSize: '10.5px',
+                fontWeight: '700',
+                letterSpacing: '0.01em',
+                color: theme.text,
+              }}
+              title={`Workspace Note by ${displayAuthorName}`}
+            >
+              {displayAuthorAvatarUrl && !imgError ? (
+                <img
+                  src={displayAuthorAvatarUrl}
+                  alt={displayAuthorName}
+                  onError={() => setImgError(true)}
+                  style={{ width: '16px', height: '16px', borderRadius: '50%', objectFit: 'cover', border: '1px solid rgba(0,0,0,0.12)' }}
+                />
+              ) : (
+                <span
+                  style={{
+                    width: '16px',
+                    height: '16px',
+                    borderRadius: '50%',
+                    backgroundColor: avatarBg,
+                    color: '#ffffff',
+                    fontSize: '9px',
+                    fontWeight: '800',
+                    display: 'inline-flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    lineHeight: 1,
+                    boxShadow: '0 1px 2px rgba(0,0,0,0.15)',
+                  }}
+                >
+                  {authorInitial}
+                </span>
+              )}
+              {displayAuthorName}
+            </span>
+          )}
+          {note.isReadOnly && (
+            <span
+              style={{
+                fontSize: '9px',
+                fontWeight: '600',
+                padding: '1px 5px',
+                borderRadius: '4px',
+                backgroundColor: 'rgba(0,0,0,0.12)',
+                color: theme.text,
+                display: 'inline-flex',
+                alignItems: 'center',
+                gap: '2px',
+              }}
+              title="Read-only teammate note"
+            >
+              🔒 Read-only
+            </span>
+          )}
           {note.syncedToNotion && (
             <span
               style={bubbleStyles.syncedIndicator}
@@ -238,37 +349,41 @@ export function NoteBubble({
           )}
         </div>
         <div style={{ display: 'flex', alignItems: 'center', gap: '2px' }}>
-          <button
-            onClick={() => setShowPalette(!showPalette)}
-            style={{ ...bubbleStyles.iconBtn, color: theme.text }}
-            title="Change background color"
-          >
-            <span
-              style={{
-                display: 'block',
-                width: '11px',
-                height: '11px',
-                borderRadius: '50%',
-                backgroundColor: theme.bg,
-                border: '1.5px solid rgba(0,0,0,0.35)',
-                boxSizing: 'border-box',
-              }}
-            />
-          </button>
-          <button
-            onClick={() => setConfirmDelete(!confirmDelete)}
-            style={{
-              ...bubbleStyles.iconBtn,
-              color: confirmDelete ? '#ef4444' : theme.text,
-              opacity: confirmDelete ? 1.0 : undefined,
-            }}
-            title="Delete note"
-          >
-            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-              <polyline points="3 6 5 6 21 6" />
-              <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2" />
-            </svg>
-          </button>
+          {!note.isReadOnly && (
+            <>
+              <button
+                onClick={() => setShowPalette(!showPalette)}
+                style={{ ...bubbleStyles.iconBtn, color: theme.text }}
+                title="Change background color"
+              >
+                <span
+                  style={{
+                    display: 'block',
+                    width: '11px',
+                    height: '11px',
+                    borderRadius: '50%',
+                    backgroundColor: theme.bg,
+                    border: '1.5px solid rgba(0,0,0,0.35)',
+                    boxSizing: 'border-box',
+                  }}
+                />
+              </button>
+              <button
+                onClick={() => setConfirmDelete(!confirmDelete)}
+                style={{
+                  ...bubbleStyles.iconBtn,
+                  color: confirmDelete ? '#ef4444' : theme.text,
+                  opacity: confirmDelete ? 1.0 : undefined,
+                }}
+                title="Delete note"
+              >
+                <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                  <polyline points="3 6 5 6 21 6" />
+                  <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2" />
+                </svg>
+              </button>
+            </>
+          )}
           <button
             onClick={() => onToggleCollapse?.(true)}
             style={{ ...bubbleStyles.iconBtn, color: theme.text }}
@@ -280,6 +395,7 @@ export function NoteBubble({
           </button>
         </div>
       </div>
+
 
       {confirmDelete && (
         <div style={bubbleStyles.deleteConfirmBar}>
@@ -407,15 +523,17 @@ export function NoteBubble({
       )}
 
       <textarea
+        readOnly={note.isReadOnly}
         style={{
           ...bubbleStyles.textarea,
           color: theme.text,
           caretColor: theme.text,
+          cursor: note.isReadOnly ? 'default' : 'text',
         }}
         value={content}
-        placeholder="Type note content..."
-        onInput={handleInput}
-        onBlur={handleInput}
+        placeholder={note.isReadOnly ? 'Read-only note' : 'Type note content...'}
+        onInput={note.isReadOnly ? undefined : handleInput}
+        onBlur={note.isReadOnly ? undefined : handleInput}
         onKeyDown={(e) => e.stopPropagation()}
         onKeyUp={(e) => e.stopPropagation()}
       />
@@ -424,31 +542,35 @@ export function NoteBubble({
         {tags.map((tag) => (
           <span key={tag} style={{ ...bubbleStyles.tagBadge, color: theme.text }}>
             #{tag}
-            <button
-              type="button"
-              onClick={(e) => {
-                e.stopPropagation();
-                removeTag(tag);
-              }}
-              style={{ ...bubbleStyles.tagRemoveBtn, color: theme.text }}
-              title="Remove tag"
-            >
-              <svg width="9" height="9" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
-                <line x1="18" y1="6" x2="6" y2="18" />
-                <line x1="6" y1="6" x2="18" y2="18" />
-              </svg>
-            </button>
+            {!note.isReadOnly && (
+              <button
+                type="button"
+                onClick={(e) => {
+                  e.stopPropagation();
+                  removeTag(tag);
+                }}
+                style={{ ...bubbleStyles.tagRemoveBtn, color: theme.text }}
+                title="Remove tag"
+              >
+                <svg width="9" height="9" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                  <line x1="18" y1="6" x2="6" y2="18" />
+                  <line x1="6" y1="6" x2="18" y2="18" />
+                </svg>
+              </button>
+            )}
           </span>
         ))}
-        <input
-          type="text"
-          placeholder="+ tag"
-          value={tagInput}
-          onInput={(e) => setTagInput((e.target as HTMLInputElement).value)}
-          onKeyDown={handleTagKeyDown}
-          onKeyUp={(e) => e.stopPropagation()}
-          style={{ ...bubbleStyles.tagInput, color: theme.text }}
-        />
+        {!note.isReadOnly && (
+          <input
+            type="text"
+            placeholder="+ tag"
+            value={tagInput}
+            onInput={(e) => setTagInput((e.target as HTMLInputElement).value)}
+            onKeyDown={handleTagKeyDown}
+            onKeyUp={(e) => e.stopPropagation()}
+            style={{ ...bubbleStyles.tagInput, color: theme.text }}
+          />
+        )}
       </div>
     </div>
   );

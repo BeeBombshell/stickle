@@ -1,9 +1,10 @@
 import { useState, useEffect } from 'preact/hooks';
-import type { StickleNote } from '../../lib/types';
+import type { StickleNote, Workspace } from '../../lib/types';
 import { getAllNotes } from '../../lib/db';
 import { NoteSidebar } from '../../components/NoteSidebar';
 import { Settings, loadSettings, saveSettings } from '../../components/Settings';
 import { exportNotesToJson, importNotesFromJson } from '../../lib/export-import';
+import { getActiveWorkspaceId, setActiveWorkspaceId, getUserWorkspaces } from '../../lib/workspace';
 import posthog from '../../lib/posthog';
 
 export type PopupTab = 'active-tab' | 'all-notes' | 'settings';
@@ -17,11 +18,19 @@ export function App() {
   const [pingStatus, setPingStatus] = useState<string>('Connecting...');
   const [statusMsg, setStatusMsg] = useState<string | null>(null);
   const [enabled, setEnabled] = useState<boolean>(true);
+  const [workspaces, setWorkspaces] = useState<Workspace[]>([]);
+  const [activeWorkspaceIdState, setActiveWorkspaceIdState] = useState<string | null>(null);
 
   const reloadNotes = async () => {
     try {
       const all = await getAllNotes();
       setNotes(all);
+
+      const wsId = await getActiveWorkspaceId();
+      setActiveWorkspaceIdState(wsId);
+
+      const userWs = await getUserWorkspaces();
+      setWorkspaces(userWs);
 
       const s = await loadSettings();
       if (s.enabled !== undefined) setEnabled(s.enabled);
@@ -45,6 +54,23 @@ export function App() {
       }
     } catch (err) {
       console.error('[Stickle Popup] Failed to load notes:', err);
+    }
+  };
+
+  const handleWorkspaceChange = async (wsId: string) => {
+    const nextId = wsId === 'personal' ? null : wsId;
+    setActiveWorkspaceIdState(nextId);
+    await setActiveWorkspaceId(nextId);
+    setStatusMsg(nextId ? 'Switched to Workspace mode' : 'Switched to Personal mode');
+    setTimeout(() => setStatusMsg(null), 2500);
+
+    // Notify content script to re-anchor and refresh notes
+    if (typeof chrome !== 'undefined' && chrome.tabs) {
+      chrome.tabs.query({ active: true, currentWindow: true }, (tabs) => {
+        if (tabs[0]?.id) {
+          chrome.tabs.sendMessage(tabs[0].id, { type: 'TRIGGER_REANCHOR' });
+        }
+      });
     }
   };
 
@@ -149,6 +175,31 @@ export function App() {
 
         {/* Header Right Actions */}
         <div style={{ display: 'flex', gap: '6px', alignItems: 'center' }}>
+          <select
+            value={activeWorkspaceIdState || 'personal'}
+            onChange={(e) => handleWorkspaceChange((e.target as HTMLSelectElement).value)}
+            style={{
+              padding: '3px 8px',
+              borderRadius: '50px',
+              fontSize: '10px',
+              fontWeight: '700',
+              fontFamily: "'JetBrains Mono', monospace",
+              backgroundColor: activeWorkspaceIdState ? '#e8d5ff' : '#f3f4f6',
+              color: '#111111',
+              border: '1px solid rgba(0,0,0,0.12)',
+              cursor: 'pointer',
+              outline: 'none',
+              maxWidth: '120px',
+            }}
+            title="Switch Workspace Mode"
+          >
+            <option value="personal">👤 Personal</option>
+            {workspaces.map((ws) => (
+              <option key={ws.id} value={ws.id}>
+                👥 {ws.name}
+              </option>
+            ))}
+          </select>
           <button
             onClick={handleToggleEnabled}
             title={enabled ? 'Stickles are active globally. Click to disable.' : 'Stickles are disabled globally. Click to enable.'}

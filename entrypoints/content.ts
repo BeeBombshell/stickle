@@ -2,7 +2,7 @@ import { defineContentScript } from 'wxt/sandbox';
 import posthog from '../lib/posthog';
 import { render, h } from 'preact';
 import { NoteBubble } from '../components/NoteBubble';
-import { createAnchor, resolveAnchor } from '../lib/anchoring';
+import { createAnchor, resolveAnchor, normalizeUrl } from '../lib/anchoring';
 import { createNote, getNotesForUrl, updateNote, deleteNote } from '../lib/db';
 import { loadSettings } from '../components/Settings';
 import { pushNoteToNotion } from '../lib/notion';
@@ -13,6 +13,8 @@ import {
   restoreHighlightOverlay,
   removeHighlightOverlay,
 } from '../lib/highlighting';
+import { getActiveWorkspaceId, fetchWorkspaceNotesForUrl } from '../lib/workspace';
+import { getCurrentUserAuthorInfo } from '../lib/auth';
 import '../styles/design-tokens.css';
 
 export default defineContentScript({
@@ -65,6 +67,8 @@ export default defineContentScript({
           const anchor = createAnchor(target, offsetX, offsetY);
           const settings = await loadSettings();
           if (settings.enabled === false) return;
+          const activeWsId = await getActiveWorkspaceId();
+          const authorInfo = activeWsId ? await getCurrentUserAuthorInfo() : undefined;
           const newNote: StickleNote = {
             id: crypto.randomUUID(),
             url: normalizeUrl(window.location.href),
@@ -77,6 +81,9 @@ export default defineContentScript({
             createdAt: Date.now(),
             updatedAt: Date.now(),
             syncedToNotion: false,
+            workspaceId: activeWsId || undefined,
+            authorName: authorInfo?.authorName,
+            authorAvatarUrl: authorInfo?.authorAvatarUrl,
           };
           await createNote(newNote);
           posthog.capture('note_created', { creation_method: 'popup_action' });
@@ -146,6 +153,8 @@ export default defineContentScript({
         const settings = await loadSettings();
         if (settings.enabled === false) return;
 
+        const activeWsId = await getActiveWorkspaceId();
+        const authorInfo = activeWsId ? await getCurrentUserAuthorInfo() : undefined;
         const newNote: StickleNote = {
           id: crypto.randomUUID(),
           url: normalizeUrl(window.location.href),
@@ -159,6 +168,9 @@ export default defineContentScript({
           createdAt: Date.now(),
           updatedAt: Date.now(),
           syncedToNotion: false,
+          workspaceId: activeWsId || undefined,
+          authorName: authorInfo?.authorName,
+          authorAvatarUrl: authorInfo?.authorAvatarUrl,
         };
 
         await createNote(newNote);
@@ -261,6 +273,8 @@ export default defineContentScript({
         const settings = await loadSettings();
         const color = settings.defaultNoteColor || 'lime';
 
+        const activeWsId = await getActiveWorkspaceId();
+        const authorInfo = activeWsId ? await getCurrentUserAuthorInfo() : undefined;
         const newNote: StickleNote = {
           id: crypto.randomUUID(),
           url: normalizeUrl(window.location.href),
@@ -274,6 +288,9 @@ export default defineContentScript({
           createdAt: Date.now(),
           updatedAt: Date.now(),
           syncedToNotion: false,
+          workspaceId: activeWsId || undefined,
+          authorName: authorInfo?.authorName,
+          authorAvatarUrl: authorInfo?.authorAvatarUrl,
         };
 
         // Wrap DOM selection range in <mark> tag
@@ -362,7 +379,36 @@ export default defineContentScript({
         }
         rootContainer.style.display = 'block';
 
-        const notes = await getNotesForUrl(normalizeUrl(window.location.href));
+        const currentUrl = normalizeUrl(window.location.href);
+        const personalNotes = await getNotesForUrl(currentUrl);
+
+        let teamNotes: StickleNote[] = [];
+        const activeWorkspaceId = await getActiveWorkspaceId();
+        if (activeWorkspaceId) {
+          try {
+            teamNotes = await fetchWorkspaceNotesForUrl(activeWorkspaceId, currentUrl);
+          } catch {}
+        }
+
+        // Deduplicate personal vs workspace notes by ID (teamNotes takes precedence to enforce isReadOnly & author metadata)
+        const notesMap = new Map<string, StickleNote>();
+        personalNotes.forEach((n) => notesMap.set(n.id, n));
+        teamNotes.forEach((n) => {
+          notesMap.set(n.id, n);
+        });
+
+        const notes = Array.from(notesMap.values());
+
+        if (activeWorkspaceId) {
+          const currentAuthor = await getCurrentUserAuthorInfo();
+          notes.forEach((n) => {
+            if (n.workspaceId === activeWorkspaceId && !n.authorName) {
+              n.authorName = currentAuthor.authorName;
+              n.authorAvatarUrl = currentAuthor.authorAvatarUrl || n.authorAvatarUrl;
+            }
+          });
+        }
+
         const currentIds = new Set(notes.map((n) => n.id));
 
         // Clean up unmounted notes that were deleted
@@ -446,6 +492,8 @@ export default defineContentScript({
       // which previously raced with layout when DOM wasn't fully painted.
       let posX = initialX ?? note.anchor.pageX ?? 60;
       let posY = initialY ?? note.anchor.pageY ?? 60;
+      if (isNaN(posX) || !isFinite(posX)) posX = note.anchor.pageX || 60;
+      if (isNaN(posY) || !isFinite(posY)) posY = note.anchor.pageY || 60;
 
       wrapper.style.left = `${posX}px`;
       wrapper.style.top = `${posY}px`;
@@ -584,14 +632,7 @@ export default defineContentScript({
   },
 });
 
-function normalizeUrl(url: string): string {
-  try {
-    const parsed = new URL(url);
-    return `${parsed.origin}${parsed.pathname}`;
-  } catch {
-    return url;
-  }
-}
+
 
 function getOrCreateHostContainer(): HTMLElement {
   let container = document.getElementById('stickle-notes-root');
