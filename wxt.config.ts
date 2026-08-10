@@ -30,9 +30,14 @@ export default defineConfig({
         '128': 'icon/128.png',
       },
     },
+    options_ui: {
+      page: 'options.html',
+      open_in_tab: true,
+      openInTab: true,
+    },
     web_accessible_resources: [
       {
-        resources: ['auth-callback.html'],
+        resources: ['auth-callback.html', 'options.html'],
         matches: ['<all_urls>'],
       },
     ],
