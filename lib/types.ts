@@ -59,6 +59,10 @@ export interface StickleNote {
   userId?: string;
   workspaceId?: string;
   deletedAt?: number;
+  // Team Workspace fields
+  authorName?: string;
+  authorAvatarUrl?: string;
+  isReadOnly?: boolean;
 }
 
 export interface NotionConfig {
@@ -73,6 +77,26 @@ export interface UserProfile {
   licenseKey?: string;
   avatarUrl?: string;
 }
+
+export interface Workspace {
+  id: string;
+  name: string;
+  slug: string;
+  ownerId: string;
+  createdAt?: string;
+  role?: 'owner' | 'admin' | 'member' | 'viewer';
+  memberCount?: number;
+}
+
+export interface WorkspaceMember {
+  workspaceId: string;
+  userId: string;
+  role: 'owner' | 'admin' | 'member' | 'viewer';
+  email: string;
+  avatarUrl?: string;
+  joinedAt?: string;
+}
+
 
 
 

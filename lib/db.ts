@@ -137,4 +137,108 @@ export async function deleteNote(id: string): Promise<void> {
   return await db.notes.delete(id);
 }
 
+// Workspace Note Cache Helpers (Local-First 0ms Initial Render)
+const WORKSPACE_CACHE_KEY = 'stickle_workspace_notes_cache';
+const inMemoryWorkspaceNotesCache: Record<string, StickleNote[]> = {};
+
+export async function getCachedWorkspaceNotes(workspaceId: string, url?: string): Promise<StickleNote[]> {
+  if (isChromeStorageAvailable()) {
+    return new Promise((resolve) => {
+      chrome.storage.local.get([WORKSPACE_CACHE_KEY], (result) => {
+        const cache: Record<string, StickleNote[]> = result[WORKSPACE_CACHE_KEY] || {};
+        const workspaceNotes = cache[workspaceId] || [];
+        if (url) {
+          resolve(workspaceNotes.filter((n) => n.url === url && !n.deletedAt));
+        } else {
+          resolve(workspaceNotes.filter((n) => !n.deletedAt));
+        }
+      });
+    });
+  }
+
+  // LocalStorage / Memory Fallback
+  try {
+    const raw = typeof localStorage !== 'undefined' && typeof localStorage.getItem === 'function' ? localStorage.getItem(WORKSPACE_CACHE_KEY) : null;
+    const cache: Record<string, StickleNote[]> = raw ? JSON.parse(raw) : inMemoryWorkspaceNotesCache;
+    const workspaceNotes = cache[workspaceId] || [];
+    if (url) {
+      return workspaceNotes.filter((n) => n.url === url && !n.deletedAt);
+    }
+    return workspaceNotes.filter((n) => !n.deletedAt);
+  } catch {
+    const workspaceNotes = inMemoryWorkspaceNotesCache[workspaceId] || [];
+    if (url) {
+      return workspaceNotes.filter((n) => n.url === url && !n.deletedAt);
+    }
+    return workspaceNotes.filter((n) => !n.deletedAt);
+  }
+}
+
+export async function cacheWorkspaceNotes(workspaceId: string, notes: StickleNote[]): Promise<void> {
+  if (isChromeStorageAvailable()) {
+    return new Promise((resolve) => {
+      chrome.storage.local.get([WORKSPACE_CACHE_KEY], (result) => {
+        const cache: Record<string, StickleNote[]> = result[WORKSPACE_CACHE_KEY] || {};
+        cache[workspaceId] = notes;
+        chrome.storage.local.set({ [WORKSPACE_CACHE_KEY]: cache }, () => resolve());
+      });
+    });
+  }
+
+  try {
+    if (typeof localStorage !== 'undefined' && typeof localStorage.setItem === 'function') {
+      const raw = localStorage.getItem(WORKSPACE_CACHE_KEY);
+      const cache: Record<string, StickleNote[]> = raw ? JSON.parse(raw) : {};
+      cache[workspaceId] = notes;
+      localStorage.setItem(WORKSPACE_CACHE_KEY, JSON.stringify(cache));
+    } else {
+      inMemoryWorkspaceNotesCache[workspaceId] = notes;
+    }
+  } catch {
+    inMemoryWorkspaceNotesCache[workspaceId] = notes;
+  }
+}
+
+export async function clearWorkspaceNotesCache(workspaceId?: string): Promise<void> {
+  if (isChromeStorageAvailable()) {
+    return new Promise((resolve) => {
+      chrome.storage.local.get([WORKSPACE_CACHE_KEY], (result) => {
+        const cache: Record<string, StickleNote[]> = result[WORKSPACE_CACHE_KEY] || {};
+        if (workspaceId) {
+          delete cache[workspaceId];
+          chrome.storage.local.set({ [WORKSPACE_CACHE_KEY]: cache }, () => resolve());
+        } else {
+          chrome.storage.local.remove([WORKSPACE_CACHE_KEY], () => resolve());
+        }
+      });
+    });
+  }
+
+  try {
+    if (typeof localStorage !== 'undefined' && typeof localStorage.setItem === 'function') {
+      if (workspaceId) {
+        const raw = localStorage.getItem(WORKSPACE_CACHE_KEY);
+        const cache: Record<string, StickleNote[]> = raw ? JSON.parse(raw) : {};
+        delete cache[workspaceId];
+        localStorage.setItem(WORKSPACE_CACHE_KEY, JSON.stringify(cache));
+      } else {
+        localStorage.removeItem(WORKSPACE_CACHE_KEY);
+      }
+    } else {
+      if (workspaceId) {
+        delete inMemoryWorkspaceNotesCache[workspaceId];
+      } else {
+        Object.keys(inMemoryWorkspaceNotesCache).forEach((k) => delete inMemoryWorkspaceNotesCache[k]);
+      }
+    }
+  } catch {
+    if (workspaceId) {
+      delete inMemoryWorkspaceNotesCache[workspaceId];
+    } else {
+      Object.keys(inMemoryWorkspaceNotesCache).forEach((k) => delete inMemoryWorkspaceNotesCache[k]);
+    }
+  }
+}
+
+
 

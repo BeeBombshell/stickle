@@ -7,9 +7,21 @@ export interface ResolvedAnchor {
   tier: AnchorTier;
 }
 
-// ---------------------------------------------------------------------------
-// Similarity helper (trigram Dice coefficient)
-// ---------------------------------------------------------------------------
+export function normalizeUrl(url: string): string {
+  if (!url) return '';
+  try {
+    const decoded = decodeURIComponent(url);
+    const parsed = new URL(decoded);
+    return `${parsed.origin}${parsed.pathname}`;
+  } catch {
+    try {
+      const parsed = new URL(url);
+      return `${parsed.origin}${parsed.pathname}`;
+    } catch {
+      return url;
+    }
+  }
+}
 
 /**
   * Calculates trigram/edit similarity score between two strings (0.0 to 1.0).
@@ -181,10 +193,16 @@ export function resolveAnchor(anchor: NoteAnchor): ResolvedAnchor {
   const bodyLeft = scrollX + bodyRect.left;
   const bodyTop = scrollY + bodyRect.top;
 
-  const computeX = (rectLeft: number) =>
-    Math.max(10, scrollX + rectLeft - bodyLeft + anchor.offsetX);
-  const computeY = (rectTop: number) =>
-    Math.max(10, scrollY + rectTop - bodyTop + anchor.offsetY);
+  const computeX = (rectLeft: number) => {
+    const offX = typeof anchor.offsetX === 'number' && !isNaN(anchor.offsetX) ? anchor.offsetX : 0;
+    const res = Math.max(10, scrollX + rectLeft - bodyLeft + offX);
+    return isNaN(res) || !isFinite(res) ? (anchor.pageX || 60) : res;
+  };
+  const computeY = (rectTop: number) => {
+    const offY = typeof anchor.offsetY === 'number' && !isNaN(anchor.offsetY) ? anchor.offsetY : 0;
+    const res = Math.max(10, scrollY + rectTop - bodyTop + offY);
+    return isNaN(res) || !isFinite(res) ? (anchor.pageY || 60) : res;
+  };
 
   // If the DOM has not painted yet, return stored absolute coords immediately.
   // This prevents all stickles accumulating at (0,0) on initial injection.
