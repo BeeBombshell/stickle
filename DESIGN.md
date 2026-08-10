@@ -141,9 +141,10 @@ The vector canvas marketing system is shadow-light by design — the color block
 ### Photography & Illustration Geometry
 
 - Image frames use `{rounded.md}` (8px) — generous enough to feel friendly, conservative enough to read as editorial.
-- Template thumbnails on the home grid sit in `{rounded.md}` tiles with `{spacing.md}` interior padding around the embedded preview.
-- Pastel sticky-note component thumbnails preserve a small `{rounded.sm}` corner that mimics actual sticky paper.
-- No avatar circles appear in marketing surfaces.
+### Iconography Standard
+
+- **Unified Vector Icon Pack**: All UI icons across the extension popup, options page, sidebar components, and web dashboard MUST use **Lucide / Feather stroke-based inline SVG vector icons** (`viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"`).
+- **No Text Emojis in UI**: Raw text emojis (e.g., ☁️, 📝, 🎨, 🤖, 🌐, 👤, 👥, 🖥️, ⚡, 🔒, 🔄, 💡) must NOT be used as icons in buttons, navigation bars, headers, or cards. Always use vector SVG icons from the unified stroke icon pack.
 
 ## Components
 
