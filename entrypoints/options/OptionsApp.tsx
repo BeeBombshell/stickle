@@ -8,6 +8,7 @@ import { getProfile, signInWithOAuth, signOut } from '../../lib/auth';
 import { isEnabled, FEATURE_NAMES, type FeatureFlag } from '../../lib/flags';
 import { fullSync } from '../../lib/sync';
 import type { NoteColorBlock, NoteBorderStyle, UserProfile } from '../../lib/types';
+import { LocalizedPricing } from '../../components/LocalizedPricing';
 import posthog from '../../lib/posthog';
 
 type NavTab = 'account' | 'notion' | 'defaults' | 'mcp' | 'about';
@@ -586,6 +587,18 @@ export function OptionsApp() {
                     );
                   })}
                 </div>
+              </section>
+
+              {/* Localized Pricing & Upgrade Section */}
+              <section style={styles.card}>
+                <div style={{ marginBottom: '16px' }}>
+                  <span style={styles.eyebrow}>LOCALIZED PLANS & PRICING</span>
+                  <h2 style={styles.cardTitle}>Upgrade Plan &amp; Supporter Tiers</h2>
+                  <p style={styles.cardDesc}>
+                    Support open source development and unlock real-time cloud sync, central web dashboard access, and remote MCP server integrations.
+                  </p>
+                </div>
+                <LocalizedPricing userEmail={profile?.email} userId={profile?.id} />
               </section>
             </div>
           )}

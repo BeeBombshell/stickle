@@ -187,3 +187,39 @@ export async function getCurrentUserAuthorInfo(): Promise<{ authorName: string; 
   };
 }
 
+/**
+ * Validates and updates user subscription tier in extension storage.
+ * Caches result for 24 hours unless forceRefresh is true.
+ */
+export async function validateUserTier(forceRefresh = false): Promise<UserProfile['tier']> {
+  const CACHE_TTL_MS = 24 * 60 * 60 * 1000; // 24 hours
+
+  if (!forceRefresh && typeof chrome !== 'undefined' && chrome.storage?.local) {
+    try {
+      const cached = await chrome.storage.local.get(['stickle_user_tier', 'stickle_tier_validated_at']);
+      const tier = cached.stickle_user_tier as UserProfile['tier'] | undefined;
+      const validatedAt = cached.stickle_tier_validated_at as number | undefined;
+
+      if (tier && validatedAt && Date.now() - validatedAt < CACHE_TTL_MS) {
+        return tier;
+      }
+    } catch {}
+  }
+
+  const profile = await getProfile();
+  const activeTier: UserProfile['tier'] = profile?.tier || 'free';
+
+  if (typeof chrome !== 'undefined' && chrome.storage?.local) {
+    try {
+      await chrome.storage.local.set({
+        stickle_user_tier: activeTier,
+        stickle_user_license_key: profile?.licenseKey || null,
+        stickle_tier_validated_at: Date.now(),
+      });
+    } catch {}
+  }
+
+  return activeTier;
+}
+
+
