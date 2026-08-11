@@ -300,7 +300,14 @@ This log records non-trivial decisions made during the development of Stickle.
 - **Decision:** Updated Dodo Payments query metadata parameter to `metadata_user_id` (stripping invalid `custom_data[...]` parameters), configured `NEXT_PUBLIC_` env var aliases for Supabase and Dodo checkout domains in Next.js, parsed returned `status` / `payment_id` parameters on return redirects instead of hardcoded `?success=true`, and enforced pre-checkout user authentication on the `/upgrade` page.
 - **Rationale:** Aligns strictly with Dodo Payments documentation specification, resolves Next.js client-side environment variable masking, prevents false success banners on failed/cancelled checkout attempts, and guarantees license keys are bound to verified user IDs upon payment completion.
 
+---
 
+## Phase 18 — Extension Release Packaging & Telemetry/Webhook Verification
 
+### 61. Multi-Browser Packaging Safeguard & Icon Asset Verification
+- **Decision:** Created `scripts/verify-packaging.ts` and `tests/packaging.test.ts` to programmatically validate extension asset icon bundles (16/32/48/128px), verify manifest permissions (`storage`, `activeTab`, `scripting`, `alarms`), and enforce that primary manifest permissions do not request unscoped `<all_urls>`.
+- **Rationale:** Prevents Chrome Web Store rejection due to over-permissioning or missing PNG asset dimensions, ensuring clean MV3 submission zip artifacts for Chrome and Firefox.
 
-
+### 62. Privacy-Preserving Telemetry Verification Suite & E2E Webhook Pipeline
+- **Decision:** Implemented `tests/analytics.test.ts` verifying `lib/posthog.ts` zero-PII compliance and added `remote-mcp/tests/dodopayments-e2e.test.ts` testing HMAC-SHA256 signature verification and tier updates for `payment.succeeded` and `subscription.cancelled` payloads.
+- **Rationale:** Guarantees telemetry events emit zero webpage URLs or note text, and provides automated end-to-end test coverage for Dodo Payments webhooks.
