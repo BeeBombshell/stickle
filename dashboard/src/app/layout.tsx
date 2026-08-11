@@ -117,6 +117,12 @@ export default function RootLayout({
               >
                 API Keys (MCP)
               </Link>
+              <Link
+                href="/upgrade"
+                className="btn-pill text-xs font-semibold px-4 py-1.5 bg-[#e4f579] text-[#111111] hover:bg-[#d8ea68]"
+              >
+                Upgrade Plan ⚡
+              </Link>
             </div>
 
             {/* Action Buttons */}

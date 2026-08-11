@@ -1,9 +1,12 @@
 "use client";
 
-import { useState } from "react";
+import { useState, Suspense } from "react";
+import { useSearchParams } from "next/navigation";
 import { createClient } from "@/lib/supabase/client";
 
-export default function LoginPage() {
+function LoginContent() {
+  const searchParams = useSearchParams();
+  const redirectToParam = searchParams.get("redirectTo") || "/notes";
   const [loading, setLoading] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
 
@@ -12,10 +15,11 @@ export default function LoginPage() {
       setLoading(provider);
       setError(null);
       const supabase = createClient();
+      const targetPath = redirectToParam.startsWith("/") ? redirectToParam : `/${redirectToParam}`;
       const { error: signInError } = await supabase.auth.signInWithOAuth({
         provider,
         options: {
-          redirectTo: `${window.location.origin}/notes`,
+          redirectTo: `${window.location.origin}${targetPath}`,
         },
       });
 
@@ -85,5 +89,13 @@ export default function LoginPage() {
         </div>
       </div>
     </div>
+  );
+}
+
+export default function LoginPage() {
+  return (
+    <Suspense fallback={<div className="p-12 text-center text-sm text-[#666]">Loading authentication...</div>}>
+      <LoginContent />
+    </Suspense>
   );
 }
