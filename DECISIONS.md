@@ -296,6 +296,11 @@ This log records non-trivial decisions made during the development of Stickle.
 - **Decision:** Built `validateUserTier()` in `lib/auth.ts` caching tier status in `chrome.storage.local` with a 24-hour TTL, backed by a `chrome.alarms` periodic alarm (`check-license-tier`) in `entrypoints/background.ts`.
 - **Rationale:** Minimizes network overhead and Supabase API calls while ensuring subscription cancellations or tier changes reflect within 24 hours without extension re-installation.
 
+### 60. Dodo Payments Spec Alignment, Next.js Env Vars & Pre-Checkout Authentication Guard
+- **Decision:** Updated Dodo Payments query metadata parameter to `metadata_user_id` (stripping invalid `custom_data[...]` parameters), configured `NEXT_PUBLIC_` env var aliases for Supabase and Dodo checkout domains in Next.js, parsed returned `status` / `payment_id` parameters on return redirects instead of hardcoded `?success=true`, and enforced pre-checkout user authentication on the `/upgrade` page.
+- **Rationale:** Aligns strictly with Dodo Payments documentation specification, resolves Next.js client-side environment variable masking, prevents false success banners on failed/cancelled checkout attempts, and guarantees license keys are bound to verified user IDs upon payment completion.
+
+
 
 
 
