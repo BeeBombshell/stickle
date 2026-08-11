@@ -12,6 +12,7 @@ import { executeGetNotesForUrl } from './tools/get-for-url.js';
 import { executeAddNote } from './tools/add.js';
 import { executeExportSummary } from './tools/summary.js';
 import { executeGetTeamTimeline } from './tools/team-timeline.js';
+import { handleDodoWebhook } from './webhooks/dodopayments.js';
 
 dotenv.config();
 
@@ -25,6 +26,9 @@ const app = new Hono<Env>();
 
 // Global CORS middleware
 app.use('*', cors());
+
+// Webhook endpoint for Dodo Payments (unauthenticated, signature checked internally)
+app.post('/webhooks/dodopayments', handleDodoWebhook);
 
 // Health check endpoint
 app.get('/health', (c) => {
