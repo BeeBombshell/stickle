@@ -280,5 +280,22 @@ This log records non-trivial decisions made during the development of Stickle.
 - **Decision:** Implemented `lib/workspace.ts` with local IndexedDB `workspaceNotes` caching (`0ms` instant rendering on page load) paired with background delta fetching (`updated_at > lastSyncedAt`) and visibility-aware Supabase Realtime channel subscriptions (`document.hidden === false`). Teammate notes render read-only with explicit author avatar badges (`👥 authorName`) and 🔒 Read-only indicators.
 - **Rationale:** Ensures 0ms page load latency for team notes, minimizes database bandwidth and network traffic, and respects Supabase Realtime WebSocket connection quotas while guaranteeing read-only security enforcement for teammate notes.
 
+---
+
+## Phase 17 — Monetization, Localized Pricing & License Validation
+
+### 57. Multi-Currency Display Pricing Engine & Geolocation Detection
+- **Decision:** Built `lib/currency.ts` auto-detecting user currency (USD, EUR, GBP, INR, CAD, AUD, BRL, JPY) from browser timezone and locale, with explicit fallback to USD and interactive currency pill switching in `components/LocalizedPricing.tsx`.
+- **Rationale:** Provides localized pricing to users worldwide while eliminating friction during Dodo Payments checkout.
+
+### 58. HMAC-SHA256 Webhook Verification & Automatic Profile Tier Provisioning
+- **Decision:** Implemented `remote-mcp/src/webhooks/dodopayments.ts` verifying `dodo-signature` headers via HMAC-SHA256. Handles `payment.succeeded` / `subscription.active` by updating `profiles.tier` to `'supporter'` or `'team_member'` and saving `license_key`, while `subscription.cancelled` / `expired` reverts tier to `'free'`.
+- **Rationale:** Ensures immediate, secure server-validated tier upgrades without exposing administrative client endpoints.
+
+### 59. 24-Hour Extension License Cache & Background Alarm Validation
+- **Decision:** Built `validateUserTier()` in `lib/auth.ts` caching tier status in `chrome.storage.local` with a 24-hour TTL, backed by a `chrome.alarms` periodic alarm (`check-license-tier`) in `entrypoints/background.ts`.
+- **Rationale:** Minimizes network overhead and Supabase API calls while ensuring subscription cancellations or tier changes reflect within 24 hours without extension re-installation.
+
+
 
 

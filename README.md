@@ -27,6 +27,9 @@
 - 🚀 **Notion Sync Integration**: 1-click manual note export or batch unsynced export to your Notion database with exponential backoff retries.
 - 🔍 **Central Extension Manager Popup**: Search across all saved notes, filter by domain/active tab, date (`Today`, `This Week`, `All Time`), tag management, and focus/open target tabs instantly.
 - 👥 **Team Shared In-Page Annotations**: Real-time shared team annotations overlaid on web pages with author avatar badges, read-only permissions enforcement, 0ms local IndexedDB caching, and background delta syncing.
+- 💳 **Monetization & Localized Display Pricing**: Multi-currency pricing engine (auto-detecting USD, EUR, GBP, INR, CAD, AUD, BRL, JPY) with Dodo Payments checkout integration.
+- ⚡ **Web Dashboard Upgrade Page**: Next.js 15 App Router `/upgrade` page featuring interactive localized pricing cards, purchase flows, and post-purchase license status polling.
+- 🔐 **HMAC-SHA256 Webhook License Provisioning**: Remote MCP webhook server processing Dodo Payments events to instantly provision Pro and Teams subscription tiers.
 - 🌐 **Web Landing & Waitlist Web App**: Built-in product landing page (`/`) and waitlist app with position estimation, FAQ, and email signup.
 
 ---
@@ -162,14 +165,21 @@ stickle/
 │   ├── db.ts             # Dexie IndexedDB + chrome.storage.local persistence
 │   ├── anchoring.ts      # 5-tier DOM anchor resolution engine (fingerprint + CSS + text + fuzzy + coords)
 │   ├── highlighting.ts   # Text range selection highlight manager
+│   ├── currency.ts       # Multi-currency display pricing engine (USD, EUR, GBP, INR, CAD, etc.)
+│   ├── dodo-payments.ts  # Dodo Payments checkout generator & metadata helper
 │   ├── notion.ts         # Notion API integration client with retry backoff
 │   ├── posthog.ts        # Privacy-respecting opt-in telemetry helper
 │   └── types.ts          # Core TypeScript interface definitions
 ├── components/           # Preact UI components
 │   ├── NoteBubble.tsx    # In-page floating sticky note UI & theme picker
 │   ├── NoteSidebar.tsx   # Extension popup note list & manager
+│   ├── LocalizedPricing.tsx # Interactive localized pricing card component
 │   ├── Settings.tsx      # Notion & MCP sync settings panel
 │   └── Toast.tsx         # User notification toasts
+├── dashboard/            # Standalone Next.js 15 App Router web dashboard
+│   └── src/app/upgrade/  # Upgrade & pricing matrix page (/upgrade)
+├── remote-mcp/           # Hosted Remote MCP microservice (Hono + SSE)
+│   └── src/webhooks/     # Dodo Payments webhook handler (HMAC-SHA256)
 ├── mcp-server/           # Model Context Protocol STDIO server
 │   └── index.ts
 ├── supabase/             # Database migrations & backend functions for waitlist

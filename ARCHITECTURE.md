@@ -211,4 +211,41 @@ Browsers restrict content scripts from making direct cross-origin HTTP requests 
 4. **Read-Only Teammate Permission Enforcement**:
    - Notes authored by teammates (`row.user_id !== currentUserId`) are rendered read-only with explicit author avatar badges (`👥 authorName`), disabled textareas, and 🔒 Read-only status indicators.
 
+---
+
+## 9. Monetization Architecture, Localized Pricing & Webhook Provisioning
+
+```
+  ┌──────────────────────────┐        Auto-Detect Timezone/Locale      ┌──────────────────────────┐
+  │ Browser Client / Popup   ├────────────────────────────────────────►│ lib/currency.ts Engine   │
+  │ (LocalizedPricing.tsx)   │        (USD, EUR, GBP, INR, JPY, etc.)  │ (Format Regional Prices) │
+  └────────────┬─────────────┘                                         └──────────────────────────┘
+               │
+               │ User Clicks "Buy Pro"
+               ▼
+  ┌──────────────────────────┐        HMAC-SHA256 Signed Webhook       ┌──────────────────────────┐
+  │ Dodo Payments Checkout   ├────────────────────────────────────────►│ remote-mcp Webhook Server│
+  │ (Merchant of Record)     │   event: 'payment.succeeded'            │ /webhooks/dodopayments   │
+  └──────────────────────────┘                                         └────────────┬─────────────┘
+                                                                                    │
+                                                                                    │ Update profiles.tier
+                                                                                    ▼
+  ┌──────────────────────────┐        24h Periodic Alarm Sync          ┌──────────────────────────┐
+  │ chrome.storage.local     │◄────────────────────────────────────────┤ Supabase PostgreSQL      │
+  │ stickle_user_tier        │        validateUserTier()               │ public.profiles          │
+  └──────────────────────────┘                                         └──────────────────────────┘
+```
+
+1. **Multi-Currency Geolocation & Fallback Pipeline**:
+   - Timezone (`Intl.DateTimeFormat().resolvedOptions().timeZone`) and locale (`navigator.language`) map to 8 supported currencies (`USD`, `EUR`, `GBP`, `INR`, `CAD`, `AUD`, `BRL`, `JPY`).
+   - Regional display prices (`formatPrice`) format amounts with appropriate currency symbols (`$29`, `€27`, `£24`, `₹2,399`, `¥4,200`, `R$149`, `A$44`, `CA$39`).
+2. **HMAC-SHA256 Webhook Verification**:
+   - Dodo Payments posts event payloads (`payment.succeeded`, `subscription.active`, `subscription.cancelled`) to `https://mcp.stickle.app/webhooks/dodopayments`.
+   - The Hono webhook server verifies `dodo-signature` headers using Web Crypto HMAC-SHA256 (`verifyDodoSignature`) with `DODO_PAYMENTS_WEBHOOK_SECRET`.
+   - Validated payloads resolve the target user by `custom_data.user_id` or `customer.email` and update `profiles.tier` to `'supporter'` or `'team_member'` + `license_key`.
+3. **24-Hour Extension Tier Validation & Local Alarm**:
+   - `validateUserTier()` caches user profile tier in `chrome.storage.local` with a 24-hour TTL.
+   - `entrypoints/background.ts` registers a `chrome.alarms` alarm (`check-license-tier`) executing every 1,440 minutes (24 hours) to re-sync license status asynchronously.
+
+
 

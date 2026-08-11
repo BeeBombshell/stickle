@@ -730,13 +730,13 @@ dashboard/app/
 9. **Early-access badge**: Add a "🎉 Early Access" tag in the extension popup for users who signed up during launch — `profiles.created_at < LAUNCH_CUTOFF_DATE`.
 
 **Acceptance criteria:**
-- [ ] Purchasing Pro via Dodo Payments checkout → within 10 s, `profiles.tier` updates to `'supporter'` via webhook
-- [ ] Localized display pricing auto-detects user region and displays regional currency symbols/pricing (USD $29, EUR €27, GBP £24, INR ₹2,399, etc.)
-- [ ] Interactive currency switcher updates display prices across all tiers dynamically
-- [ ] Extension re-validates tier within 24 h; cloud sync and Remote MCP unlock without reinstalling the extension
-- [ ] Invalid / revoked license key causes `isEnabled('cloudSync')` to return `false` after next validation cycle
-- [ ] Upgrade page renders correctly at `dashboard.stickle.app/upgrade` with Dodo Payments checkout links
-- [ ] "Coming Soon" Pro banners in the popup show a "Unlock — $29" CTA that deep-links to the upgrade page
+- [x] Purchasing Pro via Dodo Payments checkout → within 10 s, `profiles.tier` updates to `'supporter'` via webhook
+- [x] Localized display pricing auto-detects user region and displays regional currency symbols/pricing (USD $29, EUR €27, GBP £24, INR ₹2,399, etc.)
+- [x] Interactive currency switcher updates display prices across all tiers dynamically
+- [x] Extension re-validates tier within 24 h; cloud sync and Remote MCP unlock without reinstalling the extension
+- [x] Invalid / revoked license key causes `isEnabled('cloudSync')` to return `false` after next validation cycle
+- [x] Upgrade page renders correctly at `dashboard.stickle.app/upgrade` with Dodo Payments checkout links
+- [x] "Coming Soon" Pro banners in the popup show a "Unlock — $29" CTA that deep-links to the upgrade page
 
 ---
 

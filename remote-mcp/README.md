@@ -26,7 +26,10 @@ Create a `.env` file in `remote-mcp/` or set variables in your cloud hosting pro
 PORT=3001
 SUPABASE_URL=https://your-project.supabase.co
 SUPABASE_SERVICE_ROLE_KEY=your-supabase-service-role-key
+DODO_PAYMENTS_WEBHOOK_SECRET=whsec_your_dodo_webhook_secret
 ```
+
+- `POST /webhooks/dodopayments`: Webhook listener processing HMAC-SHA256 signed events from Dodo Payments (`payment.succeeded`, `subscription.active`, `subscription.cancelled`) to automatically provision user subscription tiers in Supabase `profiles`.
 
 > [!CAUTION]
 > `SUPABASE_SERVICE_ROLE_KEY` bypasses RLS policies to validate API keys and query user notes securely. Never expose or commit this key to public repositories.
