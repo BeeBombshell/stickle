@@ -1,4 +1,4 @@
-export type NoteColorBlock = 'lime' | 'lilac' | 'cream' | 'mint' | 'pink' | 'coral' | 'navy';
+export type NoteColorBlock = 'lime' | 'blue' | 'lilac' | 'cream' | 'mint' | 'pink' | 'coral' | 'navy';
 
 export interface NoteAnchor {
   cssSelector: string;
@@ -22,6 +22,7 @@ export interface DashboardNote {
   content: string;
   anchor: NoteAnchor;
   color?: NoteColorBlock;
+  border_style?: 'solid' | 'dashed' | 'none';
   collapsed?: boolean;
   tags?: string[];
   user_id?: string;

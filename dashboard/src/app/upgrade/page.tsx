@@ -55,6 +55,8 @@ function UpgradeContent() {
   const [currency, setCurrency] = useState<CurrencyCode>("USD");
   const [email, setEmail] = useState("");
   const [user, setUser] = useState<{ id: string; email?: string } | null>(null);
+  const [userTier, setUserTier] = useState<string>("free");
+  const [licenseKey, setLicenseKey] = useState<string | null>(null);
   const [authLoading, setAuthLoading] = useState(true);
 
   useEffect(() => {
@@ -65,8 +67,22 @@ function UpgradeContent() {
         if (session?.user) {
           setUser({ id: session.user.id, email: session.user.email });
           if (session.user.email) setEmail(session.user.email);
+
+          // Fetch profile tier
+          const { data: profile } = await supabase
+            .from("profiles")
+            .select("tier, license_key")
+            .eq("id", session.user.id)
+            .maybeSingle();
+
+          if (profile) {
+            setUserTier(profile.tier || "free");
+            setLicenseKey(profile.license_key || null);
+          }
         } else {
           setUser(null);
+          setUserTier("free");
+          router.push("/login?redirectTo=/upgrade");
         }
       } catch (err) {
         console.error("Auth check failed:", err);
@@ -113,10 +129,10 @@ function UpgradeContent() {
       {/* Header Banner */}
       <div className="text-center mb-10">
         <span className="eyebrow-lime text-xs font-mono uppercase tracking-wider mb-2 inline-block px-3 py-1 bg-[#e4f579] rounded-full text-[#111] font-bold">
-          Unlock Full Power
+          {userTier !== 'free' ? 'Active Subscription' : 'Unlock Full Power'}
         </span>
         <h1 className="text-4xl font-extrabold text-[#111111] tracking-tight mt-2">
-          Upgrade Stickle Account
+          {userTier !== 'free' ? 'Your Stickle Plan' : 'Upgrade Stickle Account'}
         </h1>
         <p className="text-[#666666] text-base max-w-xl mx-auto mt-3">
           Support open-source development and unlock real-time cloud sync, central web dashboard access, and remote MCP server integrations.
@@ -128,7 +144,7 @@ function UpgradeContent() {
         <div className="mb-8 p-4 bg-[#e6f4ea] border border-[#34a853] text-[#137333] rounded-xl text-center font-medium shadow-sm flex items-center justify-center gap-2">
           <span className="text-xl">🎉</span>
           <span>
-            Thank you for upgrading! Your payment was successful {paymentId ? `(ID: ${paymentId})` : ""}. Your license key and features are being provisioned. Re-open your Stickle extension to refresh status.
+            Thank you for upgrading! Your payment was successful {paymentId ? `(ID: ${paymentId})` : ""}. Your license key and features are active.
           </span>
         </div>
       )}
@@ -143,13 +159,13 @@ function UpgradeContent() {
         </div>
       )}
 
-      {/* Auth Status Notification Bar */}
+      {/* Auth Status Notification Bar & Auto Redirect */}
       {!authLoading && !user && (
         <div className="mb-8 p-4 bg-[#fff9e6] border border-[#ffe58f] text-[#876800] rounded-2xl text-center text-xs shadow-sm flex flex-col md:flex-row items-center justify-between gap-3">
           <div className="flex items-center gap-2 text-left">
             <span className="text-base">🔒</span>
             <span>
-              <strong>Sign in required to upgrade:</strong> Please sign in to your Stickle account before completing purchase so your license key is bound to your account.
+              <strong>Sign in required to upgrade:</strong> Redirecting to login so your license key is linked to your Stickle account…
             </span>
           </div>
           <button
@@ -162,64 +178,54 @@ function UpgradeContent() {
         </div>
       )}
 
-      {!authLoading && user && (
+      {/* Active Plan Banner if User holds Supporter or Teams */}
+      {!authLoading && user && userTier !== "free" && (
+        <div className="mb-8 p-5 bg-[#e4f579] border-2 border-[#111111] text-[#111111] rounded-2xl shadow-md flex flex-col md:flex-row items-center justify-between gap-4">
+          <div>
+            <div className="flex items-center gap-2">
+              <span className="text-xl">🌟</span>
+              <span className="text-base font-extrabold">
+                Active Plan: {userTier === "supporter" ? "Stickle Pro Supporter (Lifetime)" : "Stickle Teams"}
+              </span>
+            </div>
+            {licenseKey && (
+              <p className="text-xs font-mono mt-1 opacity-80">
+                License Key: <strong>{licenseKey}</strong>
+              </p>
+            )}
+            <p className="text-xs mt-1">
+              Signed in as <strong>{user.email}</strong>. Your account has full access to cloud sync, Remote MCP, and web dashboard features.
+            </p>
+          </div>
+          <a
+            href="https://test.dodopayments.com"
+            target="_blank"
+            rel="noopener noreferrer"
+            className="px-5 py-2.5 rounded-full bg-[#111111] text-white font-bold text-xs hover:bg-[#262626] transition-all whitespace-nowrap shadow-sm"
+          >
+            Manage Invoices & Receipts ↗
+          </a>
+        </div>
+      )}
+
+      {!authLoading && user && userTier === "free" && (
         <div className="mb-8 p-3 bg-[#e8f4fd] border border-[#b6e0fe] text-[#004085] rounded-2xl text-center text-xs flex items-center justify-center gap-2 shadow-sm">
           <span>👤</span>
           <span>
-            Signed in as <strong>{user.email}</strong>. Your license will be automatically linked to your account.
+            Signed in as <strong>{user.email}</strong> (Free Tier). Your license will be automatically linked to your account upon purchase.
           </span>
         </div>
       )}
 
-      {/* Currency Selector Bar */}
-      <div className="flex flex-wrap items-center justify-between gap-4 p-4 bg-[#f8f8f6] border border-[#e5e5e0] rounded-2xl mb-8">
-        <div className="flex items-center gap-2 text-sm font-medium text-[#111]">
-          <span>📍 Selected Currency:</span>
-          <span className="font-bold">
-            {currConfig.flag} {currConfig.name} ({currConfig.symbol})
-          </span>
-        </div>
-        <div className="flex flex-wrap gap-1.5">
-          {(Object.keys(SUPPORTED_CURRENCIES) as CurrencyCode[]).map((code) => {
-            const item = SUPPORTED_CURRENCIES[code];
-            const isActive = code === currency;
-            return (
-              <button
-                key={code}
-                type="button"
-                onClick={() => setCurrency(code)}
-                className={`px-3 py-1 rounded-full text-xs font-semibold transition-all ${
-                  isActive
-                    ? "bg-[#111111] text-white"
-                    : "bg-white text-[#444] border border-[#e0e0e0] hover:border-[#111]"
-                }`}
-              >
-                {item.flag} {item.code}
-              </button>
-            );
-          })}
-        </div>
-      </div>
-
-      {/* Optional Email Input for Pre-filling Checkout */}
-      <div className="mb-8 max-w-md mx-auto">
-        <label className="block text-xs font-semibold text-[#666] uppercase tracking-wider mb-2 text-center">
-          Pre-filled account email for activation
-        </label>
-        <input
-          type="email"
-          placeholder="your.email@domain.com"
-          value={email}
-          onChange={(e) => setEmail(e.target.value)}
-          disabled={!!user?.email}
-          className="w-full px-4 py-2.5 rounded-xl border border-[#e0e0e0] text-sm focus:outline-none focus:border-[#111] transition-colors disabled:bg-[#f5f5f5] disabled:text-[#666]"
-        />
-      </div>
-
       {/* Pricing Cards Grid */}
       <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
         {/* Free Plan */}
-        <div className="bg-white border border-[#e5e5e0] rounded-2xl p-6 flex flex-col justify-between shadow-sm">
+        <div className={`bg-white border rounded-2xl p-6 flex flex-col justify-between shadow-sm relative ${userTier === 'free' ? 'border-2 border-[#111]' : 'border-[#e5e5e0]'}`}>
+          {userTier === 'free' && (
+            <div className="absolute -top-3 right-6 bg-[#f0f0f0] text-[#111] px-3 py-0.5 rounded-full text-[10px] font-extrabold uppercase tracking-wider border border-[#ccc]">
+              YOUR CURRENT PLAN
+            </div>
+          )}
           <div>
             <div className="text-xs uppercase tracking-wider font-semibold text-[#888] mb-1">
               Open Source
@@ -248,14 +254,14 @@ function UpgradeContent() {
             disabled
             className="w-full py-2.5 rounded-full bg-[#f0f0f0] text-[#888] text-xs font-semibold border border-[#e0e0e0]"
           >
-            Current Free Plan
+            {userTier === 'free' ? 'Current Free Plan' : 'Free Tier'}
           </button>
         </div>
 
         {/* Pro Supporter */}
-        <div className="bg-white border-2 border-[#111111] rounded-2xl p-6 flex flex-col justify-between shadow-lg relative">
+        <div className={`bg-white rounded-2xl p-6 flex flex-col justify-between shadow-lg relative ${userTier === 'supporter' ? 'border-4 border-[#e4f579]' : 'border-2 border-[#111111]'}`}>
           <div className="absolute -top-3 right-6 bg-[#e4f579] text-[#111] px-3 py-0.5 rounded-full text-[10px] font-extrabold uppercase tracking-wider">
-            RECOMMENDED
+            {userTier === 'supporter' ? 'YOUR ACTIVE PLAN ✓' : 'RECOMMENDED'}
           </div>
           <div>
             <div className="text-xs uppercase tracking-wider font-semibold text-[#111] mb-1">
@@ -287,21 +293,35 @@ function UpgradeContent() {
               </li>
             </ul>
           </div>
-          <button
-            type="button"
-            onClick={() => handleCheckout("pro")}
-            className="w-full py-3 rounded-full bg-[#111111] text-white text-xs font-bold hover:bg-[#222] transition-colors shadow-md flex items-center justify-center gap-2"
-          >
-            {user ? (
-              `Buy Pro (${formatPrice(currConfig.proPrice, currConfig.code)})`
-            ) : (
-              `Sign In to Buy Pro (${formatPrice(currConfig.proPrice, currConfig.code)}) ↗`
-            )}
-          </button>
+          {userTier === 'supporter' ? (
+            <button
+              disabled
+              className="w-full py-3 rounded-full bg-[#e4f579] text-[#111111] text-xs font-extrabold border border-[#111111] shadow-sm flex items-center justify-center gap-2"
+            >
+              Active Supporter License ✓
+            </button>
+          ) : (
+            <button
+              type="button"
+              onClick={() => handleCheckout("pro")}
+              className="w-full py-3 rounded-full bg-[#111111] text-white text-xs font-bold hover:bg-[#222] transition-colors shadow-md flex items-center justify-center gap-2"
+            >
+              {user ? (
+                `Buy Pro (${formatPrice(currConfig.proPrice, currConfig.code)})`
+              ) : (
+                `Sign In to Buy Pro (${formatPrice(currConfig.proPrice, currConfig.code)}) ↗`
+              )}
+            </button>
+          )}
         </div>
 
         {/* Teams */}
-        <div className="bg-[#fafafa] border border-[#e5e5e0] rounded-2xl p-6 flex flex-col justify-between shadow-sm">
+        <div className={`bg-[#fafafa] border rounded-2xl p-6 flex flex-col justify-between shadow-sm relative ${userTier === 'team_member' ? 'border-4 border-[#e4f579]' : 'border-[#e5e5e0]'}`}>
+          {userTier === 'team_member' && (
+            <div className="absolute -top-3 right-6 bg-[#e4f579] text-[#111] px-3 py-0.5 rounded-full text-[10px] font-extrabold uppercase tracking-wider">
+              YOUR ACTIVE PLAN ✓
+            </div>
+          )}
           <div>
             <div className="text-xs uppercase tracking-wider font-semibold text-[#666] mb-1">
               Team Workspaces
@@ -330,17 +350,26 @@ function UpgradeContent() {
               </li>
             </ul>
           </div>
-          <button
-            type="button"
-            onClick={() => handleCheckout("teams")}
-            className="w-full py-3 rounded-full bg-white text-[#111] border border-[#111] text-xs font-bold hover:bg-[#f5f5f5] transition-colors flex items-center justify-center gap-2"
-          >
-            {user ? (
-              `Get Teams (${formatPrice(currConfig.teamsPrice, currConfig.code)}/mo)`
-            ) : (
-              `Sign In to Get Teams (${formatPrice(currConfig.teamsPrice, currConfig.code)}/mo) ↗`
-            )}
-          </button>
+          {userTier === 'team_member' ? (
+            <button
+              disabled
+              className="w-full py-3 rounded-full bg-[#e4f579] text-[#111111] text-xs font-extrabold border border-[#111111] shadow-sm flex items-center justify-center gap-2"
+            >
+              Active Team License ✓
+            </button>
+          ) : (
+            <button
+              type="button"
+              onClick={() => handleCheckout("teams")}
+              className="w-full py-3 rounded-full bg-white text-[#111] border border-[#111] text-xs font-bold hover:bg-[#f5f5f5] transition-colors flex items-center justify-center gap-2"
+            >
+              {user ? (
+                `Get Teams (${formatPrice(currConfig.teamsPrice, currConfig.code)}/mo)`
+              ) : (
+                `Sign In to Get Teams (${formatPrice(currConfig.teamsPrice, currConfig.code)}/mo) ↗`
+              )}
+            </button>
+          )}
         </div>
       </div>
     </div>
