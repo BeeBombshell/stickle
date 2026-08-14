@@ -74,18 +74,16 @@ I built Stickle because I wanted to write notes *on* the page — like sticky no
 
 The hard part was making notes stay attached to the right spot when pages reload or re-render. I ended up building a 3-tier DOM anchoring engine: it tries XPath first, falls back to neighbor content hashing, and finally fuzzy-matches text if the structure changes completely. It works on dynamic SPAs including Twitter, Reddit, and GitHub issues.
 
-What's in v1:
-📌 Alt + Click any element to drop a note
-🔒 Local-first, offline, no sign-up
-🚀 1-click Notion export with source URL + timestamps
-🎨 5 pastel color options with clean monochrome frames
-📖 Interactive onboarding sandbox on first install
-
-What I'm building next:
-• Cloud sync for cross-device access
-• Team shared annotations & workspaces
-• AI assistant context (Claude, Cursor, ChatGPT)
-• Central web dashboard & analytics
+What's in v1 & v2:
+• 📌 Alt + Click any element to drop a note
+• 🔒 Local-first, offline, no sign-up required for local mode
+• 🚀 1-click Notion export with source URL + timestamps
+• 🎨 7 pastel color options with clean monochrome frames
+• 📖 Interactive onboarding sandbox on first install
+• ☁️ Cloud sync for cross-device access & Next.js Web Dashboard (`http://localhost:3001`)
+• 👥 Team shared annotations & workspaces with real-time active workspace filtering
+• 🤖 AI assistant Model Context Protocol (MCP) integrations (Claude, Cursor, Windsurf)
+• 📐 Collapsible dashboard navigation & portable JSON import/export
 
 Stickle is fully open source. If you're a fellow Notion nerd or just someone who annotates a lot of tabs — would love your feedback in the comments!
 

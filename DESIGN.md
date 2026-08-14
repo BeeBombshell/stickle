@@ -103,6 +103,12 @@ If implementing without access to custom canvas fonts, suitable open-source subs
 - Three- and four-column grids on the desktop pricing comparison and template galleries.
 - Color-block sections break the column grid — they span content width with full bleed inside the rounded `{rounded.lg}` corners, then place a single editorial column of headline + body inside.
 
+### Dashboard Navigation & Collapsible Sidebar
+
+- **Web Dashboard Layout (`http://localhost:3001`)**: Features an editor-clean topbar and sticky sidebar navigation.
+- **Collapsible Sidebar**: Supports a 240px expanded navigation panel and a 64px icon-strip collapsed view (`.dashboard-sidebar.collapsed`).
+- **Sidebar Header Toggle**: Clean contextual toggle button in the sidebar header (`<IconPanelLeftClose />` / `<IconPanelLeftOpen />`) with state saved in `localStorage` (`stickle_sidebar_collapsed`).
+
 ### Whitespace Philosophy
 
 White space is used to make the color blocks feel deliberate. Between every colored panel and the next, the page returns to white canvas with `{spacing.section}` of breathing room. Inside a color block, the type itself is given generous side margins (often more than 1/4 of the block's width on each side) so the panel reads as a poster, not a wall of copy.

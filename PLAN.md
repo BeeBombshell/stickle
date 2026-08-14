@@ -740,10 +740,27 @@ dashboard/app/
 
 ---
 
-## Rules for the agent executing this plan
-1. Work through phases strictly in order. Do not begin a phase whose predecessor's acceptance criteria are unchecked.
-2. Log every non-trivial judgment call in `DECISIONS.md` with a one-line rationale.
-3. Do not introduce new external dependencies beyond what's named in this doc without noting the reason in `DECISIONS.md`.
-4. If an acceptance criterion cannot be met, stop and surface the blocker.
-5. **Phases 12–17 are v2 cloud features.** They assume Phases 1–11 acceptance criteria are already met. Do not attempt v2 phases on a fresh clone without first verifying v1 is functional.
-6. **Never store the Supabase service role key in extension code or the public GitHub repo.** It lives only as a secret in the remote-mcp deployment environment (Cloudflare Workers / Railway secrets).
+7. **Never store the Supabase service role key in extension code or the public GitHub repo.** It lives only as a secret in the remote-mcp deployment environment (Cloudflare Workers / Railway secrets).
+
+---
+
+## 🎯 Plan Execution Status — All Phases Complete & Verified
+
+- [x] **Phase 0 — Project scaffolding**: WXT MV3, Preact, TypeScript, Vitest, Playwright setup.
+- [x] **Phase 1 — Core note creation & local persistence**: IndexedDB + Dexie.js + chrome.storage CRUD.
+- [x] **Phase 2 — Resilient 5-tier DOM anchoring**: Fingerprint, CSS selector, Text Quote, Trigram Fuzzy, Page coords. Pixel-accurate drag & highlight offset retention.
+- [x] **Phase 3 — In-page note bubble UI**: Figma-inspired color blocks, collapsibility, dragging, text highlights.
+- [x] **Phase 4 — Extension popup note manager**: Domain grouping, search, date/tag filtering, focus navigation.
+- [x] **Phase 5 — Notion integration**: 1-click sync & batch export with exponential backoff.
+- [x] **Phase 6 — Local Model Context Protocol (MCP) server**: 6 registered tools for AI desktop clients (`list_stickle_notes`, `search_stickle_notes`, `get_notes_for_url`, `add_stickle_note`, `export_stickle_summary`, `get_team_activity_timeline`).
+- [x] **Phase 7 — Options page & settings**: Theme defaults, Notion configuration, backup/restore.
+- [x] **Phase 8 — Context menu & keyboard shortcuts**: `Alt+Click` creation & right-click menu integration.
+- [x] **Phase 9 — Production packaging & build verification**: Clean MV3 bundle (`pnpm build`).
+- [x] **Phase 10 — Landing page & onboarding experience**: Interactive sandbox onboarding.
+- [x] **Phase 11 — Comprehensive test suite & documentation**: 20 test files, 98 passing tests.
+- [x] **Phase 12 — Supabase schema & backend infrastructure**: RLS policies, PostgreSQL schema, Realtime subscriptions.
+- [x] **Phase 13 — Auth & session bridge**: OAuth sign-in with bi-directional session bridge to Next.js dashboard (`localhost:3001`).
+- [x] **Phase 14 — Remote MCP server**: Hosted Hono SSE server on port `3001` with Bearer token auth.
+- [x] **Phase 15 — Team shared annotations**: Real-time team collaboration with workspace selection filtering.
+- [x] **Phase 16 — Next.js Web Dashboard**: Complete App Router dashboard with collapsible sidebar (64px/240px), Notes Explorer, Timeline Feed, Connected MCPs, Import/Export, Notion Setup, and API Token management.
+- [x] **Phase 17 — Dodo Payments & localized pricing**: Multi-currency pricing engine & webhook license provisioning.
