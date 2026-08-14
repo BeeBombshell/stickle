@@ -17,6 +17,7 @@
     "build:dashboard": "pnpm --prefix dashboard build",
     "mcp": "tsx mcp-server/index.ts",
     "db:setup": "node scripts/apply-schema.js",
+    "db:clear-waitlist": "node scripts/clear-waitlist.js",
     "postinstall": "wxt prepare"
   },
   "dependencies": {

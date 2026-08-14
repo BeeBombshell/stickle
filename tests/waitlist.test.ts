@@ -5,6 +5,7 @@ describe('Waitlist Service', () => {
   const store: Record<string, string> = {};
 
   beforeEach(() => {
+    vi.restoreAllMocks();
     for (const key in store) {
       delete store[key];
     }
@@ -20,7 +21,15 @@ describe('Waitlist Service', () => {
         for (const key in store) delete store[key];
       },
     });
-    vi.restoreAllMocks();
+    vi.stubGlobal(
+      'fetch',
+      vi.fn().mockResolvedValue({
+        ok: true,
+        status: 201,
+        json: async () => ({}),
+        text: async () => '',
+      })
+    );
   });
 
   describe('validateEmail', () => {
