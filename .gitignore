@@ -7,3 +7,6 @@ node_modules
 !.env.example
 
 notes/
+.next
+*.tsbuildinfo
+next-env.d.ts
