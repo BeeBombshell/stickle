@@ -65,6 +65,7 @@ export async function createNote(note: StickleNote): Promise<string> {
     syncStatus: note.syncStatus || 'pending',
   };
 
+  let id: string;
   if (isChromeStorageAvailable()) {
     const notes = await getStorageNotes();
     const existingIndex = notes.findIndex((n) => n.id === noteToSave.id);
@@ -77,9 +78,15 @@ export async function createNote(note: StickleNote): Promise<string> {
     try {
       await db.notes.put(noteToSave);
     } catch {}
-    return noteToSave.id;
+    id = noteToSave.id;
+  } else {
+    id = await db.notes.add(noteToSave);
   }
-  return await db.notes.add(noteToSave);
+
+  // Trigger background sync to Supabase asynchronously
+  import('./sync').then(({ pushPendingNotes }) => pushPendingNotes()).catch(() => {});
+
+  return id;
 }
 
 export async function getNotesForUrl(url: string): Promise<StickleNote[]> {
@@ -108,6 +115,7 @@ export async function updateNote(id: string, changes: Partial<StickleNote>): Pro
     updatedAt: changes.updatedAt || Date.now(),
   };
 
+  let resultCount = 0;
   if (isChromeStorageAvailable()) {
     const notes = await getStorageNotes();
     const index = notes.findIndex((n) => n.id === id);
@@ -117,11 +125,16 @@ export async function updateNote(id: string, changes: Partial<StickleNote>): Pro
       try {
         await db.notes.update(id, updatedChanges);
       } catch {}
-      return 1;
+      resultCount = 1;
     }
-    return 0;
+  } else {
+    resultCount = await db.notes.update(id, updatedChanges);
   }
-  return await db.notes.update(id, updatedChanges);
+
+  // Trigger background sync to Supabase asynchronously
+  import('./sync').then(({ pushPendingNotes }) => pushPendingNotes()).catch(() => {});
+
+  return resultCount;
 }
 
 export async function deleteNote(id: string): Promise<void> {
@@ -132,9 +145,12 @@ export async function deleteNote(id: string): Promise<void> {
     try {
       await db.notes.delete(id);
     } catch {}
-    return;
+  } else {
+    await db.notes.delete(id);
   }
-  return await db.notes.delete(id);
+
+  // Trigger background sync to Supabase asynchronously
+  import('./sync').then(({ pushPendingNotes }) => pushPendingNotes()).catch(() => {});
 }
 
 // Workspace Note Cache Helpers (Local-First 0ms Initial Render)

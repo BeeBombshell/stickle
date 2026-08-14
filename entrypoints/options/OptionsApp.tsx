@@ -62,6 +62,33 @@ export function OptionsApp() {
     });
     refreshNotesCount();
     refreshProfile();
+
+    const handleFocus = () => {
+      refreshProfile();
+      refreshNotesCount();
+    };
+
+    window.addEventListener('focus', handleFocus);
+    document.addEventListener('visibilitychange', handleFocus);
+
+    let storageListener: ((changes: any, areaName: string) => void) | null = null;
+    if (typeof chrome !== 'undefined' && chrome.storage?.onChanged) {
+      storageListener = (changes, areaName) => {
+        if (areaName === 'local' && (changes.stickle_user_session || changes.stickle_user_profile || changes.stickle_auth_updated_at)) {
+          refreshProfile();
+          refreshNotesCount();
+        }
+      };
+      chrome.storage.onChanged.addListener(storageListener);
+    }
+
+    return () => {
+      window.removeEventListener('focus', handleFocus);
+      document.removeEventListener('visibilitychange', handleFocus);
+      if (storageListener && typeof chrome !== 'undefined' && chrome.storage?.onChanged) {
+        chrome.storage.onChanged.removeListener(storageListener);
+      }
+    };
   }, []);
 
   const handleOAuthSignIn = async (provider: 'google' | 'github') => {
@@ -201,7 +228,7 @@ export function OptionsApp() {
   };
 
   const handleOpenDashboard = () => {
-    const dashboardUrl = 'http://localhost:3000/dashboard';
+    const dashboardUrl = 'http://localhost:3001/notes';
     if (typeof chrome !== 'undefined' && chrome.tabs) {
       chrome.tabs.create({ url: dashboardUrl });
     } else {

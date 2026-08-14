@@ -43,7 +43,7 @@ export async function pushPendingNotes(): Promise<{ pushed: number; errors: numb
 
   const allLocalNotes = await getAllNotes();
   const pendingNotes = allLocalNotes.filter(
-    (n) => n.syncStatus === 'pending' || n.deletedAt !== undefined
+    (n) => n.syncStatus !== 'synced' || n.deletedAt !== undefined
   );
 
   if (pendingNotes.length === 0) return { pushed: 0, errors: 0 };

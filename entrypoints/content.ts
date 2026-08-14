@@ -42,7 +42,7 @@ export default defineContentScript({
     // Listen for storage changes across popup & other contexts
     if (typeof chrome !== 'undefined' && chrome.storage?.onChanged) {
       chrome.storage.onChanged.addListener((changes, areaName) => {
-        if (areaName === 'local' && changes.stickle_notes) {
+        if (areaName === 'local' && (changes.stickle_notes || changes.stickle_active_workspace_id)) {
           refreshNotes();
         }
       });
@@ -55,6 +55,46 @@ export default defineContentScript({
         refreshNotes();
       }
     });
+
+    // Session bridge between Chrome Extension and Web Dashboard
+    const isDashboardHost =
+      window.location.hostname === 'localhost' ||
+      window.location.hostname === '127.0.0.1' ||
+      window.location.hostname.includes('stickle');
+
+    if (isDashboardHost && typeof chrome !== 'undefined' && chrome.storage?.local) {
+      const syncSessionToDashboard = () => {
+        chrome.storage.local.get(['stickle_user_session'], (res) => {
+          if (res.stickle_user_session) {
+            window.postMessage(
+              {
+                type: 'STICKLE_SYNC_AUTH_TO_DASHBOARD',
+                session: res.stickle_user_session,
+              },
+              '*'
+            );
+          }
+        });
+      };
+
+      // Push session immediately on load
+      syncSessionToDashboard();
+      setTimeout(syncSessionToDashboard, 800);
+
+      // Listen for extension session updates and push to dashboard
+      chrome.storage.onChanged.addListener((changes, areaName) => {
+        if (areaName === 'local' && (changes.stickle_user_session || changes.stickle_auth_updated_at)) {
+          syncSessionToDashboard();
+        }
+      });
+
+      // Listen for dashboard logout
+      window.addEventListener('message', (event) => {
+        if (event.data === 'STICKLE_DASHBOARD_SIGNOUT') {
+          chrome.storage.local.remove(['stickle_user_session', 'stickle_user_profile']);
+        }
+      });
+    }
 
     if (typeof chrome !== 'undefined' && chrome.runtime?.onMessage) {
       chrome.runtime.onMessage.addListener(async (msg, _sender, sendResponse) => {
@@ -397,9 +437,16 @@ export default defineContentScript({
           notesMap.set(n.id, n);
         });
 
-        const notes = Array.from(notesMap.values());
+        let notes = Array.from(notesMap.values());
 
-        if (activeWorkspaceId) {
+        // Filter notes on webpage based on active workspace selection
+        if (activeWorkspaceId === 'personal') {
+          notes = notes.filter((n) => !n.workspaceId);
+        } else if (activeWorkspaceId && activeWorkspaceId !== 'all') {
+          notes = notes.filter((n) => n.workspaceId === activeWorkspaceId);
+        }
+
+        if (activeWorkspaceId && activeWorkspaceId !== 'personal') {
           const currentAuthor = await getCurrentUserAuthorInfo();
           notes.forEach((n) => {
             if (n.workspaceId === activeWorkspaceId && !n.authorName) {
@@ -438,8 +485,10 @@ export default defineContentScript({
               const bodyRect = (document.body || document.documentElement).getBoundingClientRect();
               const sx = window.scrollX;
               const sy = window.scrollY;
-              resolvedX = Math.max(10, sx + markRect.left - (sx + bodyRect.left));
-              resolvedY = Math.max(10, sy + markRect.top - (sy + bodyRect.top));
+              const offX = typeof note.anchor?.offsetX === 'number' && !isNaN(note.anchor.offsetX) ? note.anchor.offsetX : 0;
+              const offY = typeof note.anchor?.offsetY === 'number' && !isNaN(note.anchor.offsetY) ? note.anchor.offsetY : 0;
+              resolvedX = Math.max(10, sx + markRect.left - (sx + bodyRect.left) + offX);
+              resolvedY = Math.max(10, sy + markRect.top - (sy + bodyRect.top) + offY);
             } else {
               const resolved = resolveAnchor(note.anchor);
               resolvedX = resolved.x;
@@ -587,8 +636,17 @@ export default defineContentScript({
         posY = newTop;
 
         wrapper.style.visibility = 'hidden';
-        const targetEl = document.elementFromPoint(clientX, clientY) || document.body;
+        let targetEl = document.elementFromPoint(clientX, clientY) || document.body;
+        if (targetEl.closest('#stickle-notes-root')) {
+          targetEl = document.body;
+        }
         wrapper.style.visibility = 'visible';
+
+        const markEl = note.highlightRange
+          ? document.querySelector(`mark[data-stickle-id="${note.id}"]`)
+          : null;
+
+        const anchorTarget = markEl || targetEl;
 
         const scrollX = window.scrollX || 0;
         const scrollY = window.scrollY || 0;
@@ -596,14 +654,14 @@ export default defineContentScript({
         const bodyLeft = scrollX + bodyRect.left;
         const bodyTop = scrollY + bodyRect.top;
 
-        const targetRect = targetEl.getBoundingClientRect();
+        const targetRect = anchorTarget.getBoundingClientRect();
         const targetPageLeft = scrollX + targetRect.left - bodyLeft;
         const targetPageTop = scrollY + targetRect.top - bodyTop;
 
         const offsetX = newLeft - targetPageLeft;
         const offsetY = newTop - targetPageTop;
 
-        const newAnchor = createAnchor(targetEl, offsetX, offsetY);
+        const newAnchor = createAnchor(anchorTarget, offsetX, offsetY);
         note.anchor = newAnchor;
         await updateNote(note.id, { anchor: newAnchor, updatedAt: Date.now() });
 

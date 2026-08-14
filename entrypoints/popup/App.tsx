@@ -62,10 +62,10 @@ export function App() {
   };
 
   const handleWorkspaceChange = async (wsId: string) => {
-    const nextId = wsId === 'personal' ? null : wsId;
-    setActiveWorkspaceIdState(nextId);
+    setActiveWorkspaceIdState(wsId);
+    const nextId = (wsId === 'personal' || wsId === 'all') ? null : wsId;
     await setActiveWorkspaceId(nextId);
-    setStatusMsg(nextId ? 'Switched to Workspace mode' : 'Switched to Personal mode');
+    setStatusMsg(wsId === 'all' ? 'Showing all Stickles' : wsId === 'personal' ? 'Switched to Personal mode' : 'Switched to Workspace mode');
     setTimeout(() => setStatusMsg(null), 2500);
 
     if (typeof chrome !== 'undefined' && chrome.tabs) {
@@ -91,7 +91,7 @@ export function App() {
 
     if (typeof chrome !== 'undefined' && chrome.storage?.onChanged) {
       const storageListener = (changes: Record<string, chrome.storage.StorageChange>, areaName: string) => {
-        if (areaName === 'local' && changes.stickle_notes) {
+        if (areaName === 'local' && (changes.stickle_notes || changes.stickle_user_session || changes.stickle_auth_updated_at)) {
           reloadNotes();
         }
       };
@@ -136,7 +136,7 @@ export function App() {
   };
 
   const handleOpenDashboard = () => {
-    const dashboardUrl = 'http://localhost:3000/dashboard';
+    const dashboardUrl = 'http://localhost:3001/notes';
     if (typeof chrome !== 'undefined' && chrome.tabs) {
       chrome.tabs.create({ url: dashboardUrl });
     } else {
@@ -182,6 +182,15 @@ export function App() {
     reader.readAsText(file);
   };
 
+  const filterByWorkspace = (list: StickleNote[]) => {
+    if (!activeWorkspaceIdState || activeWorkspaceIdState === 'all') return list;
+    if (activeWorkspaceIdState === 'personal') return list.filter((n) => !n.workspaceId);
+    return list.filter((n) => n.workspaceId === activeWorkspaceIdState);
+  };
+
+  const displayNotes = filterByWorkspace(notes);
+  const displayActiveUrlNotes = filterByWorkspace(activeUrlNotes);
+
   return (
     <div style={popupStyles.container}>
       {/* Header Bar */}
@@ -197,31 +206,34 @@ export function App() {
 
         {/* Header Right Actions */}
         <div style={{ display: 'flex', gap: '6px', alignItems: 'center', flexShrink: 0 }}>
-          <select
-            value={activeWorkspaceIdState || 'personal'}
-            onChange={(e) => handleWorkspaceChange((e.target as HTMLSelectElement).value)}
-            style={{
-              padding: '3px 8px',
-              borderRadius: '50px',
-              fontSize: '10px',
-              fontWeight: '700',
-              fontFamily: "'JetBrains Mono', monospace",
-              backgroundColor: activeWorkspaceIdState ? '#e8d5ff' : '#f3f4f6',
-              color: '#111111',
-              border: '1px solid rgba(0,0,0,0.12)',
-              cursor: 'pointer',
-              outline: 'none',
-              maxWidth: '110px',
-            }}
-            title="Workspace Mode"
-          >
-            <option value="personal">Personal</option>
-            {workspaces.map((ws) => (
-              <option key={ws.id} value={ws.id}>
-                {ws.name}
-              </option>
-            ))}
-          </select>
+          {profile && (
+            <select
+              value={activeWorkspaceIdState || 'all'}
+              onChange={(e) => handleWorkspaceChange((e.target as HTMLSelectElement).value)}
+              style={{
+                padding: '3px 8px',
+                borderRadius: '50px',
+                fontSize: '10px',
+                fontWeight: '700',
+                fontFamily: "'JetBrains Mono', monospace",
+                backgroundColor: activeWorkspaceIdState && activeWorkspaceIdState !== 'all' ? '#e8d5ff' : '#f3f4f6',
+                color: '#111111',
+                border: '1px solid rgba(0,0,0,0.12)',
+                cursor: 'pointer',
+                outline: 'none',
+                maxWidth: '110px',
+              }}
+              title="Workspace Mode"
+            >
+              <option value="all">All Workspaces</option>
+              <option value="personal">Personal</option>
+              {workspaces.map((ws) => (
+                <option key={ws.id} value={ws.id}>
+                  {ws.name}
+                </option>
+              ))}
+            </select>
+          )}
           <button
             onClick={handleToggleEnabled}
             title={enabled ? 'Stickles are active globally. Click to disable.' : 'Stickles are disabled globally. Click to enable.'}
@@ -262,7 +274,7 @@ export function App() {
               {currentTabDomain}
             </div>
             <span style={popupStyles.noteBadgePill}>
-              {activeUrlNotes.length} {activeUrlNotes.length === 1 ? 'Note' : 'Notes'}
+              {displayActiveUrlNotes.length} {displayActiveUrlNotes.length === 1 ? 'Note' : 'Notes'}
             </span>
           </div>
 
@@ -293,13 +305,13 @@ export function App() {
           style={activeTab === 'active-tab' ? popupStyles.navPillActive : popupStyles.navPill}
           onClick={() => setActiveTab('active-tab')}
         >
-          This Page ({activeUrlNotes.length})
+          This Page ({displayActiveUrlNotes.length})
         </button>
         <button
           style={activeTab === 'all-notes' ? popupStyles.navPillActive : popupStyles.navPill}
           onClick={() => setActiveTab('all-notes')}
         >
-          All Notes ({notes.length})
+          All Notes ({displayNotes.length})
         </button>
       </nav>
 
@@ -307,7 +319,7 @@ export function App() {
       <main style={popupStyles.mainContent}>
         {activeTab === 'active-tab' && (
           <div>
-            {activeUrlNotes.length === 0 ? (
+            {displayActiveUrlNotes.length === 0 ? (
               <div style={popupStyles.emptyStateContainer}>
                 <svg width="24" height="24" viewBox="0 0 44 44" fill="none" style={{ marginBottom: '6px', opacity: 0.35 }}>
                   <rect width="44" height="44" rx="10" fill="#111111" />
@@ -325,14 +337,14 @@ export function App() {
                 </div>
               </div>
             ) : (
-              <NoteSidebar notes={activeUrlNotes} onNoteChange={reloadNotes} />
+              <NoteSidebar notes={displayActiveUrlNotes} onNoteChange={reloadNotes} />
             )}
           </div>
         )}
 
         {activeTab === 'all-notes' && (
           <div>
-            <NoteSidebar notes={notes} onNoteChange={reloadNotes} />
+            <NoteSidebar notes={displayNotes} onNoteChange={reloadNotes} />
 
             {/* Quick Export/Import Bar at bottom of All Notes */}
             <div style={popupStyles.backupActionBar}>

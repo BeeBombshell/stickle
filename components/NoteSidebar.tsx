@@ -29,7 +29,8 @@ export function filterNotes(
   searchQuery: string,
   dateFilter: DateFilter,
   tagFilterOrRefTime?: string | number,
-  referenceTimeParam?: number
+  referenceTimeParam?: number,
+  colorFilterParam?: string
 ): StickleNote[] {
   let tagFilter = 'all';
   let referenceTime = Date.now();
@@ -47,6 +48,13 @@ export function filterNotes(
   const query = searchQuery.trim().toLowerCase();
 
   return notes.filter((note) => {
+    // Color filter
+    if (colorFilterParam && colorFilterParam !== 'all') {
+      if (note.color !== colorFilterParam) {
+        return false;
+      }
+    }
+
     // Tag filter
     if (tagFilter !== 'all') {
       if (!note.tags || !note.tags.includes(tagFilter)) {
@@ -119,13 +127,13 @@ export function NoteSidebar({ notes, onNoteChange, onSelectNote }: NoteSidebarPr
   const [searchQuery, setSearchQuery] = useState('');
   const [dateFilter, setDateFilter] = useState<DateFilter>('all');
   const [selectedTag, setSelectedTag] = useState<string>('all');
+  const [selectedColor, setSelectedColor] = useState<string>('all');
   const [editingId, setEditingId] = useState<string | null>(null);
   const [editContent, setEditContent] = useState('');
   const [exportingId, setExportingId] = useState<string | null>(null);
   const [isBatchExporting, setIsBatchExporting] = useState(false);
   const [syncStatusMsg, setSyncStatusMsg] = useState<string | null>(null);
   const [hasNotionConfig, setHasNotionConfig] = useState(false);
-
   const [showFilterPopover, setShowFilterPopover] = useState(false);
 
   useEffect(() => {
@@ -135,10 +143,10 @@ export function NoteSidebar({ notes, onNoteChange, onSelectNote }: NoteSidebarPr
   }, []);
 
   const allTags = Array.from(new Set(notes.flatMap((n) => n.tags || []))).sort();
-  const filtered = filterNotes(notes, searchQuery, dateFilter, selectedTag);
+  const filtered = filterNotes(notes, searchQuery, dateFilter, selectedTag, undefined, selectedColor);
   const grouped = groupNotesByDomain(filtered);
   const unsyncedCount = notes.filter((n) => !n.syncedToNotion).length;
-  const activeFilterCount = (dateFilter !== 'all' ? 1 : 0) + (selectedTag !== 'all' ? 1 : 0);
+  const activeFilterCount = (dateFilter !== 'all' ? 1 : 0) + (selectedTag !== 'all' ? 1 : 0) + (selectedColor !== 'all' ? 1 : 0);
 
   const handleStartEdit = (note: StickleNote, e: Event) => {
     e.stopPropagation();
@@ -359,6 +367,46 @@ export function NoteSidebar({ notes, onNoteChange, onSelectNote }: NoteSidebarPr
               >
                 This Week
               </button>
+            </div>
+
+            <div style={{ fontSize: '10px', fontFamily: "'JetBrains Mono', monospace", fontWeight: '700', textTransform: 'uppercase', color: 'var(--color-ink-muted)', marginTop: '2px' }}>
+              Filter By Color
+            </div>
+            <div style={{ display: 'flex', flexWrap: 'wrap', gap: '4px' }}>
+              <button
+                onClick={() => setSelectedColor('all')}
+                style={{
+                  fontSize: '10px',
+                  fontFamily: "'JetBrains Mono', monospace",
+                  padding: '2px 8px',
+                  borderRadius: '50px',
+                  border: selectedColor === 'all' ? '1.5px solid #111' : '1px solid #ccc',
+                  backgroundColor: selectedColor === 'all' ? '#111' : '#fff',
+                  color: selectedColor === 'all' ? '#fff' : '#111',
+                  cursor: 'pointer',
+                }}
+              >
+                #all
+              </button>
+              {['lime', 'lilac', 'cream', 'mint', 'pink', 'coral', 'navy'].map((c) => (
+                <button
+                  key={c}
+                  onClick={() => setSelectedColor(c)}
+                  style={{
+                    fontSize: '10px',
+                    fontFamily: "'JetBrains Mono', monospace",
+                    padding: '2px 8px',
+                    borderRadius: '50px',
+                    border: selectedColor === c ? '2px solid #111' : '1px solid rgba(0,0,0,0.15)',
+                    backgroundColor: c === 'navy' ? '#111' : `var(--color-block-${c}, #f0f0f0)`,
+                    color: c === 'navy' ? '#fff' : '#111',
+                    fontWeight: selectedColor === c ? '700' : '500',
+                    cursor: 'pointer',
+                  }}
+                >
+                  {c}
+                </button>
+              ))}
             </div>
 
             {allTags.length > 0 && (

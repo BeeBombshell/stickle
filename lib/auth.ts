@@ -37,8 +37,40 @@ export function initSupabase(): SupabaseClient | null {
 export async function getSession(): Promise<Session | null> {
   const client = initSupabase();
   if (!client) return null;
-  const { data } = await client.auth.getSession();
-  return data.session;
+
+  try {
+    const { data } = await client.auth.getSession();
+    if (data.session?.user) {
+      return data.session;
+    }
+  } catch {}
+
+  // Fallback for Chrome Extension environments (content scripts & background worker)
+  if (typeof chrome !== 'undefined' && chrome.storage?.local) {
+    return new Promise((resolve) => {
+      chrome.storage.local.get(['stickle_user_session'], async (result) => {
+        const storedSession = result.stickle_user_session as Session | undefined;
+        if (storedSession?.access_token && storedSession?.refresh_token) {
+          try {
+            const { data: setRes, error } = await client.auth.setSession({
+              access_token: storedSession.access_token,
+              refresh_token: storedSession.refresh_token,
+            });
+            if (!error && setRes.session) {
+              chrome.storage.local.set({ stickle_user_session: setRes.session });
+              resolve(setRes.session);
+              return;
+            }
+          } catch {}
+          resolve(storedSession);
+          return;
+        }
+        resolve(null);
+      });
+    });
+  }
+
+  return null;
 }
 
 export async function getProfile(): Promise<UserProfile | null> {

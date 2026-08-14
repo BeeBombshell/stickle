@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'preact/hooks';
 import { initSupabase, getProfile } from '../../lib/auth';
+import { fullSync } from '../../lib/sync';
 
 export default function AuthCallbackApp() {
   const [status, setStatus] = useState<'loading' | 'success' | 'error'>('loading');
@@ -49,8 +50,12 @@ export default function AuthCallbackApp() {
               setEmail(session.user.email || profile?.email || 'User');
               setStatus('success');
               if (typeof chrome !== 'undefined' && chrome.storage?.local) {
-                chrome.storage.local.set({ stickle_user_session: session });
+                chrome.storage.local.set({
+                  stickle_user_session: session,
+                  stickle_auth_updated_at: Date.now(),
+                });
               }
+              fullSync().catch(() => {});
             }
           });
 
@@ -70,8 +75,14 @@ export default function AuthCallbackApp() {
         setStatus('success');
 
         if (typeof chrome !== 'undefined' && chrome.storage?.local) {
-          chrome.storage.local.set({ stickle_user_session: data.session });
+          chrome.storage.local.set({
+            stickle_user_session: data.session,
+            stickle_auth_updated_at: Date.now(),
+          });
         }
+
+        // Auto sync notes on sign-in
+        fullSync().catch(() => {});
 
         // Auto-close tab after 3.5 seconds
         setTimeout(() => {
