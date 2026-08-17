@@ -21,6 +21,8 @@ export interface NoteAnchor {
   domTag?: string;
   /** First 60 chars of element's normalized text — used to validate domIndex on restore */
   textFingerprint?: string;
+  /** Full/truncated snippet of webpage element text the note was attached to */
+  anchoredText?: string;
   tier: AnchorTier;
 }
 
@@ -31,6 +33,8 @@ export interface NoteHighlightRange {
   endContainerPath: string;
   endOffset: number;
 }
+
+export type SyncStatus = 'local' | 'synced' | 'pending' | 'conflict';
 
 export interface StickleNote {
   id: string;
@@ -47,11 +51,52 @@ export interface StickleNote {
   collapsed?: boolean;
   highlightRange?: NoteHighlightRange;
   tags?: string[];
+  /** Snippet of webpage element text the note was anchored to (for LLM/MCP reference) */
+  anchoredText?: string;
+  // Cloud Sync & Multi-device fields
+  syncStatus?: SyncStatus;
+  cloudId?: string;
+  userId?: string;
+  workspaceId?: string;
+  deletedAt?: number;
+  // Team Workspace fields
+  authorName?: string;
+  authorAvatarUrl?: string;
+  isReadOnly?: boolean;
 }
 
 export interface NotionConfig {
   apiKey: string;
   databaseId: string;
 }
+
+export interface UserProfile {
+  id: string;
+  email: string;
+  tier: 'free' | 'supporter' | 'team_member';
+  licenseKey?: string;
+  avatarUrl?: string;
+}
+
+export interface Workspace {
+  id: string;
+  name: string;
+  slug: string;
+  ownerId: string;
+  createdAt?: string;
+  role?: 'owner' | 'admin' | 'member' | 'viewer';
+  memberCount?: number;
+}
+
+export interface WorkspaceMember {
+  workspaceId: string;
+  userId: string;
+  role: 'owner' | 'admin' | 'member' | 'viewer';
+  email: string;
+  avatarUrl?: string;
+  joinedAt?: string;
+}
+
+
 
 

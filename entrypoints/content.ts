@@ -2,7 +2,7 @@ import { defineContentScript } from 'wxt/sandbox';
 import posthog from '../lib/posthog';
 import { render, h } from 'preact';
 import { NoteBubble } from '../components/NoteBubble';
-import { createAnchor, resolveAnchor } from '../lib/anchoring';
+import { createAnchor, resolveAnchor, normalizeUrl } from '../lib/anchoring';
 import { createNote, getNotesForUrl, updateNote, deleteNote } from '../lib/db';
 import { loadSettings } from '../components/Settings';
 import { pushNoteToNotion } from '../lib/notion';
@@ -13,6 +13,8 @@ import {
   restoreHighlightOverlay,
   removeHighlightOverlay,
 } from '../lib/highlighting';
+import { getActiveWorkspaceId, fetchWorkspaceNotesForUrl } from '../lib/workspace';
+import { getCurrentUserAuthorInfo } from '../lib/auth';
 import '../styles/design-tokens.css';
 
 export default defineContentScript({
@@ -40,7 +42,7 @@ export default defineContentScript({
     // Listen for storage changes across popup & other contexts
     if (typeof chrome !== 'undefined' && chrome.storage?.onChanged) {
       chrome.storage.onChanged.addListener((changes, areaName) => {
-        if (areaName === 'local' && changes.stickle_notes) {
+        if (areaName === 'local' && (changes.stickle_notes || changes.stickle_active_workspace_id)) {
           refreshNotes();
         }
       });
@@ -54,6 +56,46 @@ export default defineContentScript({
       }
     });
 
+    // Session bridge between Chrome Extension and Web Dashboard
+    const isDashboardHost =
+      window.location.hostname === 'localhost' ||
+      window.location.hostname === '127.0.0.1' ||
+      window.location.hostname.includes('stickle');
+
+    if (isDashboardHost && typeof chrome !== 'undefined' && chrome.storage?.local) {
+      const syncSessionToDashboard = () => {
+        chrome.storage.local.get(['stickle_user_session'], (res) => {
+          if (res.stickle_user_session) {
+            window.postMessage(
+              {
+                type: 'STICKLE_SYNC_AUTH_TO_DASHBOARD',
+                session: res.stickle_user_session,
+              },
+              '*'
+            );
+          }
+        });
+      };
+
+      // Push session immediately on load
+      syncSessionToDashboard();
+      setTimeout(syncSessionToDashboard, 800);
+
+      // Listen for extension session updates and push to dashboard
+      chrome.storage.onChanged.addListener((changes, areaName) => {
+        if (areaName === 'local' && (changes.stickle_user_session || changes.stickle_auth_updated_at)) {
+          syncSessionToDashboard();
+        }
+      });
+
+      // Listen for dashboard logout
+      window.addEventListener('message', (event) => {
+        if (event.data === 'STICKLE_DASHBOARD_SIGNOUT') {
+          chrome.storage.local.remove(['stickle_user_session', 'stickle_user_profile']);
+        }
+      });
+    }
+
     if (typeof chrome !== 'undefined' && chrome.runtime?.onMessage) {
       chrome.runtime.onMessage.addListener(async (msg, _sender, sendResponse) => {
         if (msg?.type === 'TRIGGER_CREATE_NOTE') {
@@ -65,6 +107,8 @@ export default defineContentScript({
           const anchor = createAnchor(target, offsetX, offsetY);
           const settings = await loadSettings();
           if (settings.enabled === false) return;
+          const activeWsId = await getActiveWorkspaceId();
+          const authorInfo = activeWsId ? await getCurrentUserAuthorInfo() : undefined;
           const newNote: StickleNote = {
             id: crypto.randomUUID(),
             url: normalizeUrl(window.location.href),
@@ -77,6 +121,9 @@ export default defineContentScript({
             createdAt: Date.now(),
             updatedAt: Date.now(),
             syncedToNotion: false,
+            workspaceId: activeWsId || undefined,
+            authorName: authorInfo?.authorName,
+            authorAvatarUrl: authorInfo?.authorAvatarUrl,
           };
           await createNote(newNote);
           posthog.capture('note_created', { creation_method: 'popup_action' });
@@ -146,18 +193,24 @@ export default defineContentScript({
         const settings = await loadSettings();
         if (settings.enabled === false) return;
 
+        const activeWsId = await getActiveWorkspaceId();
+        const authorInfo = activeWsId ? await getCurrentUserAuthorInfo() : undefined;
         const newNote: StickleNote = {
           id: crypto.randomUUID(),
           url: normalizeUrl(window.location.href),
           pageTitle: document.title,
           content: '',
           anchor,
+          anchoredText: anchor.anchoredText,
           color: settings.defaultNoteColor || 'lime',
           borderStyle: settings.defaultBorderStyle || 'solid',
           collapsed: false,
           createdAt: Date.now(),
           updatedAt: Date.now(),
           syncedToNotion: false,
+          workspaceId: activeWsId || undefined,
+          authorName: authorInfo?.authorName,
+          authorAvatarUrl: authorInfo?.authorAvatarUrl,
         };
 
         await createNote(newNote);
@@ -260,18 +313,24 @@ export default defineContentScript({
         const settings = await loadSettings();
         const color = settings.defaultNoteColor || 'lime';
 
+        const activeWsId = await getActiveWorkspaceId();
+        const authorInfo = activeWsId ? await getCurrentUserAuthorInfo() : undefined;
         const newNote: StickleNote = {
           id: crypto.randomUUID(),
           url: normalizeUrl(window.location.href),
           pageTitle: document.title,
           content: `"${highlightText}"`,
           anchor,
+          anchoredText: highlightText || anchor.anchoredText,
           color,
           collapsed: false,
           highlightRange,
           createdAt: Date.now(),
           updatedAt: Date.now(),
           syncedToNotion: false,
+          workspaceId: activeWsId || undefined,
+          authorName: authorInfo?.authorName,
+          authorAvatarUrl: authorInfo?.authorAvatarUrl,
         };
 
         // Wrap DOM selection range in <mark> tag
@@ -360,7 +419,43 @@ export default defineContentScript({
         }
         rootContainer.style.display = 'block';
 
-        const notes = await getNotesForUrl(normalizeUrl(window.location.href));
+        const currentUrl = normalizeUrl(window.location.href);
+        const personalNotes = await getNotesForUrl(currentUrl);
+
+        let teamNotes: StickleNote[] = [];
+        const activeWorkspaceId = await getActiveWorkspaceId();
+        if (activeWorkspaceId) {
+          try {
+            teamNotes = await fetchWorkspaceNotesForUrl(activeWorkspaceId, currentUrl);
+          } catch {}
+        }
+
+        // Deduplicate personal vs workspace notes by ID (teamNotes takes precedence to enforce isReadOnly & author metadata)
+        const notesMap = new Map<string, StickleNote>();
+        personalNotes.forEach((n) => notesMap.set(n.id, n));
+        teamNotes.forEach((n) => {
+          notesMap.set(n.id, n);
+        });
+
+        let notes = Array.from(notesMap.values());
+
+        // Filter notes on webpage based on active workspace selection
+        if (activeWorkspaceId === 'personal') {
+          notes = notes.filter((n) => !n.workspaceId);
+        } else if (activeWorkspaceId && activeWorkspaceId !== 'all') {
+          notes = notes.filter((n) => n.workspaceId === activeWorkspaceId);
+        }
+
+        if (activeWorkspaceId && activeWorkspaceId !== 'personal') {
+          const currentAuthor = await getCurrentUserAuthorInfo();
+          notes.forEach((n) => {
+            if (n.workspaceId === activeWorkspaceId && !n.authorName) {
+              n.authorName = currentAuthor.authorName;
+              n.authorAvatarUrl = currentAuthor.authorAvatarUrl || n.authorAvatarUrl;
+            }
+          });
+        }
+
         const currentIds = new Set(notes.map((n) => n.id));
 
         // Clean up unmounted notes that were deleted
@@ -390,8 +485,10 @@ export default defineContentScript({
               const bodyRect = (document.body || document.documentElement).getBoundingClientRect();
               const sx = window.scrollX;
               const sy = window.scrollY;
-              resolvedX = Math.max(10, sx + markRect.left - (sx + bodyRect.left));
-              resolvedY = Math.max(10, sy + markRect.top - (sy + bodyRect.top));
+              const offX = typeof note.anchor?.offsetX === 'number' && !isNaN(note.anchor.offsetX) ? note.anchor.offsetX : 0;
+              const offY = typeof note.anchor?.offsetY === 'number' && !isNaN(note.anchor.offsetY) ? note.anchor.offsetY : 0;
+              resolvedX = Math.max(10, sx + markRect.left - (sx + bodyRect.left) + offX);
+              resolvedY = Math.max(10, sy + markRect.top - (sy + bodyRect.top) + offY);
             } else {
               const resolved = resolveAnchor(note.anchor);
               resolvedX = resolved.x;
@@ -444,6 +541,8 @@ export default defineContentScript({
       // which previously raced with layout when DOM wasn't fully painted.
       let posX = initialX ?? note.anchor.pageX ?? 60;
       let posY = initialY ?? note.anchor.pageY ?? 60;
+      if (isNaN(posX) || !isFinite(posX)) posX = note.anchor.pageX || 60;
+      if (isNaN(posY) || !isFinite(posY)) posY = note.anchor.pageY || 60;
 
       wrapper.style.left = `${posX}px`;
       wrapper.style.top = `${posY}px`;
@@ -537,8 +636,17 @@ export default defineContentScript({
         posY = newTop;
 
         wrapper.style.visibility = 'hidden';
-        const targetEl = document.elementFromPoint(clientX, clientY) || document.body;
+        let targetEl = document.elementFromPoint(clientX, clientY) || document.body;
+        if (targetEl.closest('#stickle-notes-root')) {
+          targetEl = document.body;
+        }
         wrapper.style.visibility = 'visible';
+
+        const markEl = note.highlightRange
+          ? document.querySelector(`mark[data-stickle-id="${note.id}"]`)
+          : null;
+
+        const anchorTarget = markEl || targetEl;
 
         const scrollX = window.scrollX || 0;
         const scrollY = window.scrollY || 0;
@@ -546,14 +654,14 @@ export default defineContentScript({
         const bodyLeft = scrollX + bodyRect.left;
         const bodyTop = scrollY + bodyRect.top;
 
-        const targetRect = targetEl.getBoundingClientRect();
+        const targetRect = anchorTarget.getBoundingClientRect();
         const targetPageLeft = scrollX + targetRect.left - bodyLeft;
         const targetPageTop = scrollY + targetRect.top - bodyTop;
 
         const offsetX = newLeft - targetPageLeft;
         const offsetY = newTop - targetPageTop;
 
-        const newAnchor = createAnchor(targetEl, offsetX, offsetY);
+        const newAnchor = createAnchor(anchorTarget, offsetX, offsetY);
         note.anchor = newAnchor;
         await updateNote(note.id, { anchor: newAnchor, updatedAt: Date.now() });
 
@@ -582,14 +690,7 @@ export default defineContentScript({
   },
 });
 
-function normalizeUrl(url: string): string {
-  try {
-    const parsed = new URL(url);
-    return `${parsed.origin}${parsed.pathname}`;
-  } catch {
-    return url;
-  }
-}
+
 
 function getOrCreateHostContainer(): HTMLElement {
   let container = document.getElementById('stickle-notes-root');

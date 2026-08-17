@@ -89,6 +89,10 @@ export function formatMarkdownSummary(notes: StickleNote[]): string {
       const tagStr = note.tags && note.tags.length > 0 ? ` [${note.tags.map((t) => `#${t}`).join(', ')}]` : '';
       const dateStr = new Date(note.createdAt).toLocaleDateString();
       markdown += `- **[${note.pageTitle}](${note.url})** (${dateStr})${tagStr}\n`;
+      const anchoredContext = note.anchoredText || note.anchor?.exactText || note.highlightRange?.selectedText;
+      if (anchoredContext) {
+        markdown += `  *Target element:* "${anchoredContext}"\n`;
+      }
       markdown += `  > ${note.content.split('\n').join('\n  > ')}\n\n`;
     }
   }

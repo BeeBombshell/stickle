@@ -29,7 +29,8 @@ export function filterNotes(
   searchQuery: string,
   dateFilter: DateFilter,
   tagFilterOrRefTime?: string | number,
-  referenceTimeParam?: number
+  referenceTimeParam?: number,
+  colorFilterParam?: string
 ): StickleNote[] {
   let tagFilter = 'all';
   let referenceTime = Date.now();
@@ -47,6 +48,13 @@ export function filterNotes(
   const query = searchQuery.trim().toLowerCase();
 
   return notes.filter((note) => {
+    // Color filter
+    if (colorFilterParam && colorFilterParam !== 'all') {
+      if (note.color !== colorFilterParam) {
+        return false;
+      }
+    }
+
     // Tag filter
     if (tagFilter !== 'all') {
       if (!note.tags || !note.tags.includes(tagFilter)) {
@@ -119,12 +127,14 @@ export function NoteSidebar({ notes, onNoteChange, onSelectNote }: NoteSidebarPr
   const [searchQuery, setSearchQuery] = useState('');
   const [dateFilter, setDateFilter] = useState<DateFilter>('all');
   const [selectedTag, setSelectedTag] = useState<string>('all');
+  const [selectedColor, setSelectedColor] = useState<string>('all');
   const [editingId, setEditingId] = useState<string | null>(null);
   const [editContent, setEditContent] = useState('');
   const [exportingId, setExportingId] = useState<string | null>(null);
   const [isBatchExporting, setIsBatchExporting] = useState(false);
   const [syncStatusMsg, setSyncStatusMsg] = useState<string | null>(null);
   const [hasNotionConfig, setHasNotionConfig] = useState(false);
+  const [showFilterPopover, setShowFilterPopover] = useState(false);
 
   useEffect(() => {
     loadSettings().then((s) => {
@@ -133,9 +143,10 @@ export function NoteSidebar({ notes, onNoteChange, onSelectNote }: NoteSidebarPr
   }, []);
 
   const allTags = Array.from(new Set(notes.flatMap((n) => n.tags || []))).sort();
-  const filtered = filterNotes(notes, searchQuery, dateFilter, selectedTag);
+  const filtered = filterNotes(notes, searchQuery, dateFilter, selectedTag, undefined, selectedColor);
   const grouped = groupNotesByDomain(filtered);
   const unsyncedCount = notes.filter((n) => !n.syncedToNotion).length;
+  const activeFilterCount = (dateFilter !== 'all' ? 1 : 0) + (selectedTag !== 'all' ? 1 : 0) + (selectedColor !== 'all' ? 1 : 0);
 
   const handleStartEdit = (note: StickleNote, e: Event) => {
     e.stopPropagation();
@@ -258,75 +269,175 @@ export function NoteSidebar({ notes, onNoteChange, onSelectNote }: NoteSidebarPr
 
   return (
     <div style={sidebarStyles.container}>
-      {/* Controls Bar: Search, Date Filters, Tag Filters, JSON Backup & Batch Notion Action */}
+      {/* Controls Bar: Search + Filter Popover Button */}
       <div style={sidebarStyles.controlsBar}>
-        <input
-          type="text"
-          placeholder="Search notes, pages, or #tags..."
-          value={searchQuery}
-          onInput={(e) => setSearchQuery((e.target as HTMLInputElement).value)}
-          style={sidebarStyles.searchInput}
-        />
+        <div style={{ display: 'flex', gap: '6px', alignItems: 'center', width: '100%', minWidth: 0 }}>
+          <input
+            type="text"
+            placeholder="Search notes, pages, or #tags..."
+            value={searchQuery}
+            onInput={(e) => setSearchQuery((e.target as HTMLInputElement).value)}
+            style={{ ...sidebarStyles.searchInput, flex: 1, minWidth: 0, width: '0', marginBottom: 0 }}
+          />
 
-        {allTags.length > 0 && (
-          <div style={sidebarStyles.tagFilterBar}>
-            <button
-              style={selectedTag === 'all' ? sidebarStyles.tagPillActive : sidebarStyles.tagPill}
-              onClick={() => setSelectedTag('all')}
-            >
-              #all
-            </button>
-            {allTags.map((tag) => (
-              <button
-                key={tag}
-                style={selectedTag === tag ? sidebarStyles.tagPillActive : sidebarStyles.tagPill}
-                onClick={() => setSelectedTag(tag)}
-              >
-                #{tag}
-              </button>
-            ))}
-          </div>
-        )}
+          <button
+            onClick={() => setShowFilterPopover(!showFilterPopover)}
+            title="Filter notes by date or tags"
+            style={{
+              display: 'inline-flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              gap: '4px',
+              padding: '6px 10px',
+              borderRadius: '50px',
+              border: activeFilterCount > 0 ? '1px solid #111111' : '1px solid var(--color-hairline, rgba(0,0,0,0.12))',
+              backgroundColor: activeFilterCount > 0 ? '#111111' : 'var(--color-canvas, #ffffff)',
+              color: activeFilterCount > 0 ? '#ffffff' : 'var(--color-ink, #111111)',
+              fontSize: '11px',
+              fontWeight: '600',
+              cursor: 'pointer',
+              flexShrink: 0,
+              transition: 'all 0.15s ease',
+            }}
+          >
+            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+              <polygon points="22 3 2 3 10 12.46 10 19 14 21 14 12.46 22 3" />
+            </svg>
+            {activeFilterCount > 0 ? `Filters (${activeFilterCount})` : 'Filter'}
+          </button>
 
-        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: '6px', flexWrap: 'wrap' }}>
-          <div style={sidebarStyles.filterGroup}>
-            <button
-              style={dateFilter === 'all' ? sidebarStyles.filterBtnActive : sidebarStyles.filterBtn}
-              onClick={() => setDateFilter('all')}
-            >
-              All
-            </button>
-            <button
-              style={dateFilter === 'today' ? sidebarStyles.filterBtnActive : sidebarStyles.filterBtn}
-              onClick={() => setDateFilter('today')}
-            >
-              Today
-            </button>
-            <button
-              style={dateFilter === 'week' ? sidebarStyles.filterBtnActive : sidebarStyles.filterBtn}
-              onClick={() => setDateFilter('week')}
-            >
-              This Week
-            </button>
-          </div>
-
-          {hasNotionConfig && (
+          {hasNotionConfig && unsyncedCount > 0 && (
             <button
               style={sidebarStyles.notionBatchBtn}
               onClick={handleBatchExport}
-              disabled={isBatchExporting || unsyncedCount === 0}
+              disabled={isBatchExporting}
             >
-              {isBatchExporting
-                ? 'Syncing...'
-                : unsyncedCount > 0
-                ? `Sync ${unsyncedCount} to Notion`
-                : 'All Synced ✓'}
+              {isBatchExporting ? 'Syncing...' : `Notion (${unsyncedCount})`}
             </button>
           )}
         </div>
 
+        {/* Collapsible Filter Popover Panel */}
+        {showFilterPopover && (
+          <div
+            style={{
+              marginTop: '8px',
+              padding: '10px 12px',
+              borderRadius: '12px',
+              backgroundColor: 'var(--color-surface-soft, #f5f5f3)',
+              border: '1px solid var(--color-hairline, #e5e5e0)',
+              display: 'flex',
+              flexDirection: 'column',
+              gap: '8px',
+            }}
+          >
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+              <span style={{ fontSize: '10px', fontFamily: "'JetBrains Mono', monospace", fontWeight: '700', textTransform: 'uppercase', color: 'var(--color-ink-muted)' }}>
+                Filter By Date
+              </span>
+              {activeFilterCount > 0 && (
+                <button
+                  onClick={() => {
+                    setDateFilter('all');
+                    setSelectedTag('all');
+                  }}
+                  style={{ background: 'none', border: 'none', color: '#dc2626', fontSize: '10px', fontWeight: '600', cursor: 'pointer', padding: 0 }}
+                >
+                  Clear Filters
+                </button>
+              )}
+            </div>
+
+            <div style={sidebarStyles.filterGroup}>
+              <button
+                style={dateFilter === 'all' ? sidebarStyles.filterBtnActive : sidebarStyles.filterBtn}
+                onClick={() => setDateFilter('all')}
+              >
+                All Dates
+              </button>
+              <button
+                style={dateFilter === 'today' ? sidebarStyles.filterBtnActive : sidebarStyles.filterBtn}
+                onClick={() => setDateFilter('today')}
+              >
+                Today
+              </button>
+              <button
+                style={dateFilter === 'week' ? sidebarStyles.filterBtnActive : sidebarStyles.filterBtn}
+                onClick={() => setDateFilter('week')}
+              >
+                This Week
+              </button>
+            </div>
+
+            <div style={{ fontSize: '10px', fontFamily: "'JetBrains Mono', monospace", fontWeight: '700', textTransform: 'uppercase', color: 'var(--color-ink-muted)', marginTop: '2px' }}>
+              Filter By Color
+            </div>
+            <div style={{ display: 'flex', flexWrap: 'wrap', gap: '4px' }}>
+              <button
+                onClick={() => setSelectedColor('all')}
+                style={{
+                  fontSize: '10px',
+                  fontFamily: "'JetBrains Mono', monospace",
+                  padding: '2px 8px',
+                  borderRadius: '50px',
+                  border: selectedColor === 'all' ? '1.5px solid #111' : '1px solid #ccc',
+                  backgroundColor: selectedColor === 'all' ? '#111' : '#fff',
+                  color: selectedColor === 'all' ? '#fff' : '#111',
+                  cursor: 'pointer',
+                }}
+              >
+                #all
+              </button>
+              {['lime', 'lilac', 'cream', 'mint', 'pink', 'coral', 'navy'].map((c) => (
+                <button
+                  key={c}
+                  onClick={() => setSelectedColor(c)}
+                  style={{
+                    fontSize: '10px',
+                    fontFamily: "'JetBrains Mono', monospace",
+                    padding: '2px 8px',
+                    borderRadius: '50px',
+                    border: selectedColor === c ? '2px solid #111' : '1px solid rgba(0,0,0,0.15)',
+                    backgroundColor: c === 'navy' ? '#111' : `var(--color-block-${c}, #f0f0f0)`,
+                    color: c === 'navy' ? '#fff' : '#111',
+                    fontWeight: selectedColor === c ? '700' : '500',
+                    cursor: 'pointer',
+                  }}
+                >
+                  {c}
+                </button>
+              ))}
+            </div>
+
+            {allTags.length > 0 && (
+              <>
+                <div style={{ fontSize: '10px', fontFamily: "'JetBrains Mono', monospace", fontWeight: '700', textTransform: 'uppercase', color: 'var(--color-ink-muted)', marginTop: '2px' }}>
+                  Filter By Tag
+                </div>
+                <div style={sidebarStyles.tagFilterBar}>
+                  <button
+                    style={selectedTag === 'all' ? sidebarStyles.tagPillActive : sidebarStyles.tagPill}
+                    onClick={() => setSelectedTag('all')}
+                  >
+                    #all
+                  </button>
+                  {allTags.map((tag) => (
+                    <button
+                      key={tag}
+                      style={selectedTag === tag ? sidebarStyles.tagPillActive : sidebarStyles.tagPill}
+                      onClick={() => setSelectedTag(tag)}
+                    >
+                      #{tag}
+                    </button>
+                  ))}
+                </div>
+              </>
+            )}
+          </div>
+        )}
+
         {syncStatusMsg && (
-          <div style={sidebarStyles.syncStatusBanner}>{syncStatusMsg}</div>
+          <div style={{ ...sidebarStyles.syncStatusBanner, marginTop: '6px' }}>{syncStatusMsg}</div>
         )}
       </div>
 
@@ -384,6 +495,50 @@ export function NoteSidebar({ notes, onNoteChange, onSelectNote }: NoteSidebarPr
                           />
                           <span style={sidebarStyles.pageTitle}>{note.pageTitle || 'Untitled Page'}</span>
                         </div>
+                        {note.authorName && (
+                          <span
+                            style={{
+                              display: 'inline-flex',
+                              alignItems: 'center',
+                              gap: '4px',
+                              fontSize: '10px',
+                              fontWeight: '700',
+                              padding: '2px 7px 2px 4px',
+                              borderRadius: '50px',
+                              backgroundColor: '#e8d5ff',
+                              color: '#111111',
+                              flexShrink: 0,
+                            }}
+                            title={`Workspace note by ${note.authorName}`}
+                          >
+                            {note.authorAvatarUrl ? (
+                              <img
+                                src={note.authorAvatarUrl}
+                                alt={note.authorName}
+                                style={{ width: '14px', height: '14px', borderRadius: '50%', objectFit: 'cover' }}
+                              />
+                            ) : (
+                              <span
+                                style={{
+                                  width: '14px',
+                                  height: '14px',
+                                  borderRadius: '50%',
+                                  backgroundColor: '#7c3aed',
+                                  color: '#ffffff',
+                                  fontSize: '8px',
+                                  fontWeight: '800',
+                                  display: 'inline-flex',
+                                  alignItems: 'center',
+                                  justifyContent: 'center',
+                                  lineHeight: 1,
+                                }}
+                              >
+                                {note.authorName.charAt(0).toUpperCase()}
+                              </span>
+                            )}
+                            {note.authorName}
+                          </span>
+                        )}
                         {hasNotionConfig && note.syncedToNotion && (
                           <div style={{ display: 'flex', gap: '4px', alignItems: 'center', flexShrink: 0 }}>
                             <span style={sidebarStyles.syncedTag} title="Synced to Notion">

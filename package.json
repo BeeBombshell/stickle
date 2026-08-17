@@ -13,11 +13,16 @@
     "compile": "tsc --noEmit",
     "test": "vitest run",
     "test:e2e": "playwright test",
+    "dev:dashboard": "pnpm --prefix dashboard dev",
+    "build:dashboard": "pnpm --prefix dashboard build",
     "mcp": "tsx mcp-server/index.ts",
+    "db:setup": "node scripts/apply-schema.js",
+    "db:clear-waitlist": "node scripts/clear-waitlist.js",
     "postinstall": "wxt prepare"
   },
   "dependencies": {
     "@modelcontextprotocol/sdk": "^1.30.0",
+    "@supabase/supabase-js": "^2.112.2",
     "dexie": "^4.0.10",
     "posthog-js": "^1.407.2",
     "preact": "^10.26.4"

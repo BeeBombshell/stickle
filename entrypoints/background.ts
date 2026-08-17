@@ -5,10 +5,21 @@ import {
   pushNoteToNotionDirect,
   exportUnsyncedNotesBatchDirect,
 } from '../lib/notion';
+import { validateUserTier } from '../lib/auth';
 
 export default defineBackground(() => {
   console.log('[Stickle Background] Service worker initialized.');
   posthog.init();
+
+  // Schedule 24-hour periodic alarm for license tier validation
+  if (typeof chrome !== 'undefined' && chrome.alarms) {
+    chrome.alarms.create('check-license-tier', { periodInMinutes: 1440 });
+    chrome.alarms.onAlarm.addListener((alarm) => {
+      if (alarm.name === 'check-license-tier') {
+        validateUserTier(true);
+      }
+    });
+  }
 
   // Create context menu item & handle first-run onboarding on install
   chrome.runtime.onInstalled.addListener((details) => {
