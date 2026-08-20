@@ -51,9 +51,10 @@ export const metadata: Metadata = {
     siteName: "Stickle",
     images: [
       {
-        url: "/og-image.svg",
+        url: "/og-image.png",
         width: 1200,
         height: 630,
+        type: "image/png",
         alt: "Stickle — Web Dashboard & Cross-Device Notes",
       },
     ],
@@ -65,7 +66,7 @@ export const metadata: Metadata = {
     title: "Stickle — Web Dashboard & Annotation Explorer",
     description:
       "Leave notes in the margins of the web. Search, filter, and manage persistent anchored web sticky notes across every device.",
-    images: ["/og-image.svg"],
+    images: ["/og-image.png"],
   },
 };
 
