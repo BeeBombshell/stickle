@@ -21,13 +21,12 @@
     "postinstall": "wxt prepare"
   },
   "dependencies": {
-    "@modelcontextprotocol/sdk": "^1.30.0",
     "@supabase/supabase-js": "^2.112.2",
     "dexie": "^4.0.10",
-    "posthog-js": "^1.407.2",
     "preact": "^10.26.4"
   },
   "devDependencies": {
+    "@modelcontextprotocol/sdk": "^1.30.0",
     "@playwright/test": "^1.62.1",
     "@preact/preset-vite": "^2.9.4",
     "@types/node": "^22.13.1",
