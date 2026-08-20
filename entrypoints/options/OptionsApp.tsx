@@ -228,7 +228,7 @@ export function OptionsApp() {
   };
 
   const handleOpenDashboard = () => {
-    const dashboardUrl = 'http://localhost:3001/notes';
+    const dashboardUrl = (import.meta.env.WXT_PUBLIC_DASHBOARD_URL as string | undefined) || 'https://app.stickle.app/notes';
     if (typeof chrome !== 'undefined' && chrome.tabs) {
       chrome.tabs.create({ url: dashboardUrl });
     } else {

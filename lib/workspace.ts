@@ -234,11 +234,9 @@ export async function fetchWorkspaceNotesForUrl(
 
     const mappedRemoteNotes: StickleNote[] = remoteRows.map((row: any) => {
       const profileObj = Array.isArray(row.profiles) ? row.profiles[0] : row.profiles;
-      const authorEmail = profileObj?.email || 'alex@stickle.app';
-      const handle = authorEmail.split('@')[0];
-      const authorName = handle.toLowerCase().includes('bhavya')
-        ? 'Bhavya'
-        : handle.charAt(0).toUpperCase() + handle.slice(1);
+      const authorEmail = profileObj?.email || '';
+      const handle = authorEmail ? authorEmail.split('@')[0] : 'Anonymous';
+      const authorName = handle.charAt(0).toUpperCase() + handle.slice(1);
       const authorAvatarUrl = profileObj?.avatar_url || undefined;
       const isReadOnly = currentUserId ? row.user_id !== currentUserId : true;
 

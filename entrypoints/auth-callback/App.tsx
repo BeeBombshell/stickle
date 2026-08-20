@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'preact/hooks';
+import { useState, useEffect, useRef } from 'preact/hooks';
 import { initSupabase, getProfile } from '../../lib/auth';
 import { fullSync } from '../../lib/sync';
 
@@ -6,6 +6,8 @@ export default function AuthCallbackApp() {
   const [status, setStatus] = useState<'loading' | 'success' | 'error'>('loading');
   const [email, setEmail] = useState('');
   const [errorMessage, setErrorMessage] = useState('');
+  // Ref to avoid stale closure in setTimeout — tracks whether auth resolved
+  const authSucceeded = useRef(false);
 
   useEffect(() => {
     async function handleCallback() {
@@ -46,6 +48,7 @@ export default function AuthCallbackApp() {
           // Listen briefly for onAuthStateChange in case token processing is async
           const { data: authListener } = client.auth.onAuthStateChange(async (event, session) => {
             if (session) {
+              authSucceeded.current = true;
               const profile = await getProfile();
               setEmail(session.user.email || profile?.email || 'User');
               setStatus('success');
@@ -61,7 +64,7 @@ export default function AuthCallbackApp() {
 
           // Wait 2s for listener before declaring error
           setTimeout(() => {
-            if (status === 'loading') {
+            if (!authSucceeded.current) {
               setStatus('error');
               setErrorMessage(error?.message || 'No valid authentication session found in URL hash.');
             }

@@ -8,6 +8,7 @@ import { getActiveWorkspaceId, setActiveWorkspaceId, getUserWorkspaces } from '.
 import { getProfile } from '../../lib/auth';
 import { ENABLE_CLOUD_AUTH } from '../../lib/flags';
 import posthog from '../../lib/posthog';
+import { normalizeUrl } from '../../lib/anchoring';
 
 export type PopupTab = 'active-tab' | 'all-notes';
 
@@ -137,7 +138,7 @@ export function App() {
   };
 
   const handleOpenDashboard = () => {
-    const dashboardUrl = 'http://localhost:3001/notes';
+    const dashboardUrl = (import.meta.env.WXT_PUBLIC_DASHBOARD_URL as string | undefined) || 'https://app.stickle.app/notes';
     if (typeof chrome !== 'undefined' && chrome.tabs) {
       chrome.tabs.create({ url: dashboardUrl });
     } else {
@@ -415,14 +416,7 @@ export function App() {
   );
 }
 
-function normalizeUrl(url: string): string {
-  try {
-    const parsed = new URL(url);
-    return `${parsed.origin}${parsed.pathname}`;
-  } catch {
-    return url;
-  }
-}
+
 
 const popupStyles = {
   container: {
