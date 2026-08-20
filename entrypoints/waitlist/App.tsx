@@ -71,13 +71,22 @@ export default function WaitlistApp() {
           <div style={s.navLinks}>
             <a href="/" style={s.navLink}>Home</a>
             <a href="/#features" style={s.navLink}>Features</a>
-            <a href="/#pricing" style={s.navLink}>Pricing</a>
-            <a href="/privacy.html" style={s.navLink}>Privacy</a>
+            <a href="/docs" style={s.navLink}>Docs</a>
+            <a href="/onboarding" style={s.navLink}>Sandbox</a>
+            <a href="/privacy" style={s.navLink}>Privacy</a>
           </div>
 
           <div style={s.navActions}>
-            <button style={s.btnSecondary} onClick={goHome}>
-              ← Back to Homepage
+            <a
+              href="https://github.com/BeeBombshell/stickle"
+              target="_blank"
+              rel="noreferrer"
+              style={{ ...s.btnSecondary, textDecoration: 'none', display: 'inline-flex', alignItems: 'center' }}
+            >
+              GitHub ↗
+            </a>
+            <button style={s.btnPrimary} onClick={goHome}>
+              ← Homepage
             </button>
           </div>
         </div>
@@ -314,11 +323,20 @@ export default function WaitlistApp() {
                 Leave persistent sticky notes in the margins of the web. 100% local-first &amp; open source.
               </p>
             </div>
-            <div>
-              <a href="/" style={s.footerLink}>Home</a>
-              <a href="/waitlist.html" style={s.footerLink}>Waitlist</a>
-              <a href="/privacy.html" style={s.footerLink}>Privacy Policy</a>
-              <a href="https://github.com/BeeBombshell/stickle" target="_blank" rel="noreferrer" style={s.footerLink}>GitHub Repository ↗</a>
+            <div style={{ display: 'flex', gap: 32, flexWrap: 'wrap' }}>
+              <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
+                <span style={{ ...s.eyebrow, fontSize: 10, color: '#71717a', marginBottom: 4 }}>NAVIGATION</span>
+                <a href="/" style={s.footerLink}>Home</a>
+                <a href="/docs" style={s.footerLink}>Documentation</a>
+                <a href="/onboarding" style={s.footerLink}>Interactive Sandbox</a>
+                <a href="/privacy" style={s.footerLink}>Privacy Policy</a>
+              </div>
+              <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
+                <span style={{ ...s.eyebrow, fontSize: 10, color: '#71717a', marginBottom: 4 }}>OPEN SOURCE</span>
+                <a href="https://github.com/BeeBombshell/stickle" target="_blank" rel="noreferrer" style={s.footerLink}>GitHub Repository ↗</a>
+                <a href="https://github.com/BeeBombshell/stickle/issues" target="_blank" rel="noreferrer" style={s.footerLink}>Issues &amp; Bugs ↗</a>
+                <a href="https://github.com/BeeBombshell/stickle/discussions" target="_blank" rel="noreferrer" style={s.footerLink}>Discussions ↗</a>
+              </div>
             </div>
           </div>
           <div style={{ marginTop: 40, paddingTop: 20, borderTop: '1px solid #262626', fontSize: 12, color: '#a1a1aa', textAlign: 'center' as const, fontFamily: "'JetBrains Mono', monospace" }}>

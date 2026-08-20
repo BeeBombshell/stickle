@@ -125,11 +125,11 @@ export default function LandingApp() {
     setOpenFaq(openFaq === idx ? null : idx);
   };
 
-  const openSandbox = () => {
+  const openOnboarding = () => {
     if (typeof chrome !== 'undefined' && chrome.tabs) {
       chrome.tabs.create({ url: chrome.runtime.getURL('onboarding.html') });
     } else {
-      window.open('/onboarding.html', '_blank');
+      window.open('/onboarding', '_blank');
     }
   };
 
@@ -137,7 +137,15 @@ export default function LandingApp() {
     if (typeof chrome !== 'undefined' && chrome.tabs) {
       chrome.tabs.create({ url: chrome.runtime.getURL('privacy.html') });
     } else {
-      window.open('/privacy.html', '_blank');
+      window.open('/privacy', '_blank');
+    }
+  };
+
+  const openDocs = () => {
+    if (typeof chrome !== 'undefined' && chrome.tabs) {
+      chrome.tabs.create({ url: chrome.runtime.getURL('docs.html') });
+    } else {
+      window.open('/docs', '_blank');
     }
   };
 
@@ -161,10 +169,12 @@ export default function LandingApp() {
 
           {/* Centre: page links */}
           <div style={s.navLinks}>
-            {['Features', 'Anchoring', 'Roadmap', 'Pricing', 'FAQ'].map(l => (
-              <a key={l} href={`#${l.toLowerCase()}`} style={s.navLink}>{l}</a>
-            ))}
-            <a href="/waitlist.html" style={s.navLink}>Waitlist</a>
+            <a href="#features" style={s.navLink}>Features</a>
+            <a href="#anchoring" style={s.navLink}>Anchoring</a>
+            <a href="/docs#mcp-server" style={s.navLink}>MCP Setup</a>
+            <a href="/docs" style={s.navLink}>Docs</a>
+            <a href="#faq" style={s.navLink}>FAQ</a>
+            <a href="/waitlist" style={s.navLink}>Waitlist</a>
           </div>
 
           {/* Right: CTAs */}
@@ -177,6 +187,7 @@ export default function LandingApp() {
             >
               GitHub ↗
             </a>
+            <button style={s.btnSecondary} onClick={openDocs}>Docs</button>
             <button style={s.btnSecondary} onClick={openSandbox}>Sandbox</button>
             <button style={s.btnPrimary} onClick={openSandbox}>Add to Chrome - Free</button>
           </div>
@@ -203,13 +214,16 @@ export default function LandingApp() {
 
             <div style={s.ctaRow}>
               <a
-                href="/waitlist.html"
+                href="/waitlist"
                 style={{ ...s.btnPrimary, fontSize: 16, padding: '12px 28px', textDecoration: 'none' }}
               >
                 Join Launch Waitlist ↗
               </a>
-              <button style={{ ...s.btnSecondary, fontSize: 16, padding: '12px 24px' }} onClick={openSandbox}>
+              <button style={{ ...s.btnSecondary, fontSize: 16, padding: '12px 24px' }} onClick={openOnboarding}>
                 Try Sandbox
+              </button>
+              <button style={{ ...s.btnSecondary, fontSize: 16, padding: '12px 24px' }} onClick={openDocs}>
+                Documentation
               </button>
               <a
                 href="https://github.com/BeeBombshell/stickle"
@@ -1238,47 +1252,43 @@ export default function LandingApp() {
         </div>
       </section>
 
-      {/* ══ 10. PRICING (Signature Lime for Early Access) ════════════════════ */}
-      <section id="pricing" style={s.sectionSpacing}>
+      {/* ══ 10. OPEN SOURCE & LOCAL FOUNDATION ════════════════════════════════ */}
+      <section id="open-source" style={s.sectionSpacing}>
         <div style={s.wrap}>
-          <span style={s.eyebrow}>TRANSPARENT PRICING</span>
-          <h2 style={{ ...s.displayLg, maxWidth: 560, marginBottom: 48 }}>
-            Open-core. Always free at the core.
+          <span style={s.eyebrow}>100% FREE &amp; OPEN SOURCE</span>
+          <h2 style={{ ...s.displayLg, maxWidth: 640, marginBottom: 48 }}>
+            Built for developers, thinkers, and the open web.
           </h2>
-          <div style={s.pricingGrid}>
-            {/* Free */}
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(300px, 1fr))', gap: 24 }}>
+            {/* Local-first core */}
             <div style={s.priceCard}>
-              <span style={s.eyebrow}>FREE FOREVER</span>
-              <h3 style={{ fontSize: 24, fontWeight: 700, margin: '8px 0 4px', letterSpacing: '-0.3px' }}>Core Extension</h3>
-              <div style={s.priceAmount}>$0</div>
-              <p style={{ fontSize: 14, color: '#52514e', margin: '0 0 24px', lineHeight: 1.5 }}>
-                100% free &amp; open source forever.
+              <span style={s.eyebrow}>ZERO ACCOUNT • ZERO CLOUD</span>
+              <h3 style={{ fontSize: 24, fontWeight: 700, margin: '8px 0 4px', letterSpacing: '-0.3px' }}>100% Local Storage</h3>
+              <p style={{ fontSize: 14, color: '#52514e', margin: '0 0 20px', lineHeight: 1.5 }}>
+                Your notes are stored in your browser's IndexedDB. They stay on your machine, work completely offline, and are never sent to third-party telemetry servers.
               </p>
               <ul style={s.featureList}>
-                {['Unlimited local sticky notes', '3-tier DOM anchoring engine', '1-click Notion export', 'Central popup note manager', 'Offline-first IndexedDB storage'].map(f => (
+                {['Unlimited sticky notes on any webpage', '5-tier resilient DOM anchoring engine', '1-click Notion database integration', 'Instant JSON backup export & restore'].map(f => (
                   <li key={f} style={s.featureItem}>
                     <span style={s.checkMark}>✓</span> {f}
                   </li>
                 ))}
               </ul>
               <button style={{ ...s.btnPrimary, width: '100%', marginTop: 'auto' }} onClick={openSandbox}>
-                Add to Chrome - Free
+                Try in Interactive Sandbox
               </button>
             </div>
 
-            {/* Pro Supporter (Lime featured card) */}
+            {/* AI MCP server */}
             <div style={{ ...s.priceCard, backgroundColor: '#111111', color: '#ffffff', border: '2px solid #e4f579', position: 'relative' as const }}>
-              <span style={{ ...s.featuredBadge, backgroundColor: '#e4f579', color: '#111111' }}>EARLY ACCESS</span>
-              <span style={{ ...s.eyebrow, color: '#e4f579' }}>PRO SUPPORTER</span>
-              <h3 style={{ fontSize: 24, fontWeight: 700, color: '#ffffff', margin: '8px 0 4px', letterSpacing: '-0.3px' }}>Supporter Access</h3>
-              <div style={{ ...s.priceAmount, color: '#ffffff' }}>
-                $29 <span style={{ fontSize: 15, fontWeight: 400, color: '#a1a1aa' }}>one-time</span>
-              </div>
-              <p style={{ fontSize: 14, color: '#a1a1aa', margin: '0 0 24px', lineHeight: 1.5 }}>
-                Support open source + unlock cloud features when they ship.
+              <span style={{ ...s.featuredBadge, backgroundColor: '#e4f579', color: '#111111' }}>MCP POWERED</span>
+              <span style={{ ...s.eyebrow, color: '#e4f579' }}>AI INTEGRATION</span>
+              <h3 style={{ fontSize: 24, fontWeight: 700, color: '#ffffff', margin: '8px 0 4px', letterSpacing: '-0.3px' }}>Local MCP Server</h3>
+              <p style={{ fontSize: 14, color: '#a1a1aa', margin: '0 0 20px', lineHeight: 1.5 }}>
+                Connect Claude Desktop, Cursor, and Windsurf directly to your web notes using Model Context Protocol (MCP).
               </p>
               <ul style={s.featureList}>
-                {['Everything in Free Core', 'Cross-device cloud sync', 'Central web dashboard', 'Remote MCP server for AI context', 'Priority feature requests'].map(f => (
+                {['Official mcp-server/ in GitHub repo', 'get_stickle_notes & create_stickle_note tools', 'Search by content, page URL, and #tags', 'Claude Desktop & Cursor JSON configs ready'].map(f => (
                   <li key={f} style={{ ...s.featureItem, color: '#ffffff' }}>
                     <span style={{ ...s.checkMark, color: '#e4f579' }}>✓</span> {f}
                   </li>
@@ -1286,35 +1296,34 @@ export default function LandingApp() {
               </ul>
               <button
                 style={{ ...s.btnPrimary, width: '100%', marginTop: 'auto', backgroundColor: '#e4f579', color: '#111111' }}
-                onClick={openSandbox}
+                onClick={openDocs}
               >
-                Become a Supporter
+                View MCP Setup Docs ↗
               </button>
             </div>
 
-            {/* Teams */}
+            {/* Community & GitHub */}
             <div style={s.priceCard}>
-              <span style={s.eyebrow}>TEAMS</span>
-              <h3 style={{ fontSize: 24, fontWeight: 700, margin: '8px 0 4px', letterSpacing: '-0.3px' }}>Teams &amp; Workspaces</h3>
-              <div style={s.priceAmount}>
-                $9 <span style={{ fontSize: 15, fontWeight: 400 }}>/user/mo</span>
-              </div>
-              <p style={{ fontSize: 14, color: '#52514e', margin: '0 0 24px', lineHeight: 1.5 }}>
-                For engineering, research, and product teams.
+              <span style={s.eyebrow}>MIT LICENSE</span>
+              <h3 style={{ fontSize: 24, fontWeight: 700, margin: '8px 0 4px', letterSpacing: '-0.3px' }}>Open Source Community</h3>
+              <p style={{ fontSize: 14, color: '#52514e', margin: '0 0 20px', lineHeight: 1.5 }}>
+                Stickle is developed transparently in the open. Star the repository, contribute pull requests, or join GitHub discussions.
               </p>
               <ul style={s.featureList}>
-                {['Everything in Pro', 'Team shared web annotations', 'Workspace audit logs', 'User role permissions', 'Dedicated support channel'].map(f => (
+                {['Open source codebase on GitHub', 'Public issue tracker & roadmap', 'Community discussions & RFCs', 'Clean TypeScript & Preact architecture'].map(f => (
                   <li key={f} style={s.featureItem}>
                     <span style={s.checkMark}>✓</span> {f}
                   </li>
                 ))}
               </ul>
-              <button style={{ ...s.btnSecondary, width: '100%', marginTop: 'auto' }} onClick={() => {
-                const el = document.getElementById('waitlist');
-                if (el) el.scrollIntoView({ behavior: 'smooth' });
-              }}>
-                Join Teams Waitlist
-              </button>
+              <a
+                href="https://github.com/BeeBombshell/stickle"
+                target="_blank"
+                rel="noreferrer"
+                style={{ ...s.btnSecondary, width: '100%', marginTop: 'auto', textDecoration: 'none', textAlign: 'center' as const, boxSizing: 'border-box' as const, display: 'block' }}
+              >
+                Explore GitHub Repository ↗
+              </a>
             </div>
           </div>
         </div>
@@ -1334,7 +1343,7 @@ export default function LandingApp() {
               </p>
               <div>
                 <a
-                  href="/waitlist.html"
+                  href="/waitlist"
                   style={{ ...s.btnPrimary, backgroundColor: '#e4f579', color: '#111111', fontSize: 16, padding: '14px 32px', textDecoration: 'none', display: 'inline-block' }}
                 >
                   Join Rollout Waitlist ↗
@@ -1386,8 +1395,11 @@ export default function LandingApp() {
             Install the extension. No account, no setup, no friction.
           </p>
           <div style={{ ...s.ctaRow, justifyContent: 'center' }}>
-            <button style={{ ...s.btnPrimary, fontSize: 16, padding: '14px 32px' }} onClick={openSandbox}>
+            <button style={{ ...s.btnPrimary, fontSize: 16, padding: '14px 32px' }} onClick={openOnboarding}>
               Add to Chrome - Free
+            </button>
+            <button style={{ ...s.btnSecondary, fontSize: 16, padding: '14px 28px' }} onClick={openDocs}>
+              Explore Docs
             </button>
             <a
               href="https://github.com/BeeBombshell/stickle"
@@ -1432,26 +1444,28 @@ export default function LandingApp() {
                 links: [
                   { label: 'Features', href: '#features' },
                   { label: 'Anchoring Tech', href: '#anchoring' },
-                  { label: 'Roadmap', href: '#roadmap' },
-                  { label: 'Pricing', href: '#pricing' },
-                  { label: 'Waitlist', href: '/waitlist.html' },
+                  { label: 'Local MCP Server', href: '/docs#mcp-server' },
+                  { label: 'Documentation', href: '/docs' },
+                  { label: 'Launch Waitlist', href: '/waitlist' },
                 ],
               },
               {
                 head: 'RESOURCES',
                 links: [
-                  { label: 'Sandbox Tutorial', href: '#', onClick: openSandbox },
+                  { label: 'Sandbox Tutorial', href: '#', onClick: openOnboarding },
+                  { label: 'Setup Guides', href: '#', onClick: openDocs },
                   { label: 'Privacy Policy', href: '#', onClick: openPrivacy },
-                  { label: 'GitHub Repository', href: 'https://github.com/BeeBombshell/stickle' },
                   { label: 'FAQ', href: '#faq' },
                 ],
               },
               {
-                head: 'COMMUNITY',
+                head: 'OPEN SOURCE & GITHUB',
                 links: [
-                  { label: 'Product Hunt', href: 'https://producthunt.com' },
-                  { label: 'Twitter / X', href: 'https://twitter.com' },
+                  { label: 'GitHub Repository', href: 'https://github.com/BeeBombshell/stickle' },
+                  { label: 'Issues & Bug Reports', href: 'https://github.com/BeeBombshell/stickle/issues' },
                   { label: 'GitHub Discussions', href: 'https://github.com/BeeBombshell/stickle/discussions' },
+                  { label: 'Pull Requests', href: 'https://github.com/BeeBombshell/stickle/pulls' },
+                  { label: 'Contributing Guide', href: '/docs#contributing' },
                 ],
               },
             ].map(col => (

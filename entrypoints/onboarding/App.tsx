@@ -162,6 +162,14 @@ export default function OnboardingApp() {
     }
   };
 
+  const openDocsPage = () => {
+    if (typeof chrome !== 'undefined' && chrome.tabs) {
+      chrome.tabs.create({ url: chrome.runtime.getURL('docs.html') });
+    } else {
+      window.open('/docs.html', '_blank');
+    }
+  };
+
   return (
     <div style={s.page}>
 
@@ -181,6 +189,7 @@ export default function OnboardingApp() {
             <a href="https://github.com/BeeBombshell/stickle" target="_blank" rel="noreferrer" style={s.navLink}>
               GitHub ↗
             </a>
+            <button style={s.btnSecondary} onClick={openDocsPage}>Documentation</button>
             <button style={s.btnSecondary} onClick={openPrivacyPage}>Privacy Policy</button>
             <button style={s.btnSecondary} onClick={openLandingPage}>Product page</button>
             <button style={s.btnPrimary} onClick={() => window.close()}>Start annotating</button>
@@ -575,13 +584,50 @@ export default function OnboardingApp() {
             Navigate to any page, hold <kbd style={s.kbd}>Alt</kbd> and click anything.
             Your first stickle is 10 seconds away.
           </p>
-          <div style={s.ctaRow}>
+          <div style={{ ...s.ctaRow, justifyContent: 'center' }}>
             <button style={{ ...s.btnPrimary, padding: '12px 32px', fontSize: 17 }} onClick={() => window.close()}>
               Start taking notes →
+            </button>
+            <button style={{ ...s.btnSecondary, padding: '12px 24px', fontSize: 15 }} onClick={openDocsPage}>
+              Setup &amp; Docs ↗
             </button>
           </div>
         </div>
       </section>
+
+      {/* ── FOOTER ─────────────────────────────────────────────────────────── */}
+      <footer style={{ backgroundColor: '#111111', color: '#ffffff', padding: '48px 24px 32px' }}>
+        <div style={{ maxWidth: 1280, margin: '0 auto', display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: 24 }}>
+          <div>
+            <div style={s.logoLockup}>
+              <div style={{ ...s.logoMark, backgroundColor: '#ffffff', width: 28, height: 28, borderRadius: 7 }}>
+                <svg width="14" height="14" viewBox="0 0 14 14" fill="none">
+                  <circle cx="10" cy="10" r="4" fill="#111111" />
+                  <circle cx="10" cy="10" r="1.5" fill="#ffffff" />
+                </svg>
+              </div>
+              <span style={{ ...s.wordmark, color: '#ffffff' }}>stickle</span>
+            </div>
+            <p style={{ color: '#9ca3af', fontSize: 13, margin: '8px 0 0' }}>
+              100% Local-first web annotation · MIT Open Source
+            </p>
+          </div>
+          <div style={{ display: 'flex', gap: 18, alignItems: 'center', flexWrap: 'wrap' }}>
+            <a href="https://github.com/BeeBombshell/stickle" target="_blank" rel="noreferrer" style={{ color: '#e5e7eb', fontSize: 13, textDecoration: 'none' }}>
+              GitHub ↗
+            </a>
+            <a href="https://github.com/BeeBombshell/stickle/issues" target="_blank" rel="noreferrer" style={{ color: '#e5e7eb', fontSize: 13, textDecoration: 'none' }}>
+              Issues
+            </a>
+            <button onClick={openDocsPage} style={{ background: 'none', border: 'none', color: '#e5e7eb', fontSize: 13, cursor: 'pointer', padding: 0 }}>
+              Documentation
+            </button>
+            <button onClick={openPrivacyPage} style={{ background: 'none', border: 'none', color: '#e5e7eb', fontSize: 13, cursor: 'pointer', padding: 0 }}>
+              Privacy Policy
+            </button>
+          </div>
+        </div>
+      </footer>
     </div>
   );
 }
