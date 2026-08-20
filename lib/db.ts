@@ -16,8 +16,11 @@ export const db = new StickleDatabase();
 
 const STORAGE_KEY = 'stickle_notes';
 
+// Memoized at module load — environment never changes at runtime
+const CHROME_STORAGE_AVAILABLE = typeof chrome !== 'undefined' && Boolean(chrome.storage?.local);
+
 function isChromeStorageAvailable(): boolean {
-  return typeof chrome !== 'undefined' && Boolean(chrome.storage?.local);
+  return CHROME_STORAGE_AVAILABLE;
 }
 
 function getStorageNotes(): Promise<StickleNote[]> {
@@ -83,8 +86,14 @@ export async function createNote(note: StickleNote): Promise<string> {
     id = await db.notes.add(noteToSave);
   }
 
-  // Trigger background sync to Supabase asynchronously
-  import('./sync').then(({ pushPendingNotes }) => pushPendingNotes()).catch(() => {});
+  // Trigger background sync to Supabase only when user is signed in
+  if (CHROME_STORAGE_AVAILABLE) {
+    chrome.storage.local.get(['stickle_user_session'], (res) => {
+      if (res.stickle_user_session) {
+        import('./sync').then(({ pushPendingNotes }) => pushPendingNotes()).catch(() => {});
+      }
+    });
+  }
 
   return id;
 }
@@ -131,8 +140,14 @@ export async function updateNote(id: string, changes: Partial<StickleNote>): Pro
     resultCount = await db.notes.update(id, updatedChanges);
   }
 
-  // Trigger background sync to Supabase asynchronously
-  import('./sync').then(({ pushPendingNotes }) => pushPendingNotes()).catch(() => {});
+  // Trigger background sync to Supabase only when user is signed in
+  if (CHROME_STORAGE_AVAILABLE) {
+    chrome.storage.local.get(['stickle_user_session'], (res) => {
+      if (res.stickle_user_session) {
+        import('./sync').then(({ pushPendingNotes }) => pushPendingNotes()).catch(() => {});
+      }
+    });
+  }
 
   return resultCount;
 }
@@ -149,8 +164,14 @@ export async function deleteNote(id: string): Promise<void> {
     await db.notes.delete(id);
   }
 
-  // Trigger background sync to Supabase asynchronously
-  import('./sync').then(({ pushPendingNotes }) => pushPendingNotes()).catch(() => {});
+  // Trigger background sync to Supabase only when user is signed in
+  if (CHROME_STORAGE_AVAILABLE) {
+    chrome.storage.local.get(['stickle_user_session'], (res) => {
+      if (res.stickle_user_session) {
+        import('./sync').then(({ pushPendingNotes }) => pushPendingNotes()).catch(() => {});
+      }
+    });
+  }
 }
 
 // Workspace Note Cache Helpers (Local-First 0ms Initial Render)
