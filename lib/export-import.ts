@@ -116,6 +116,17 @@ export async function importNotesFromJson(jsonString: string): Promise<ImportRes
     };
   }
 
+  if (notesToImport.length > 5000) {
+    return {
+      success: false,
+      imported: 0,
+      updated: 0,
+      skipped: 0,
+      total: notesToImport.length,
+      error: `Import file too large (${notesToImport.length} notes). Maximum is 5000 notes per import.`,
+    };
+  }
+
   const existingNotes = await getAllNotes();
   const existingMap = new Map<string, StickleNote>(existingNotes.map((n) => [n.id, n]));
 
@@ -131,9 +142,9 @@ export async function importNotesFromJson(jsonString: string): Promise<ImportRes
 
     const note: StickleNote = {
       id: String(rawNote.id),
-      url: String(rawNote.url),
-      pageTitle: String(rawNote.pageTitle || 'Untitled Page'),
-      content: String(rawNote.content || ''),
+      url: String(rawNote.url).slice(0, 2048),
+      pageTitle: String(rawNote.pageTitle || 'Untitled Page').slice(0, 512),
+      content: String(rawNote.content || '').slice(0, 50000),
       anchor: rawNote.anchor || {
         cssSelector: 'body',
         offsetX: 0,

@@ -33,12 +33,13 @@ export default defineConfig({
     options_ui: {
       page: 'options.html',
       open_in_tab: true,
-      openInTab: true,
     },
     web_accessible_resources: [
       {
         resources: ['auth-callback.html', 'options.html'],
-        matches: ['<all_urls>'],
+        // Restrict to Supabase OAuth redirect and the Stickle dashboard only.
+        // This prevents arbitrary websites from fetching extension HTML pages.
+        matches: ['https://*.supabase.co/*', 'https://app.stickle.app/*'],
       },
     ],
   },
