@@ -113,7 +113,7 @@ export function WaitlistForm({ source = 'homepage', variant = 'standalone', defa
         {/* Role Selector Pills */}
         <div style={{ marginBottom: 20 }}>
           <label style={styles.fieldLabel}>HOW DO YOU PLAN TO USE STICKLE?</label>
-          <div style={styles.pillsRow}>
+          <div className="waitlist-pills-row" style={styles.pillsRow}>
             {USE_CASES.map((uc) => {
               const isSelected = selectedUseCase === uc.id;
               return (
@@ -121,6 +121,7 @@ export function WaitlistForm({ source = 'homepage', variant = 'standalone', defa
                   type="button"
                   key={uc.id}
                   onClick={() => setSelectedUseCase(uc.id)}
+                  className="waitlist-pill-btn"
                   style={{
                     ...styles.pillToggle,
                     ...(isSelected ? styles.pillToggleSelected : styles.pillToggleDefault),
@@ -136,20 +137,21 @@ export function WaitlistForm({ source = 'homepage', variant = 'standalone', defa
         {/* Input & Submit Button Row */}
         <div style={{ display: 'flex', flexDirection: 'column' as const, gap: 12 }}>
           <label style={styles.fieldLabel}>YOUR EMAIL ADDRESS</label>
-          <div style={styles.inputBtnGroup}>
+          <div className="waitlist-input-group" style={styles.inputBtnGroup}>
             <input
               type="email"
               placeholder="you@company.com"
               value={email}
               onInput={(e) => setEmail((e.target as HTMLInputElement).value)}
               disabled={loading}
+              className="waitlist-email-input"
               style={{
                 ...styles.textInput,
                 flex: 1,
                 borderColor: errorMsg ? '#ef4444' : '#e5e5e0',
               }}
             />
-            <button type="submit" disabled={loading} style={styles.btnPrimaryPill}>
+            <button type="submit" disabled={loading} className="waitlist-submit-btn" style={styles.btnPrimaryPill}>
               {loading ? 'Joining Waitlist...' : 'Join Waitlist'}
             </button>
           </div>
@@ -172,11 +174,13 @@ const styles = {
     gap: 8,
     maxWidth: 520,
     width: '100%',
+    boxSizing: 'border-box' as const,
   },
   heroInputRow: {
     display: 'flex',
     gap: 8,
     flexWrap: 'wrap' as const,
+    width: '100%',
   },
   cardContainer: {
     backgroundColor: '#ffffff',
@@ -187,6 +191,7 @@ const styles = {
     maxWidth: 640,
     width: '100%',
     margin: '0 auto',
+    boxSizing: 'border-box' as const,
   },
   fieldLabel: {
     fontFamily: "'JetBrains Mono', monospace",
@@ -202,6 +207,7 @@ const styles = {
     display: 'flex',
     gap: 8,
     flexWrap: 'wrap' as const,
+    width: '100%',
   },
   pillToggle: {
     padding: '8px 16px',
@@ -211,6 +217,8 @@ const styles = {
     cursor: 'pointer',
     transition: 'all 0.15s ease',
     border: '1px solid #e5e5e0',
+    boxSizing: 'border-box' as const,
+    whiteSpace: 'nowrap' as const,
   },
   pillToggleDefault: {
     backgroundColor: '#ffffff',
@@ -225,10 +233,12 @@ const styles = {
     display: 'flex',
     gap: 10,
     flexWrap: 'wrap' as const,
+    width: '100%',
+    boxSizing: 'border-box' as const,
   },
   textInput: {
     padding: '12px 18px',
-    fontSize: 15,
+    fontSize: 16,
     fontFamily: 'inherit',
     borderRadius: 50,
     border: '1px solid #e5e5e0',
@@ -236,7 +246,8 @@ const styles = {
     color: '#111111',
     outline: 'none',
     boxSizing: 'border-box' as const,
-    minWidth: 240,
+    minWidth: 0,
+    width: '100%',
   },
   btnPrimaryPill: {
     backgroundColor: '#111111',
@@ -249,6 +260,7 @@ const styles = {
     cursor: 'pointer',
     whiteSpace: 'nowrap' as const,
     transition: 'transform 0.1s ease, opacity 0.15s ease',
+    boxSizing: 'border-box' as const,
   },
   errorText: {
     fontSize: 13,
@@ -262,6 +274,7 @@ const styles = {
     color: '#737373',
     marginTop: 16,
     textAlign: 'center' as const,
+    lineHeight: 1.4,
   },
   successBox: {
     backgroundColor: '#ffffff',

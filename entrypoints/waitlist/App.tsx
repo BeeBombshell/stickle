@@ -24,6 +24,7 @@ const WAITLIST_FAQS = [
 
 export default function WaitlistApp() {
   const [openFaq, setOpenFaq] = useState<number | null>(null);
+  const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [demoNote, setDemoNote] = useState<StickleNote>({
     id: 'waitlist-hero-note',
     url: 'https://stickle.app/waitlist',
@@ -56,7 +57,7 @@ export default function WaitlistApp() {
     <div style={s.page}>
       {/* ══ 1. TOP NAV ════════════════════════════════════════════════════════ */}
       <nav style={s.nav}>
-        <div style={s.navInner}>
+        <div className="waitlist-wrap" style={s.navInner}>
           <div style={s.logoLockup} onClick={goHome}>
             <div style={s.logoMark}>
               <svg width="18" height="18" viewBox="0 0 18 18" fill="none">
@@ -68,7 +69,7 @@ export default function WaitlistApp() {
             <span style={s.navBadge}>WAITLIST</span>
           </div>
 
-          <div style={s.navLinks}>
+          <div className="nav-desktop-links" style={s.navLinks}>
             <a href="/" style={s.navLink}>Home</a>
             <a href="/#features" style={s.navLink}>Features</a>
             <a href="/docs" style={s.navLink}>Docs</a>
@@ -76,7 +77,7 @@ export default function WaitlistApp() {
             <a href="/privacy" style={s.navLink}>Privacy</a>
           </div>
 
-          <div style={s.navActions}>
+          <div className="nav-desktop-actions" style={s.navActions}>
             <a
               href="https://github.com/BeeBombshell/stickle"
               target="_blank"
@@ -89,17 +90,78 @@ export default function WaitlistApp() {
               ← Homepage
             </button>
           </div>
+
+          {/* Mobile Toggle Button */}
+          <button
+            className="nav-mobile-toggle"
+            onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
+            aria-label="Toggle navigation menu"
+          >
+            {mobileMenuOpen ? (
+              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                <line x1="18" y1="6" x2="6" y2="18" />
+                <line x1="6" y1="6" x2="18" y2="18" />
+              </svg>
+            ) : (
+              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                <line x1="3" y1="12" x2="21" y2="12" />
+                <line x1="3" y1="6" x2="21" y2="6" />
+                <line x1="3" y1="18" x2="21" y2="18" />
+              </svg>
+            )}
+          </button>
         </div>
+
+        {/* Mobile Slide-down Drawer */}
+        {mobileMenuOpen && (
+          <div className="mobile-menu-drawer">
+            <a href="/" style={s.mobileNavLink} onClick={() => setMobileMenuOpen(false)}>
+              Home
+            </a>
+            <a href="/#features" style={s.mobileNavLink} onClick={() => setMobileMenuOpen(false)}>
+              Features
+            </a>
+            <a href="/docs" style={s.mobileNavLink} onClick={() => setMobileMenuOpen(false)}>
+              Documentation
+            </a>
+            <a href="/onboarding" style={s.mobileNavLink} onClick={() => setMobileMenuOpen(false)}>
+              Interactive Sandbox
+            </a>
+            <a href="/privacy" style={s.mobileNavLink} onClick={() => setMobileMenuOpen(false)}>
+              Privacy Policy
+            </a>
+            <a
+              href="https://github.com/BeeBombshell/stickle"
+              target="_blank"
+              rel="noreferrer"
+              style={s.mobileNavLink}
+              onClick={() => setMobileMenuOpen(false)}
+            >
+              GitHub Repository ↗
+            </a>
+            <div style={{ marginTop: 16, paddingTop: 16, borderTop: '1px solid #e5e5e0' }}>
+              <button
+                style={{ ...s.btnPrimary, width: '100%', padding: '12px 20px', fontSize: 15 }}
+                onClick={() => {
+                  setMobileMenuOpen(false);
+                  goHome();
+                }}
+              >
+                ← Return to Homepage
+              </button>
+            </div>
+          </div>
+        )}
       </nav>
 
-      {/* ══ 2. HERO / WAITLIST SECTION (Dynamic 2-Column Monochrome Dark Block with Lime Accents) ═ */}
-      <section style={s.heroSection}>
-        <div style={s.wrap}>
-          <div style={{ ...s.colorBlock, backgroundColor: '#111111', color: '#ffffff', padding: '64px 56px', position: 'relative' as const, overflow: 'hidden' }}>
+      {/* ══ 2. HERO / WAITLIST SECTION (Dynamic Responsive Monochrome Dark Block with Lime Accents) ═ */}
+      <section className="waitlist-hero-section" style={s.heroSection}>
+        <div className="waitlist-wrap" style={s.wrap}>
+          <div className="waitlist-hero-card">
             {/* Ambient background accent glow */}
             <div style={{ position: 'absolute', right: '-5%', top: '-20%', width: 360, height: 360, borderRadius: '50%', backgroundColor: 'rgba(228,245,121,0.07)', filter: 'blur(70px)', pointerEvents: 'none' }} />
 
-            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(320px, 1fr))', gap: 56, alignItems: 'center' }}>
+            <div className="waitlist-hero-grid">
               {/* Left Column: Headlines, Subhead, Embedded Form & Social Proof */}
               <div>
                 <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 16 }}>
@@ -107,7 +169,7 @@ export default function WaitlistApp() {
                   <span style={{ ...s.eyebrow, color: '#e4f579' }}>STICKLE • LAUNCH WAITLIST</span>
                 </div>
                 
-                <h1 style={{ ...s.displayXL, color: '#ffffff', margin: '0 0 20px', fontSize: 'clamp(36px, 4.8vw, 58px)' }}>
+                <h1 style={{ ...s.displayXL, color: '#ffffff', margin: '0 0 20px' }}>
                   Be first in line<br />when Stickle launches.
                 </h1>
                 
@@ -134,12 +196,12 @@ export default function WaitlistApp() {
               </div>
 
               {/* Right Column: Cute 3D Interactive Stickle Note Display */}
-              <div style={{ position: 'relative', display: 'flex', justifyContent: 'center', alignItems: 'center', paddingTop: 20, paddingBottom: 20 }}>
+              <div className="waitlist-hero-preview">
                 {/* Cute Floating Tooltip Badge pointing to the Note */}
                 <div style={{
                   position: 'absolute',
-                  top: -12,
-                  right: 8,
+                  top: -8,
+                  right: 4,
                   backgroundColor: '#e4f579',
                   color: '#111111',
                   fontFamily: "'JetBrains Mono', monospace",
@@ -153,6 +215,7 @@ export default function WaitlistApp() {
                   display: 'flex',
                   alignItems: 'center',
                   gap: 6,
+                  maxWidth: '90%',
                 }}>
                   <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="#111111" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
                     <line x1="12" y1="17" x2="12" y2="22" />
@@ -193,8 +256,8 @@ export default function WaitlistApp() {
                 {/* Cute Floating SVG Stickle Badge at bottom left */}
                 <div style={{
                   position: 'absolute',
-                  bottom: -10,
-                  left: 12,
+                  bottom: -8,
+                  left: 4,
                   backgroundColor: '#ffffff',
                   border: '1.5px solid #111111',
                   borderRadius: 50,
@@ -220,8 +283,8 @@ export default function WaitlistApp() {
       </section>
 
       {/* ══ 3. WHAT STICKLE OFFERS (4 Crisp White Feature Cards) ══════════════ */}
-      <section style={s.sectionSpacing}>
-        <div style={s.wrap}>
+      <section className="waitlist-section-spacing" style={s.sectionSpacing}>
+        <div className="waitlist-wrap" style={s.wrap}>
           <div style={{ textAlign: 'center' as const, marginBottom: 40 }}>
             <span style={s.eyebrow}>FEATURE HIGHLIGHTS</span>
             <h2 style={{ ...s.displayLg, maxWidth: 640, margin: '12px auto 0' }}>
@@ -229,7 +292,7 @@ export default function WaitlistApp() {
             </h2>
           </div>
 
-          <div style={s.fourGrid}>
+          <div className="waitlist-feature-grid">
             {[
               {
                 eyebrow: 'ROBUST ANCHORING',
@@ -256,7 +319,7 @@ export default function WaitlistApp() {
                 badge: 'MCP READY',
               },
             ].map((card) => (
-              <div key={card.title} style={{ ...s.colorBlock, backgroundColor: '#ffffff', border: '1px solid #e5e5e0', padding: 32, flex: 1, minWidth: 260, display: 'flex', flexDirection: 'column', justifyContent: 'space-between' }}>
+              <div key={card.title} className="waitlist-feature-card">
                 <div>
                   {/* Fixed Header Layout for Badges & Eyebrows */}
                   <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 16, gap: 8 }}>
@@ -281,9 +344,9 @@ export default function WaitlistApp() {
       </section>
 
       {/* ══ 4. WAITLIST FAQ (Signature Block Lime: #e4f579) ═══════════════════ */}
-      <section style={s.sectionSpacing}>
-        <div style={s.wrap}>
-          <div style={{ ...s.colorBlock, backgroundColor: '#e4f579', padding: '56px 48px' }}>
+      <section className="waitlist-section-spacing" style={s.sectionSpacing}>
+        <div className="waitlist-wrap" style={s.wrap}>
+          <div className="waitlist-faq-card">
             <span style={{ ...s.eyebrow, color: '#111111', marginBottom: 12 }}>WAITLIST FAQ</span>
             <h2 style={{ ...s.displayLg, color: '#111111', maxWidth: 520, marginBottom: 36 }}>
               Frequently asked questions
@@ -291,12 +354,12 @@ export default function WaitlistApp() {
             <div style={{ maxWidth: 760, display: 'flex', flexDirection: 'column' as const, gap: 2 }}>
               {WAITLIST_FAQS.map((faq, i) => (
                 <div key={i} style={{ ...s.faqItem, borderRadius: i === 0 ? '12px 12px 0 0' : i === WAITLIST_FAQS.length - 1 ? '0 0 12px 12px' : 0 }}>
-                  <button style={s.faqQ} onClick={() => toggleFaq(i)}>
+                  <button className="waitlist-faq-q-btn" style={s.faqQ} onClick={() => toggleFaq(i)}>
                     <span>{faq.q}</span>
                     <span style={{ fontSize: 20, fontWeight: 300, flexShrink: 0 }}>{openFaq === i ? '−' : '+'}</span>
                   </button>
                   {openFaq === i && (
-                    <div style={s.faqA}>{faq.a}</div>
+                    <div className="waitlist-faq-a-content" style={s.faqA}>{faq.a}</div>
                   )}
                 </div>
               ))}
@@ -307,7 +370,7 @@ export default function WaitlistApp() {
 
       {/* ══ 5. FOOTER (Monochrome Dark #111) ═══════════════════════════════════ */}
       <footer style={s.footer}>
-        <div style={s.wrap}>
+        <div className="waitlist-wrap" style={s.wrap}>
           <div style={s.footerInner}>
             <div>
               <div style={s.footerLogo}>
@@ -324,14 +387,14 @@ export default function WaitlistApp() {
               </p>
             </div>
             <div style={{ display: 'flex', gap: 32, flexWrap: 'wrap' }}>
-              <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
+              <div style={{ display: 'flex', flexDirection: 'column', gap: 8, minWidth: 130 }}>
                 <span style={{ ...s.eyebrow, fontSize: 10, color: '#71717a', marginBottom: 4 }}>NAVIGATION</span>
                 <a href="/" style={s.footerLink}>Home</a>
                 <a href="/docs" style={s.footerLink}>Documentation</a>
                 <a href="/onboarding" style={s.footerLink}>Interactive Sandbox</a>
                 <a href="/privacy" style={s.footerLink}>Privacy Policy</a>
               </div>
-              <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
+              <div style={{ display: 'flex', flexDirection: 'column', gap: 8, minWidth: 130 }}>
                 <span style={{ ...s.eyebrow, fontSize: 10, color: '#71717a', marginBottom: 4 }}>OPEN SOURCE</span>
                 <a href="https://github.com/BeeBombshell/stickle" target="_blank" rel="noreferrer" style={s.footerLink}>GitHub Repository ↗</a>
                 <a href="https://github.com/BeeBombshell/stickle/issues" target="_blank" rel="noreferrer" style={s.footerLink}>Issues &amp; Bugs ↗</a>
@@ -356,18 +419,14 @@ const s = {
     color: '#111111',
     fontFamily: "Inter, 'SF Pro Display', -apple-system, sans-serif",
     WebkitFontSmoothing: 'antialiased' as const,
+    overflowX: 'hidden' as const,
   },
   wrap: {
     maxWidth: 1280,
     margin: '0 auto',
-    padding: '0 24px',
   },
-  sectionSpacing: {
-    padding: '0 0 96px',
-  },
-  heroSection: {
-    padding: '24px 0 96px',
-  },
+  sectionSpacing: {},
+  heroSection: {},
   nav: {
     height: 64,
     borderBottom: '1px solid #e5e5e0',
@@ -379,9 +438,6 @@ const s = {
     zIndex: 100,
   },
   navInner: {
-    maxWidth: 1280,
-    margin: '0 auto',
-    padding: '0 24px',
     height: '100%',
     display: 'flex',
     alignItems: 'center',
@@ -434,6 +490,15 @@ const s = {
     alignItems: 'center',
     gap: 12,
   },
+  mobileNavLink: {
+    display: 'block',
+    padding: '12px 14px',
+    fontSize: 16,
+    fontWeight: 500,
+    color: '#111111',
+    textDecoration: 'none',
+    borderRadius: 8,
+  },
   btnPrimary: {
     backgroundColor: '#111111',
     color: '#ffffff',
@@ -455,11 +520,6 @@ const s = {
     boxShadow: '0 0 0 1px #e5e5e0',
     cursor: 'pointer',
   },
-  colorBlock: {
-    borderRadius: 24,
-    padding: 56,
-    boxSizing: 'border-box' as const,
-  },
   heroHeader: {
     textAlign: 'center' as const,
     maxWidth: 760,
@@ -474,38 +534,24 @@ const s = {
     display: 'block',
   },
   displayXL: {
-    fontSize: 'clamp(36px, 5vw, 64px)',
+    fontSize: 'clamp(28px, 6vw, 56px)',
     fontWeight: 340,
     letterSpacing: '-1.5px',
-    lineHeight: 1.05,
+    lineHeight: 1.08,
   },
   displayLg: {
-    fontSize: 'clamp(28px, 4vw, 48px)',
+    fontSize: 'clamp(24px, 4.8vw, 44px)',
     fontWeight: 340,
     letterSpacing: '-0.8px',
-    lineHeight: 1.1,
+    lineHeight: 1.15,
   },
   heroSub: {
-    fontSize: 20,
+    fontSize: 'clamp(15px, 3.8vw, 19px)',
     fontWeight: 330,
-    lineHeight: 1.4,
+    lineHeight: 1.45,
     letterSpacing: '-0.14px',
     margin: '0 auto',
     maxWidth: 680,
-  },
-  socialProofBar: {
-    textAlign: 'center' as const,
-    marginTop: 32,
-    fontFamily: "'JetBrains Mono', monospace",
-    fontSize: 11,
-    fontWeight: 700,
-    color: '#e4f579',
-    letterSpacing: '0.6px',
-  },
-  fourGrid: {
-    display: 'grid',
-    gridTemplateColumns: 'repeat(auto-fit, minmax(260px, 1fr))',
-    gap: 20,
   },
   cardBadge: {
     fontFamily: "'JetBrains Mono', monospace",
