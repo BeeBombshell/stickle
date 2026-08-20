@@ -13,26 +13,49 @@ export default defineBackground(() => {
 
   // Schedule 24-hour periodic alarm for license tier validation
   if (typeof chrome !== 'undefined' && chrome.alarms) {
-    chrome.alarms.create('check-license-tier', { periodInMinutes: 1440 });
-    chrome.alarms.onAlarm.addListener((alarm) => {
-      if (alarm.name === 'check-license-tier') {
-        validateUserTier(true);
-      }
-    });
+    try {
+      chrome.alarms.create('check-license-tier', { periodInMinutes: 1440 });
+      chrome.alarms.onAlarm.addListener((alarm) => {
+        if (alarm?.name === 'check-license-tier') {
+          validateUserTier(true).catch(() => {});
+        }
+      });
+    } catch (err) {
+      if (import.meta.env.DEV) console.warn('[Stickle Background] Alarm registration skipped:', err);
+    }
   }
 
   // Create context menu item & handle first-run onboarding on install
-  chrome.runtime.onInstalled.addListener((details) => {
-    chrome.contextMenus.create({
-      id: 'stickle-add-note',
-      title: '📌 Add Stickle Note Here',
-      contexts: ['all'],
-    });
+  if (typeof chrome !== 'undefined' && chrome.runtime?.onInstalled) {
+    chrome.runtime.onInstalled.addListener((details) => {
+      if (chrome.contextMenus?.create) {
+        try {
+          chrome.contextMenus.create(
+            {
+              id: 'stickle-add-note',
+              title: '📌 Add Stickle Note Here',
+              contexts: ['all'],
+            },
+            () => {
+              if (chrome.runtime?.lastError) {
+                // Ignore harmless duplicate menu error on reload
+              }
+            }
+          );
+        } catch {}
+      }
 
-    if (details.reason === 'install') {
-      chrome.tabs.create({ url: chrome.runtime.getURL('onboarding.html') });
-    }
-  });
+      if (details.reason === 'install' && chrome.tabs?.create) {
+        try {
+          chrome.tabs.create({ url: chrome.runtime.getURL('onboarding.html') }, () => {
+            if (chrome.runtime?.lastError) {
+              // Ignore headless window creation error during automated installation testing
+            }
+          });
+        } catch {}
+      }
+    });
+  }
 
   chrome.contextMenus.onClicked.addListener((info, tab) => {
     if (info.menuItemId === 'stickle-add-note' && tab?.id) {

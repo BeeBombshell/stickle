@@ -12,7 +12,7 @@ export default defineConfig({
   manifest: {
     name: 'Stickle — Web Note Anchoring',
     description: 'Anchor persistent floating sticky notes directly to dynamic web content',
-    permissions: ['storage', 'activeTab', 'scripting', 'contextMenus'],
+    permissions: ['storage', 'activeTab', 'scripting', 'contextMenus', 'alarms'],
 
     host_permissions: ['https://api.notion.com/*', 'https://*.posthog.com/*', 'https://*.supabase.co/*'],
     icons: {
