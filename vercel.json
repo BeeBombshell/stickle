@@ -9,6 +9,7 @@
     { "source": "/landing.html", "destination": "/index.html" },
     { "source": "/waitlist", "destination": "/waitlist.html" },
     { "source": "/privacy", "destination": "/privacy.html" },
-    { "source": "/onboarding", "destination": "/onboarding.html" }
+    { "source": "/onboarding", "destination": "/onboarding.html" },
+    { "source": "/docs", "destination": "/docs.html" }
   ]
 }
