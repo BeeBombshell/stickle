@@ -6,7 +6,7 @@ import { createAnchor, resolveAnchor, normalizeUrl } from '../lib/anchoring';
 import { createNote, getNotesForUrl, updateNote, deleteNote } from '../lib/db';
 import { loadSettings } from '../components/Settings';
 import { pushNoteToNotion } from '../lib/notion';
-import type { StickleNote, NoteBorderStyle } from '../lib/types';
+import type { StickleNote, NoteBorderStyle, NoteColorBlock } from '../lib/types';
 import {
   serializeRange,
   applyHighlightOverlay,
@@ -20,7 +20,7 @@ import '../styles/design-tokens.css';
 export default defineContentScript({
   matches: ['<all_urls>'],
   async main() {
-    console.log('[Stickle Content] Injected & active on page:', window.location.href);
+    if (import.meta.env.DEV) console.log('[Stickle Content] Injected & active on page:', window.location.href);
 
     const hostContainer = getOrCreateHostContainer();
     const mountedNotes = new Map<string, HTMLElement>();
@@ -39,18 +39,29 @@ export default defineContentScript({
     // Expose global re-anchoring helper in content script scope
     (window as any).stickleReanchor = refreshNotes;
 
-    // Listen for storage changes across popup & other contexts
+    // Listen for storage changes across popup & other contexts (debounced to avoid storms on batch writes)
+    let storageChangeTimeout: ReturnType<typeof setTimeout> | null = null;
     if (typeof chrome !== 'undefined' && chrome.storage?.onChanged) {
       chrome.storage.onChanged.addListener((changes, areaName) => {
         if (areaName === 'local' && (changes.stickle_notes || changes.stickle_active_workspace_id)) {
-          refreshNotes();
+          if (storageChangeTimeout) clearTimeout(storageChangeTimeout);
+          storageChangeTimeout = setTimeout(() => refreshNotes(), 150);
         }
       });
     }
 
     // Listen for custom DOM events & window messages from page scope
     document.addEventListener('stickle:reanchor', () => refreshNotes());
+
+    // Trusted origins for postMessage communication
+    const TRUSTED_ORIGINS = [
+      'https://app.stickle.app',
+      'http://localhost:3001',
+      'http://localhost:3333',
+    ];
+
     window.addEventListener('message', (event) => {
+      if (!TRUSTED_ORIGINS.includes(event.origin)) return;
       if (event.data === 'stickle-reanchor') {
         refreshNotes();
       }
@@ -88,8 +99,9 @@ export default defineContentScript({
         }
       });
 
-      // Listen for dashboard logout
+      // Listen for dashboard logout (only from trusted origins)
       window.addEventListener('message', (event) => {
+        if (!TRUSTED_ORIGINS.includes(event.origin)) return;
         if (event.data === 'STICKLE_DASHBOARD_SIGNOUT') {
           chrome.storage.local.remove(['stickle_user_session', 'stickle_user_profile']);
         }
@@ -563,7 +575,7 @@ export default defineContentScript({
         mountedNotes.delete(note.id);
       };
 
-      const handleColorChange = async (color: any) => {
+      const handleColorChange = async (color: NoteColorBlock) => {
         note.color = color;
         note.updatedAt = Date.now();
         await updateNote(note.id, { color, updatedAt: note.updatedAt });

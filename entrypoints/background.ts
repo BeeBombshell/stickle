@@ -8,7 +8,7 @@ import {
 import { validateUserTier } from '../lib/auth';
 
 export default defineBackground(() => {
-  console.log('[Stickle Background] Service worker initialized.');
+  if (import.meta.env.DEV) console.log('[Stickle Background] Service worker initialized.');
   posthog.init();
 
   // Schedule 24-hour periodic alarm for license tier validation
