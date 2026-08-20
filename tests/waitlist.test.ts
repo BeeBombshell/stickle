@@ -1,8 +1,15 @@
 import { describe, it, expect, beforeEach, vi } from 'vitest';
-import { validateEmail, submitWaitlistEmail, getWaitlistState } from '../lib/waitlist';
+import {
+  validateEmail,
+  submitWaitlistEmail,
+  getWaitlistState,
+  sendDiscordWaitlistNotification,
+  DISCORD_WAITLIST_WEBHOOK_URL,
+} from '../lib/waitlist';
 
 describe('Waitlist Service', () => {
   const store: Record<string, string> = {};
+  let fetchMock: any;
 
   beforeEach(() => {
     vi.restoreAllMocks();
@@ -21,15 +28,13 @@ describe('Waitlist Service', () => {
         for (const key in store) delete store[key];
       },
     });
-    vi.stubGlobal(
-      'fetch',
-      vi.fn().mockResolvedValue({
-        ok: true,
-        status: 201,
-        json: async () => ({}),
-        text: async () => '',
-      })
-    );
+    fetchMock = vi.fn().mockResolvedValue({
+      ok: true,
+      status: 201,
+      json: async () => ({}),
+      text: async () => '',
+    });
+    vi.stubGlobal('fetch', fetchMock);
   });
 
   describe('validateEmail', () => {
@@ -55,7 +60,7 @@ describe('Waitlist Service', () => {
       expect(getWaitlistState().isJoined).toBe(false);
     });
 
-    it('should successfully process valid email submission and store state in localStorage', async () => {
+    it('should successfully process valid email submission, store state, and notify Discord', async () => {
       const testEmail = `developer_${Date.now()}@stickle.app`;
       const result = await submitWaitlistEmail({
         email: testEmail,
@@ -71,6 +76,35 @@ describe('Waitlist Service', () => {
       expect(state.email).toBe(testEmail);
       expect(state.useCase).toBe('Developer');
       expect(state.joinedAt).toBeDefined();
+
+      // Check Discord webhook invocation
+      expect(fetchMock).toHaveBeenCalledWith(
+        DISCORD_WAITLIST_WEBHOOK_URL,
+        expect.objectContaining({
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+        })
+      );
+    });
+  });
+
+  describe('sendDiscordWaitlistNotification', () => {
+    it('should send a formatted discord webhook payload', async () => {
+      const ok = await sendDiscordWaitlistNotification({
+        email: 'tester@stickle.app',
+        useCase: 'AI Agent MCP',
+        source: 'waitlist_page',
+      });
+
+      expect(ok).toBe(true);
+      expect(fetchMock).toHaveBeenCalledWith(
+        DISCORD_WAITLIST_WEBHOOK_URL,
+        expect.objectContaining({
+          method: 'POST',
+          body: expect.stringContaining('tester@stickle.app'),
+        })
+      );
     });
   });
 });
+
