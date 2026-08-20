@@ -6,6 +6,7 @@ import { loadSettings, saveSettings } from '../../components/Settings';
 import { exportNotesToJson, importNotesFromJson } from '../../lib/export-import';
 import { getActiveWorkspaceId, setActiveWorkspaceId, getUserWorkspaces } from '../../lib/workspace';
 import { getProfile } from '../../lib/auth';
+import { ENABLE_CLOUD_AUTH } from '../../lib/flags';
 import posthog from '../../lib/posthog';
 
 export type PopupTab = 'active-tab' | 'all-notes';
@@ -373,13 +374,13 @@ export function App() {
       {/* Task 3: Popup Footer */}
       <footer style={popupStyles.footer}>
         <div style={popupStyles.syncStatusText}>
-          {profile ? (
+          {ENABLE_CLOUD_AUTH && profile ? (
             <span style={{ display: 'inline-flex', alignItems: 'center', gap: '4px' }}>
               <span style={{ width: '5px', height: '5px', borderRadius: '50%', backgroundColor: '#16a34a' }} />
               Synced ({profile.email.split('@')[0]})
             </span>
           ) : (
-            <span>Local mode</span>
+            <span style={{ fontSize: '11px', color: 'var(--color-ink-muted, #6b7280)', fontFamily: 'var(--font-mono, monospace)', fontWeight: '600' }}>v1.0</span>
           )}
         </div>
 
@@ -395,7 +396,7 @@ export function App() {
             </svg>
           </button>
 
-          {profile && (
+          {ENABLE_CLOUD_AUTH && profile && (
             <button
               onClick={handleOpenDashboard}
               title="Open Web Dashboard"

@@ -5,7 +5,7 @@ import { COLOR_SWATCHES } from '../../components/NoteBubble';
 import { getAllNotes } from '../../lib/db';
 import { exportNotesToJson, importNotesFromJson } from '../../lib/export-import';
 import { getProfile, signInWithOAuth, signOut } from '../../lib/auth';
-import { isEnabled, FEATURE_NAMES, type FeatureFlag } from '../../lib/flags';
+import { isEnabled, FEATURE_NAMES, ENABLE_CLOUD_AUTH, type FeatureFlag } from '../../lib/flags';
 import { fullSync } from '../../lib/sync';
 import type { NoteColorBlock, NoteBorderStyle, UserProfile } from '../../lib/types';
 import { LocalizedPricing } from '../../components/LocalizedPricing';
@@ -14,7 +14,7 @@ import posthog from '../../lib/posthog';
 type NavTab = 'account' | 'notion' | 'defaults' | 'mcp' | 'about';
 
 export function OptionsApp() {
-  const [activeTab, setActiveTab] = useState<NavTab>('account');
+  const [activeTab, setActiveTab] = useState<NavTab>(ENABLE_CLOUD_AUTH ? 'account' : 'notion');
 
   // Auth & Cloud Sync
   const [profile, setProfile] = useState<UserProfile | null>(null);
@@ -246,7 +246,15 @@ export function OptionsApp() {
     if (typeof chrome !== 'undefined' && chrome.tabs) {
       chrome.tabs.create({ url: chrome.runtime.getURL('index.html') });
     } else {
-      window.open('https://stickle.beebombshell.com', '_blank');
+      window.open('/', '_blank');
+    }
+  };
+
+  const handleOpenDocs = () => {
+    if (typeof chrome !== 'undefined' && chrome.tabs) {
+      chrome.tabs.create({ url: chrome.runtime.getURL('docs.html') });
+    } else {
+      window.open('/docs.html', '_blank');
     }
   };
 
@@ -294,26 +302,30 @@ export function OptionsApp() {
               <span style={styles.badgePill}>v1.0 PREFERENCES</span>
             </div>
 
-            <div style={{ display: 'flex', gap: '8px', alignItems: 'center' }}>
-              <button
-                onClick={handleOpenDashboard}
-                className="btn-pill btn-primary"
-                style={{ padding: '8px 16px', fontSize: '12px', fontWeight: '600' }}
-              >
-                <span style={{ display: 'inline-flex', alignItems: 'center', gap: '6px' }}>
-                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                    <rect x="2" y="3" width="20" height="14" rx="2" ry="2" />
-                    <line x1="8" y1="21" x2="16" y2="21" />
-                    <line x1="12" y1="17" x2="12" y2="21" />
-                  </svg>
-                  Open Dashboard
-                </span>
-              </button>
-            </div>
+            {ENABLE_CLOUD_AUTH && (
+              <div style={{ display: 'flex', gap: '8px', alignItems: 'center' }}>
+                <button
+                  onClick={handleOpenDashboard}
+                  className="btn-pill btn-primary"
+                  style={{ padding: '8px 16px', fontSize: '12px', fontWeight: '600' }}
+                >
+                  <span style={{ display: 'inline-flex', alignItems: 'center', gap: '6px' }}>
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                      <rect x="2" y="3" width="20" height="14" rx="2" ry="2" />
+                      <line x1="8" y1="21" x2="16" y2="21" />
+                      <line x1="12" y1="17" x2="12" y2="21" />
+                    </svg>
+                    Open Dashboard
+                  </span>
+                </button>
+              </div>
+            )}
           </div>
 
           <div style={styles.headerSub}>
-            Extension preferences, Cloud authentication, Notion integration, and Model Context Protocol (MCP) configuration.
+            {ENABLE_CLOUD_AUTH
+              ? 'Extension preferences, Cloud authentication, Notion integration, and Model Context Protocol (MCP) configuration.'
+              : 'Extension preferences, Notion integration, and Model Context Protocol (MCP) configuration.'}
           </div>
         </div>
       </header>
@@ -323,17 +335,19 @@ export function OptionsApp() {
         {/* Left Nav Sidebar */}
         <aside style={styles.sidebar}>
           <nav className="options-nav" style={styles.navStack}>
-            <button
-              onClick={() => setActiveTab('account')}
-              style={activeTab === 'account' ? styles.navItemActive : styles.navItem}
-            >
-              <span style={styles.navIcon}>
-                <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                  <path d="M17.5 19H9a7 7 0 1 1 6.71-9h1.79a4.5 4.5 0 1 1 0 9z" />
-                </svg>
-              </span>
-              <span style={styles.navLabel}>Account &amp; Tier</span>
-            </button>
+            {ENABLE_CLOUD_AUTH && (
+              <button
+                onClick={() => setActiveTab('account')}
+                style={activeTab === 'account' ? styles.navItemActive : styles.navItem}
+              >
+                <span style={styles.navIcon}>
+                  <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                    <path d="M17.5 19H9a7 7 0 1 1 6.71-9h1.79a4.5 4.5 0 1 1 0 9z" />
+                  </svg>
+                </span>
+                <span style={styles.navLabel}>Account &amp; Tier</span>
+              </button>
+            )}
 
             <button
               onClick={() => setActiveTab('notion')}
@@ -401,9 +415,11 @@ export function OptionsApp() {
           <div style={styles.sidebarFooter}>
             <div style={styles.eyebrow}>LOCAL STORAGE</div>
             <div style={styles.sidebarStatValue}>{totalNotesCount} Notes Saved</div>
-            <div style={{ fontSize: '11px', color: '#6b7280', marginTop: '4px' }}>
-              Tier: <strong style={{ color: '#111' }}>{userTier.toUpperCase()}</strong>
-            </div>
+            {ENABLE_CLOUD_AUTH && (
+              <div style={{ fontSize: '11px', color: '#6b7280', marginTop: '4px' }}>
+                Tier: <strong style={{ color: '#111' }}>{userTier.toUpperCase()}</strong>
+              </div>
+            )}
           </div>
         </aside>
 
@@ -423,7 +439,7 @@ export function OptionsApp() {
           )}
 
           {/* TAB 1: Account & Cloud Sync */}
-          {activeTab === 'account' && (
+          {ENABLE_CLOUD_AUTH && activeTab === 'account' && (
             <div style={{ display: 'flex', flexDirection: 'column', gap: '24px' }}>
               <section style={{ ...styles.card, backgroundColor: '#111111', color: '#ffffff' }}>
                 <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', flexWrap: 'wrap', gap: '12px' }}>
@@ -789,6 +805,17 @@ export function OptionsApp() {
                   Export your notes as portable JSON files or restore notes from a backup. Your data remains 100% under your control.
                 </p>
 
+                <div style={styles.cloudSyncComingSoonBanner}>
+                  <span style={{ display: 'inline-flex', alignItems: 'center', gap: '6px' }}>
+                    <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                      <circle cx="12" cy="12" r="10" />
+                      <line x1="12" y1="16" x2="12" y2="12" />
+                      <line x1="12" y1="8" x2="12.01" y2="8" />
+                    </svg>
+                    <span><strong>Cloud sync coming soon</strong> — export lets you back up or move your notes in the meantime.</span>
+                  </span>
+                </div>
+
                 <div className="options-backup-grid" style={styles.backupCardRow}>
                   <div style={styles.backupBox}>
                     <div style={styles.backupBoxTitle}>Export Backup</div>
@@ -869,7 +896,7 @@ export function OptionsApp() {
                 {/* MCP Tools List */}
                 <div style={{ paddingTop: '16px', borderTop: '1px solid #e5e7eb' }}>
                   <h3 style={{ fontSize: '14px', fontWeight: '700', marginBottom: '8px' }}>Available MCP Tools</h3>
-                  <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '8px' }}>
+                  <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: '8px' }}>
                     <div style={styles.mcpToolCard}>
                       <div style={{ fontFamily: "'JetBrains Mono', monospace", fontWeight: '700', fontSize: '11px' }}>get_stickle_notes</div>
                       <div style={{ fontSize: '11px', color: '#6b7280', marginTop: '2px' }}>Fetch all web notes anchored across sites.</div>
@@ -889,52 +916,74 @@ export function OptionsApp() {
                   </div>
                 </div>
 
-                {/* Remote MCP Endpoint Info */}
-                <div style={{ marginTop: '20px', padding: '12px 14px', borderRadius: '12px', backgroundColor: '#e8d5ff', border: '1px solid #c084fc', color: '#111111' }}>
-                  <div style={{ fontSize: '12px', fontWeight: '700', display: 'flex', alignItems: 'center', gap: '6px' }}>
-                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                      <circle cx="12" cy="12" r="10" />
-                      <line x1="2" y1="12" x2="22" y2="12" />
-                      <path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z" />
-                    </svg>
-                    Remote MCP Endpoint (HTTPS / SSE)
+                {/* Remote MCP Endpoint Info (Feature-flagged) */}
+                {ENABLE_CLOUD_AUTH && (
+                  <div style={{ marginTop: '20px', padding: '12px 14px', borderRadius: '12px', backgroundColor: '#e8d5ff', border: '1px solid #c084fc', color: '#111111' }}>
+                    <div style={{ fontSize: '12px', fontWeight: '700', display: 'flex', alignItems: 'center', gap: '6px' }}>
+                      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                        <circle cx="12" cy="12" r="10" />
+                        <line x1="2" y1="12" x2="22" y2="12" />
+                        <path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z" />
+                      </svg>
+                      Remote MCP Endpoint (HTTPS / SSE)
+                    </div>
+                    <div style={{ fontSize: '11.5px', marginTop: '4px', lineHeight: '1.4' }}>
+                      Remote MCP access allows cloud AI agents to connect over secure HTTPS. Requires a <strong>Pro Supporter</strong> or <strong>Teams</strong> subscription. Manage remote MCP tokens on the Web Dashboard!
+                    </div>
                   </div>
-                  <div style={{ fontSize: '11.5px', marginTop: '4px', lineHeight: '1.4' }}>
-                    Remote MCP access allows cloud AI agents to connect over secure HTTPS. Requires a <strong>Pro Supporter</strong> or <strong>Teams</strong> subscription. Manage remote MCP tokens on the Web Dashboard!
-                  </div>
+                )}
+
+                {/* Soft placeholder for future features */}
+                <div style={styles.futurePlaceholder}>
+                  Team workspaces &amp; cloud sync — coming soon
                 </div>
               </section>
             </div>
           )}
 
           {/* TAB 5: Product & Resources */}
+          {/* TAB 5: Product & Resources */}
           {activeTab === 'about' && (
             <section style={styles.card}>
               <span style={styles.eyebrow}>DOCUMENTATION &amp; LINKS</span>
               <h2 style={styles.cardTitle}>Product &amp; Resources</h2>
               <p style={styles.cardDesc}>
-                Explore documentation, interactive onboarding, privacy commitments, and dashboard tools.
+                Explore comprehensive guides, local MCP setup, interactive onboarding, and open source repositories.
               </p>
 
               <div style={styles.resourceGrid}>
                 <a
-                  href="#"
-                  onClick={(e) => {
-                    e.preventDefault();
-                    handleOpenDashboard();
-                  }}
-                  style={{ ...styles.resourceCard, backgroundColor: '#111111', color: '#ffffff' }}
+                  href="/docs"
+                  target="_blank"
+                  rel="noreferrer"
+                  style={{ ...styles.resourceCard, backgroundColor: '#111111', color: '#ffffff', borderColor: '#e4f579' }}
                 >
-                  <div style={styles.resourceIcon}>
+                  <div style={{ ...styles.resourceIcon, backgroundColor: '#e4f579', color: '#111111' }}>
                     <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                      <rect x="2" y="3" width="20" height="14" rx="2" ry="2" />
-                      <line x1="8" y1="21" x2="16" y2="21" />
-                      <line x1="12" y1="17" x2="12" y2="21" />
+                      <path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20" />
+                      <path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z" />
                     </svg>
                   </div>
                   <div>
-                    <div style={{ ...styles.resourceTitle, color: '#ffffff' }}>Web Dashboard</div>
-                    <div style={{ ...styles.resourceDesc, color: '#9ca3af' }}>Manage team workspaces, cross-device timeline, and billing status.</div>
+                    <div style={{ ...styles.resourceTitle, color: '#ffffff' }}>Documentation &amp; Setup Guides ↗</div>
+                    <div style={{ ...styles.resourceDesc, color: '#d1d5db' }}>Complete guides for 5-tier anchoring, Notion sync, and Local MCP server setup.</div>
+                  </div>
+                </a>
+
+                <a
+                  href="https://github.com/BeeBombshell/stickle"
+                  target="_blank"
+                  rel="noreferrer"
+                  style={styles.resourceCard}
+                >
+                  <div style={styles.resourceIcon}>
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                      <path d="M9 19c-5 1.5-5-2.5-7-3m14 6v-3.87a3.37 3.37 0 0 0-.94-2.61c3.14-.35 6.44-1.54 6.44-7A5.44 5.44 0 0 0 20 4.77 5.07 5.07 0 0 0 19.91 1S18.73.65 16 2.48a13.38 13.38 0 0 0-7 0C6.27.65 5.09 1 5.09 1A5.07 5.07 0 0 0 5 4.77a5.44 5.44 0 0 0-1.5 3.78c0 5.42 3.3 6.61 6.44 7A3.37 3.37 0 0 0 9 18.13V22" />
+                    </svg>
+                  </div>
+                  <div>
+                    <div style={styles.resourceTitle}>GitHub Repository ↗</div>
+                    <div style={styles.resourceDesc}>View the open source codebase, report issues, submit PRs, and star the project.</div>
                   </div>
                 </a>
 
@@ -955,12 +1004,12 @@ export function OptionsApp() {
                   </div>
                   <div>
                     <div style={styles.resourceTitle}>Landing Page</div>
-                    <div style={styles.resourceDesc}>Overview of features, architecture, and extension capabilities (stickle.beebomsbhell.com).</div>
+                    <div style={styles.resourceDesc}>Overview of features, architecture, and extension capabilities.</div>
                   </div>
                 </a>
 
                 <a
-                  href="/onboarding.html"
+                  href="/onboarding"
                   target="_blank"
                   rel="noreferrer"
                   style={styles.resourceCard}
@@ -977,7 +1026,7 @@ export function OptionsApp() {
                 </a>
 
                 <a
-                  href="/privacy.html"
+                  href="/privacy"
                   target="_blank"
                   rel="noreferrer"
                   style={styles.resourceCard}
@@ -1284,5 +1333,24 @@ const styles = {
     padding: '10px 12px',
     borderRadius: '10px',
     border: '1px solid #e5e7eb',
+  },
+  cloudSyncComingSoonBanner: {
+    padding: '10px 14px',
+    borderRadius: '10px',
+    backgroundColor: '#f3f4f6',
+    border: '1px solid #e5e7eb',
+    fontSize: '12px',
+    color: '#374151',
+    marginBottom: '16px',
+    lineHeight: '1.4',
+  },
+  futurePlaceholder: {
+    marginTop: '24px',
+    padding: '12px 16px',
+    textAlign: 'center' as const,
+    fontSize: '12px',
+    color: '#6b7280',
+    borderTop: '1px dashed #e5e7eb',
+    letterSpacing: '0.2px',
   },
 };

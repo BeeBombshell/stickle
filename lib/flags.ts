@@ -1,3 +1,5 @@
+export const ENABLE_CLOUD_AUTH = false;
+
 export type FeatureFlag = 'cloudSync' | 'teamSharing' | 'remoteMCP' | 'centralDashboard';
 export type UserTier = 'free' | 'supporter' | 'team_member';
 

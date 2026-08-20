@@ -21,11 +21,23 @@
       @media (max-width: 768px) {
         .options-grid {
           grid-template-columns: 1fr !important;
-          gap: 16px !important;
+          gap: 20px !important;
+          padding: 0 12px !important;
+          margin: 16px auto !important;
         }
         .options-nav {
           flex-direction: row !important;
           overflow-x: auto !important;
+          padding-bottom: 6px !important;
+          -webkit-overflow-scrolling: touch;
+          scrollbar-width: none;
+        }
+        .options-nav::-webkit-scrollbar {
+          display: none;
+        }
+        .options-nav button {
+          flex-shrink: 0 !important;
+          white-space: nowrap !important;
         }
         .options-backup-grid {
           grid-template-columns: 1fr !important;
