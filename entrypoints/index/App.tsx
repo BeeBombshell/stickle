@@ -149,9 +149,12 @@ export default function LandingApp() {
     }
   };
 
+  const openSandbox = () => {
+    openOnboarding();
+  };
+
   return (
     <div style={s.page}>
-
       {/* ══ 1. NAV ═══════════════════════════════════════════════════════════ */}
       <nav style={s.nav}>
         <div style={s.navInner}>
