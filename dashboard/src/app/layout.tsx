@@ -35,6 +35,9 @@ export const metadata: Metadata = {
     index: false,
     follow: false,
   },
+  verification: {
+    google: "iztnXGKuIWicmeU4IWIBTxJGwWz_ubRViANYbmH_oAw",
+  },
   icons: {
     icon: [{ url: "/icon.svg", type: "image/svg+xml" }],
     shortcut: "/icon.svg",
