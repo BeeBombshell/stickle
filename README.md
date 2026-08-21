@@ -70,7 +70,12 @@ pnpm compile && pnpm test
 
 ## 🤖 Model Context Protocol (MCP) Integration
 
-Stickle exposes a **6-Tool Suite** via Model Context Protocol:
+Stickle exposes a **6-Tool Suite** via Model Context Protocol, available in two modes:
+
+| Mode | Transport | Best for |
+| :--- | :--- | :--- |
+| **Local stdio** | `npx stickle mcp` | Claude Desktop, Cursor, Windsurf, VS Code, Zed |
+| **Remote SSE** | `http://localhost:3001/sse` | Cloud agents, team-shared notes |
 
 | Tool Name | Description |
 | :--- | :--- |
@@ -81,7 +86,7 @@ Stickle exposes a **6-Tool Suite** via Model Context Protocol:
 | `export_stickle_summary` | Generate a structured Markdown report grouped by site domain |
 | `get_team_activity_timeline` | Retrieve activity timeline for shared workspace notes |
 
-### Claude Desktop Configuration (`claude_desktop_config.json`)
+### Quick setup — Claude Desktop (local stdio)
 Location: `~/Library/Application Support/Claude/claude_desktop_config.json`
 
 ```json
@@ -89,13 +94,16 @@ Location: `~/Library/Application Support/Claude/claude_desktop_config.json`
   "mcpServers": {
     "stickle": {
       "command": "npx",
-      "args": ["-y", "stickle", "mcp"]
+      "args": ["-y", "stickle", "mcp"],
+      "env": {
+        "STICKLE_NOTES_PATH": "/Users/yourname/.stickle/notes.json"
+      }
     }
   }
 }
 ```
 
-### Remote SSE Transport Configuration (Port `3001`)
+### Quick setup — Remote SSE (port `3001`)
 ```json
 {
   "mcpServers": {
@@ -108,6 +116,8 @@ Location: `~/Library/Application Support/Claude/claude_desktop_config.json`
   }
 }
 ```
+
+📖 **Full step-by-step setup guide for all clients (Claude Desktop, Cursor, Windsurf, VS Code, Zed) and Cloudflare Workers deployment:** [MCP.md](./MCP.md)
 
 ---
 

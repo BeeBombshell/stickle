@@ -15,7 +15,7 @@ export default function DocsApp() {
   const [activeDocId, setActiveDocId] = useState<string>('overview');
   const [searchQuery, setSearchQuery] = useState<string>('');
   const [packageManager, setPackageManager] = useState<'pnpm' | 'npm' | 'yarn' | 'bun'>('pnpm');
-  const [mcpClientTab, setMcpClientTab] = useState<'cursor' | 'claude' | 'windsurf'>('cursor');
+  const [mcpClientTab, setMcpClientTab] = useState<'cursor' | 'claude' | 'windsurf' | 'vscode'>('cursor');
   const [copiedKey, setCopiedKey] = useState<string | null>(null);
   const [mobileMenuOpen, setMobileMenuOpen] = useState<boolean>(false);
 
@@ -196,40 +196,41 @@ export default function DocsApp() {
       breadcrumbs: ['Docs', 'AI & MCP Server', 'Overview'],
       toc: [
         { id: 'what-is-mcp', label: 'What is MCP?' },
-        { id: 'architecture', label: 'Local-First stdio Architecture' },
-        { id: 'github-repo', label: 'GitHub Repository Source' },
+        { id: 'architecture', label: 'How It Works' },
+        { id: 'export-notes', label: 'Step 0 — Export Notes First' },
+        { id: 'github-repo', label: 'GitHub Repository' },
       ],
       prev: { id: 'anchoring', title: '5-Tier Resilient Anchoring' },
-      next: { id: 'mcp-clients', title: 'Cursor & Claude Setup' },
+      next: { id: 'mcp-clients', title: 'Client Setup' },
     },
     'mcp-clients': {
       id: 'mcp-clients',
       category: 'AI & MCP Server',
-      title: 'Cursor & Claude Desktop Setup',
-      description: 'Step-by-step configuration snippets to connect Cursor, Claude Desktop, and Windsurf to Stickle.',
+      title: 'Client Setup (Cursor, Claude, VS Code, Windsurf)',
+      description: 'Step-by-step configuration for Cursor, Claude Desktop, VS Code Copilot, and Windsurf.',
       breadcrumbs: ['Docs', 'AI & MCP Server', 'Client Configuration'],
       toc: [
-        { id: 'cursor-setup', label: 'Cursor Configuration (~/.cursor/mcp.json)' },
-        { id: 'claude-setup', label: 'Claude Desktop Configuration' },
-        { id: 'windsurf-setup', label: 'Windsurf / Roo Code Setup' },
-        { id: 'testing-connection', label: 'Verifying Tool Execution' },
+        { id: 'step1-clone', label: 'Step 1 — Clone & Install' },
+        { id: 'step2-client', label: 'Step 2 — Pick Your Client' },
+        { id: 'step3-verify', label: 'Step 3 — Verify Connection' },
       ],
       prev: { id: 'mcp-overview', title: 'Model Context Protocol' },
-      next: { id: 'mcp-tools', title: 'MCP Tools API Reference' },
+      next: { id: 'mcp-tools', title: 'MCP Tools Reference' },
     },
     'mcp-tools': {
       id: 'mcp-tools',
       category: 'AI & MCP Server',
       title: 'MCP Tools API Reference',
-      description: 'Complete schema reference for all 4 tools provided by the Stickle Model Context Protocol server.',
+      description: 'Complete schema reference for all 5 tools in the Stickle local MCP server.',
       breadcrumbs: ['Docs', 'AI & MCP Server', 'Tools Reference'],
       toc: [
-        { id: 'get_stickle_notes', label: 'get_stickle_notes' },
-        { id: 'create_stickle_note', label: 'create_stickle_note' },
+        { id: 'list_stickle_notes', label: 'list_stickle_notes' },
         { id: 'search_stickle_notes', label: 'search_stickle_notes' },
         { id: 'get_notes_for_url', label: 'get_notes_for_url' },
+        { id: 'add_stickle_note', label: 'add_stickle_note' },
+        { id: 'export_stickle_summary', label: 'export_stickle_summary' },
       ],
-      prev: { id: 'mcp-clients', title: 'Cursor & Claude Setup' },
+      prev: { id: 'mcp-clients', title: 'Client Setup' },
       next: { id: 'notion', title: 'Notion Database Sync' },
     },
     notion: {
@@ -339,8 +340,9 @@ export default function DocsApp() {
     {
       mcpServers: {
         stickle: {
-          command: 'npx',
-          args: ['-y', 'tsx', '/absolute/path/to/stickle/mcp-server/index.ts'],
+          command: 'pnpm',
+          args: ['--prefix', '/absolute/path/to/stickle', 'mcp'],
+          env: { STICKLE_NOTES_PATH: '/Users/yourname/.stickle/notes.json' },
         },
       },
     },
@@ -352,8 +354,9 @@ export default function DocsApp() {
     {
       mcpServers: {
         stickle: {
-          command: 'node',
-          args: ['/absolute/path/to/stickle/mcp-server/dist/index.js'],
+          command: 'pnpm',
+          args: ['--prefix', '/absolute/path/to/stickle', 'mcp'],
+          env: { STICKLE_NOTES_PATH: '/Users/yourname/.stickle/notes.json' },
         },
       },
     },
@@ -365,8 +368,23 @@ export default function DocsApp() {
     {
       mcpServers: {
         stickle: {
-          command: 'npx',
-          args: ['-y', 'tsx', '/absolute/path/to/stickle/mcp-server/index.ts'],
+          command: 'pnpm',
+          args: ['--prefix', '/absolute/path/to/stickle', 'mcp'],
+          env: { STICKLE_NOTES_PATH: '/Users/yourname/.stickle/notes.json' },
+        },
+      },
+    },
+    null,
+    2
+  );
+
+  const vscodeJson = JSON.stringify(
+    {
+      'github.copilot.chat.mcp.servers': {
+        stickle: {
+          command: 'pnpm',
+          args: ['--prefix', '/absolute/path/to/stickle', 'mcp'],
+          env: { STICKLE_NOTES_PATH: '/Users/yourname/.stickle/notes.json' },
         },
       },
     },
@@ -862,13 +880,80 @@ export default function DocsApp() {
               <div>
                 <h2 id="what-is-mcp" style={nextStyles.docH2}>What is MCP?</h2>
                 <p style={nextStyles.paragraph}>
-                  The <strong>Model Context Protocol (MCP)</strong> is an open standard created by Anthropic that enables AI assistants (like Claude Desktop, Cursor, and Windsurf) to safely query external tools and data sources.
+                  The <strong>Model Context Protocol (MCP)</strong> is an open standard that lets AI assistants — Claude Desktop, Cursor, VS Code Copilot, Windsurf — call external tools and read structured data. Stickle exposes your browser annotations as 5 MCP tools so your AI coding agent can query, search, and create web notes directly.
                 </p>
 
-                <h2 id="architecture" style={nextStyles.docH2}>Local-First stdio Architecture</h2>
+                <h2 id="architecture" style={nextStyles.docH2}>How It Works</h2>
                 <p style={nextStyles.paragraph}>
-                  The Stickle MCP server runs locally over standard I/O (<code style={nextStyles.inlineCode}>stdio</code>). It reads directly from your local notes storage, giving your AI pair-programmer instant contextual access to everything you have highlighted or annotated on the web.
+                  The local MCP server runs as a child process spawned by your AI client over <code style={nextStyles.inlineCode}>stdio</code>. It reads from a plain JSON file (<code style={nextStyles.inlineCode}>~/.stickle/notes.json</code>) — no internet, no cloud, fully private.
                 </p>
+                <pre style={{ ...nextStyles.codeBlock, fontSize: 11, lineHeight: 1.6 }}>{`AI Client (Claude/Cursor)
+        │  spawns
+        ▼
+Stickle MCP Server  ──reads──►  ~/.stickle/notes.json
+                                        ▲
+                              JSON export from
+                              Chrome Extension`}</pre>
+
+                <h2 id="export-notes" style={nextStyles.docH2}>Step 0 — Export Your Notes First</h2>
+                <div style={nextStyles.calloutNote}>
+                  <div style={nextStyles.calloutTitle}>
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                      <circle cx="12" cy="12" r="10" />
+                      <path d="M12 16v-4" />
+                      <path d="M12 8h.01" />
+                    </svg>
+                    <span>You must do this before the MCP server can see any notes</span>
+                  </div>
+                  <p style={nextStyles.calloutBody}>
+                    The local MCP server reads from <code style={{ fontFamily: 'monospace', fontWeight: 600 }}>~/.stickle/notes.json</code>. The Chrome extension stores notes in IndexedDB — you need to export a copy so the server can read it.
+                  </p>
+                </div>
+                <ol style={nextStyles.orderedList}>
+                  <li>Click the <strong>Stickle icon</strong> in your Chrome toolbar.</li>
+                  <li>Go to <strong>Settings → Export / Backup</strong>.</li>
+                  <li>Click <strong>"Export JSON"</strong> — downloads <code style={nextStyles.inlineCode}>stickle_export_YYYY-MM-DD.json</code>.</li>
+                  <li>Move it to the default location:</li>
+                </ol>
+                <pre style={nextStyles.codeBlock}>{`mkdir -p ~/.stickle
+cp ~/Downloads/stickle_export_*.json ~/.stickle/notes.json`}</pre>
+                <p style={nextStyles.paragraph}>
+                  Re-export whenever you add new notes. The server always reads the file fresh on every tool call.
+                </p>
+
+                <div style={nextStyles.calloutTip}>
+                  <div style={nextStyles.calloutTitle}>
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                      <path d="M12 2v4M12 18v4M4.93 4.93l2.83 2.83M16.24 16.24l2.83 2.83M2 12h4M18 12h4M4.93 19.07l2.83-2.83M16.24 7.76l2.83-2.83" />
+                    </svg>
+                    <span>Remote MCP — Coming Soon</span>
+                  </div>
+                  <p style={nextStyles.calloutBody}>
+                    A cloud-hosted MCP server (zero export required, real-time sync, team sharing) is in development. The local MCP is and will always remain free and open source.
+                  </p>
+                </div>
+
+                <h2 id="github-repo" style={nextStyles.docH2}>Open Source Repository</h2>
+                <p style={nextStyles.paragraph}>
+                  The MCP server source is fully open. Read the code, fork it, or contribute:
+                  {' '}<a href="https://github.com/BeeBombshell/stickle/tree/main/mcp-server" target="_blank" rel="noreferrer" style={{ color: '#09090b', fontWeight: 600 }}>stickle/mcp-server on GitHub ↗</a>
+                </p>
+              </div>
+            )}
+
+            {activeDocId === 'mcp-clients' && (
+              <div>
+                <h2 id="step1-clone" style={nextStyles.docH2}>Step 1 — Clone the repo &amp; install</h2>
+                <p style={nextStyles.paragraph}>
+                  The MCP server lives inside the Stickle repo. Clone it once and it's ready to run:
+                </p>
+                <pre style={nextStyles.codeBlock}>{`git clone https://github.com/BeeBombshell/stickle.git
+cd stickle
+pnpm install
+
+# Verify it starts correctly (Ctrl+C to exit)
+pnpm mcp
+# → Stickle MCP Server running on stdio`}</pre>
 
                 <div style={nextStyles.calloutNote}>
                   <div style={nextStyles.calloutTitle}>
@@ -877,103 +962,147 @@ export default function DocsApp() {
                       <path d="M12 16v-4" />
                       <path d="M12 8h.01" />
                     </svg>
-                    <span>Official Open Source Repository</span>
+                    <span>Did you export your notes yet?</span>
                   </div>
                   <p style={nextStyles.calloutBody}>
-                    View the source code in the official repository: <a href="https://github.com/BeeBombshell/stickle/tree/main/mcp-server" target="_blank" rel="noreferrer" style={{ color: '#09090b', fontWeight: 600 }}>stickle/mcp-server on GitHub ↗</a>.
+                    If you skipped Step 0, do that first — the server will start but return 0 notes until <code style={{ fontFamily: 'monospace' }}>~/.stickle/notes.json</code> exists.
+                    See the <button onClick={() => setActiveDocId('mcp-overview')} style={{ background: 'none', border: 'none', color: '#09090b', fontWeight: 600, cursor: 'pointer', padding: 0, textDecoration: 'underline' }}>Overview → Step 0</button> section.
                   </p>
                 </div>
-              </div>
-            )}
 
-            {activeDocId === 'mcp-clients' && (
-              <div>
+                <h2 id="step2-client" style={nextStyles.docH2}>Step 2 — Configure your AI client</h2>
                 <p style={nextStyles.paragraph}>
-                  Configure your AI coding assistant to communicate with the local Stickle MCP server.
+                  Paste the config into your client's MCP settings file. Replace <code style={nextStyles.inlineCode}>/absolute/path/to/stickle</code> with the actual path where you cloned the repo, and update <code style={nextStyles.inlineCode}>yourname</code>.
                 </p>
 
                 {/* Client selector tabs */}
                 <div style={nextStyles.codeTabWrap}>
                   <div style={nextStyles.tabHeader}>
-                    <div style={{ display: 'flex', gap: 4 }}>
-                      {(['cursor', 'claude', 'windsurf'] as const).map((tab) => (
+                    <div style={{ display: 'flex', gap: 4, flexWrap: 'wrap' as const }}>
+                      {(['cursor', 'claude', 'windsurf', 'vscode'] as const).map((tab) => (
                         <button
                           key={tab}
                           onClick={() => setMcpClientTab(tab)}
                           style={mcpClientTab === tab ? nextStyles.tabBtnActive : nextStyles.tabBtn}
                         >
-                          {tab === 'cursor' ? 'Cursor IDE' : tab === 'claude' ? 'Claude Desktop' : 'Windsurf / Roo'}
+                          {tab === 'cursor' ? 'Cursor' : tab === 'claude' ? 'Claude Desktop' : tab === 'windsurf' ? 'Windsurf' : 'VS Code'}
                         </button>
                       ))}
                     </div>
                     <button
                       onClick={() =>
                         copyCode(
-                          mcpClientTab === 'cursor' ? cursorJson : mcpClientTab === 'claude' ? claudeJson : windsurfJson,
+                          mcpClientTab === 'cursor' ? cursorJson
+                          : mcpClientTab === 'claude' ? claudeJson
+                          : mcpClientTab === 'windsurf' ? windsurfJson
+                          : vscodeJson,
                           'mcp-client'
                         )
                       }
                       style={nextStyles.copyButton}
                     >
-                      {copiedKey === 'mcp-client' ? '✓ Copied' : 'Copy Config'}
+                      {copiedKey === 'mcp-client' ? '✓ Copied' : 'Copy'}
                     </button>
                   </div>
                   <pre style={nextStyles.codeBlock}>
-                    {mcpClientTab === 'cursor' ? cursorJson : mcpClientTab === 'claude' ? claudeJson : windsurfJson}
+                    {mcpClientTab === 'cursor' ? cursorJson
+                      : mcpClientTab === 'claude' ? claudeJson
+                      : mcpClientTab === 'windsurf' ? windsurfJson
+                      : vscodeJson}
                   </pre>
                 </div>
 
-                <h3 id="testing-connection" style={nextStyles.docH3}>Verifying Tool Execution</h3>
+                {/* Per-client config file location */}
+                <div style={{ marginTop: 12, padding: '10px 14px', background: '#f4f4f5', borderRadius: 8, fontSize: 13 }}>
+                  {mcpClientTab === 'cursor' && <span><strong>Config file:</strong> <code style={nextStyles.inlineCode}>~/.cursor/mcp.json</code> — or Cursor → Settings → Features → MCP Servers</span>}
+                  {mcpClientTab === 'claude' && <span><strong>Config file (macOS):</strong> <code style={nextStyles.inlineCode}>~/Library/Application Support/Claude/claude_desktop_config.json</code> — then fully quit and reopen Claude Desktop</span>}
+                  {mcpClientTab === 'windsurf' && <span><strong>Config file:</strong> <code style={nextStyles.inlineCode}>~/.codeium/windsurf/mcp_config.json</code> — or Windsurf → Settings → MCP</span>}
+                  {mcpClientTab === 'vscode' && <span><strong>VS Code 1.99+:</strong> Add to <code style={nextStyles.inlineCode}>settings.json</code> under <code style={nextStyles.inlineCode}>github.copilot.chat.mcp.servers</code>. In Copilot Chat, switch to <strong>Agent mode</strong> to use MCP tools.</span>}
+                </div>
+
+                <h2 id="step3-verify" style={nextStyles.docH2}>Step 3 — Verify the connection</h2>
                 <p style={nextStyles.paragraph}>
-                  Once configured, open Cursor or Claude Desktop and prompt:
+                  Open your AI client and try one of these prompts:
                 </p>
                 <div style={nextStyles.promptCard}>
-                  "Search my Stickle notes for any references to #architecture or fetch notes for https://news.ycombinator.com"
+                  "List my Stickle notes"
                 </div>
+                <div style={{ ...nextStyles.promptCard, marginTop: 8 }}>
+                  "Search my Stickle notes for anything about #research"
+                </div>
+                <p style={{ ...nextStyles.paragraph, marginTop: 16 }}>
+                  You should see the 🔧 tool indicator and a response listing your notes. If you get 0 results, re-check that <code style={nextStyles.inlineCode}>~/.stickle/notes.json</code> exists and is non-empty.
+                </p>
               </div>
             )}
 
             {activeDocId === 'mcp-tools' && (
               <div>
                 <p style={nextStyles.paragraph}>
-                  The Stickle MCP server exports 4 primary tools:
+                  The Stickle local MCP server exposes <strong>5 tools</strong>. All tool names can be verified in <code style={nextStyles.inlineCode}>mcp-server/index.ts</code>.
                 </p>
 
                 <div style={{ display: 'flex', flexDirection: 'column', gap: 20, margin: '20px 0' }}>
                   {[
                     {
-                      name: 'get_stickle_notes',
-                      desc: 'Returns all notes stored locally with full metadata, page titles, URLs, tags, and timestamps.',
-                      params: 'none',
-                    },
-                    {
-                      name: 'create_stickle_note',
-                      desc: 'Programmatically anchors and creates a new note on a specified URL.',
-                      params: '{ url: string, content: string, color?: string, tags?: string[] }',
+                      name: 'list_stickle_notes',
+                      desc: 'List saved browser sticky notes. Returns full metadata including URL, page title, content, tags, color, and timestamps.',
+                      params: 'domain?: string, tag?: string, limit?: number (default 50)',
+                      example: '"List my notes from github.com" or "Show notes tagged #research"',
                     },
                     {
                       name: 'search_stickle_notes',
-                      desc: 'Performs semantic and text search across note content, page titles, and #tags.',
-                      params: '{ query: string }',
+                      desc: 'Full-text search across note content, page titles, URLs, and tags.',
+                      params: 'query: string (required), tag?: string',
+                      example: '"Search my notes for React Server Components"',
                     },
                     {
                       name: 'get_notes_for_url',
-                      desc: 'Retrieves all notes attached to a specific target webpage URL.',
-                      params: '{ url: string }',
+                      desc: 'Retrieve all notes anchored to a specific webpage URL (exact or prefix match).',
+                      params: 'url: string (required)',
+                      example: '"Get my notes for https://news.ycombinator.com"',
+                    },
+                    {
+                      name: 'add_stickle_note',
+                      desc: 'Create and attach a new sticky note to any webpage URL.',
+                      params: 'url: string (required), content: string (required), pageTitle?: string, tags?: string[], color?: lime|lilac|cream|mint|pink|coral|blue',
+                      example: '"Add a note to https://github.com/vercel/next.js: check App Router caching"',
+                    },
+                    {
+                      name: 'export_stickle_summary',
+                      desc: 'Generate a structured Markdown report of all notes, grouped by site domain. Great for research digests.',
+                      params: 'domain?: string, tag?: string',
+                      example: '"Export a Markdown summary of all my notes from wikipedia.org"',
                     },
                   ].map((t) => (
-                    <div key={t.name} style={nextStyles.toolCard}>
+                    <div key={t.name} id={t.name} style={nextStyles.toolCard}>
                       <div style={nextStyles.toolHeader}>
                         <code style={nextStyles.toolName}>{t.name}</code>
                         <span style={nextStyles.toolBadge}>TOOL</span>
                       </div>
                       <p style={nextStyles.toolDesc}>{t.desc}</p>
                       <div style={{ marginTop: 8 }}>
-                        <span style={{ fontSize: 11, fontWeight: 600, color: '#71717a', textTransform: 'uppercase' }}>Parameters: </span>
+                        <span style={{ fontSize: 11, fontWeight: 600, color: '#71717a', textTransform: 'uppercase' as const }}>Parameters: </span>
                         <code style={nextStyles.inlineCode}>{t.params}</code>
+                      </div>
+                      <div style={{ marginTop: 6 }}>
+                        <span style={{ fontSize: 11, fontWeight: 600, color: '#71717a', textTransform: 'uppercase' as const }}>Try: </span>
+                        <span style={{ fontSize: 13, color: '#52525b', fontStyle: 'italic' }}>{t.example}</span>
                       </div>
                     </div>
                   ))}
+                </div>
+
+                <div style={nextStyles.calloutTip}>
+                  <div style={nextStyles.calloutTitle}>
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                      <path d="M12 2v4M12 18v4M4.93 4.93l2.83 2.83M16.24 16.24l2.83 2.83M2 12h4M18 12h4M4.93 19.07l2.83-2.83M16.24 7.76l2.83-2.83" />
+                    </svg>
+                    <span>Remote MCP — Coming Soon</span>
+                  </div>
+                  <p style={nextStyles.calloutBody}>
+                    A future <code style={{ fontFamily: 'monospace' }}>get_team_activity_timeline</code> tool will expose shared team workspace annotations. This is part of the upcoming cloud-hosted remote MCP (paid tier).
+                  </p>
                 </div>
               </div>
             )}
