@@ -10,3 +10,10 @@ notes/
 .next
 *.tsbuildinfo
 next-env.d.ts
+
+# ── Private / paid-tier dirs (live in the separate stickle-app private repo) ──
+dashboard/
+remote-mcp/
+supabase/
+scripts/
+
