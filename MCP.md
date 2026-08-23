@@ -68,7 +68,7 @@ It reads notes from a local JSON file — no server, no cloud, fully private.
 
 ```bash
 # Clone the repo if you haven't
-git clone https://github.com/stickle-app/stickle.git
+git clone https://github.com/BeeBombshell/stickle.git
 cd stickle
 
 # Install dependencies
