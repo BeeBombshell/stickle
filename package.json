@@ -23,6 +23,7 @@
   "dependencies": {
     "@supabase/supabase-js": "^2.112.2",
     "dexie": "^4.0.10",
+    "lucide-preact": "^1.33.0",
     "preact": "^10.26.4"
   },
   "devDependencies": {
