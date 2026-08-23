@@ -1,4 +1,5 @@
 import { useState, useEffect, useRef } from 'preact/hooks';
+import { Plus, Minus, Trash2, GripVertical, X } from 'lucide-preact';
 import type { StickleNote, AnchorTier, NoteColorBlock, NoteBorderStyle } from '../lib/types';
 
 export const COLOR_SWATCHES: Record<NoteColorBlock, { name: string; bg: string; text: string; border: string }> = {
@@ -234,10 +235,7 @@ export function NoteBubble({
           style={{ ...chipStyles.iconBtn, color: theme.text }}
           title="Expand note"
         >
-          <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
-            <line x1="12" y1="5" x2="12" y2="19" />
-            <line x1="5" y1="12" x2="19" y2="12" />
-          </svg>
+          <Plus size={12} strokeWidth={2.5} />
         </button>
       </div>
     );
@@ -264,14 +262,7 @@ export function NoteBubble({
       >
         <div style={bubbleStyles.headerLeft}>
           <span style={{ ...bubbleStyles.dragGrip, color: theme.text }} title="Drag to reposition note">
-            <svg width="12" height="12" viewBox="0 0 24 24" fill="currentColor">
-              <circle cx="8" cy="5" r="2.2" />
-              <circle cx="16" cy="5" r="2.2" />
-              <circle cx="8" cy="12" r="2.2" />
-              <circle cx="16" cy="12" r="2.2" />
-              <circle cx="8" cy="19" r="2.2" />
-              <circle cx="16" cy="19" r="2.2" />
-            </svg>
+            <GripVertical size={12} />
           </span>
           {displayAuthorName && (
             <span
@@ -377,10 +368,7 @@ export function NoteBubble({
                 }}
                 title="Delete note"
               >
-                <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                  <polyline points="3 6 5 6 21 6" />
-                  <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2" />
-                </svg>
+                <Trash2 size={12} />
               </button>
             </>
           )}
@@ -389,9 +377,7 @@ export function NoteBubble({
             style={{ ...bubbleStyles.iconBtn, color: theme.text }}
             title="Minimize note"
           >
-            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
-              <line x1="5" y1="12" x2="19" y2="12" />
-            </svg>
+            <Minus size={12} strokeWidth={2.2} />
           </button>
         </div>
       </div>
@@ -552,10 +538,7 @@ export function NoteBubble({
                 style={{ ...bubbleStyles.tagRemoveBtn, color: theme.text }}
                 title="Remove tag"
               >
-                <svg width="9" height="9" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
-                  <line x1="18" y1="6" x2="6" y2="18" />
-                  <line x1="6" y1="6" x2="18" y2="18" />
-                </svg>
+                <X size={9} strokeWidth={2.5} />
               </button>
             )}
           </span>

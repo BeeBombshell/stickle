@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'preact/hooks';
+import { Cloud, ChevronDown, RefreshCw, Users, Upload, Download, Globe, Zap, Lock } from 'lucide-preact';
 import { testNotionConnection } from '../lib/notion';
 import type { NoteColorBlock, NoteBorderStyle, UserProfile } from '../lib/types';
 import { COLOR_SWATCHES } from './NoteBubble';
@@ -402,9 +403,7 @@ export function Settings() {
         }}
       >
         <div style={{ display: 'flex', alignItems: 'center', gap: '6px', minWidth: 0 }}>
-          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" style={{ color: '#9ca3af', flexShrink: 0 }}>
-            <path d="M17.5 19H9a7 7 0 1 1 6.71-9h1.79a4.5 4.5 0 1 1 0 9z" />
-          </svg>
+          <Cloud size={14} style={{ color: '#9ca3af', flexShrink: 0 }} />
           <span style={{ fontSize: '12px', fontWeight: '600', letterSpacing: '-0.1px', whiteSpace: 'nowrap' }}>
             Stickle Cloud
           </span>
@@ -424,24 +423,15 @@ export function Settings() {
             {userTier === 'supporter' ? 'PRO SUPPORTER' : userTier === 'team_member' ? 'TEAMS' : 'FREE TIER'}
           </span>
         </div>
-        <svg
-          width="14"
-          height="14"
-          viewBox="0 0 24 24"
-          fill="none"
-          stroke="currentColor"
-          strokeWidth="2"
-          strokeLinecap="round"
-          strokeLinejoin="round"
+        <ChevronDown
+          size={14}
           style={{
             transform: isAccountOpen ? 'rotate(180deg)' : 'rotate(0deg)',
             transition: 'transform 0.2s ease',
             color: '#9ca3af',
             flexShrink: 0,
           }}
-        >
-          <path d="M6 9l6 6 6-6" />
-        </svg>
+        />
       </div>
 
       {isAccountOpen && (
@@ -505,9 +495,7 @@ export function Settings() {
                   boxShadow: '0 1px 3px rgba(0,0,0,0.1)',
                 }}
               >
-                <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                  <path d="M21.5 2v6h-6M21.34 15.57a10 10 0 1 1-.57-8.38l5.67-5.67" />
-                </svg>
+                <RefreshCw size={13} />
                 {isSyncing ? 'Syncing with Cloud...' : 'Sync Cloud Notes Now'}
               </button>
             </div>
@@ -660,13 +648,7 @@ export function Settings() {
         }}
       >
         <div style={{ display: 'flex', alignItems: 'center', gap: '6px', minWidth: 0 }}>
-          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" style={{ color: '#9ca3af', flexShrink: 0 }}>
-            <path d="M17 21v-2a4 4 0 0 0-3-3.87" />
-            <path d="M9 21v-2a4 4 0 0 0-4-4H3a4 4 0 0 0-4 4v2" />
-            <circle cx="9" cy="7" r="4" />
-            <path d="M23 21v-2a4 4 0 0 0-3-3.87" />
-            <path d="M16 3.13a4 4 0 0 1 0 7.75" />
-          </svg>
+          <Users size={14} style={{ color: '#9ca3af', flexShrink: 0 }} />
           <span style={{ fontSize: '12px', fontWeight: '600', letterSpacing: '-0.1px', whiteSpace: 'nowrap' }}>
             Team Workspaces
           </span>
@@ -686,24 +668,15 @@ export function Settings() {
             {workspaces.length} {workspaces.length === 1 ? 'Workspace' : 'Workspaces'}
           </span>
         </div>
-        <svg
-          width="14"
-          height="14"
-          viewBox="0 0 24 24"
-          fill="none"
-          stroke="currentColor"
-          strokeWidth="2"
-          strokeLinecap="round"
-          strokeLinejoin="round"
+        <ChevronDown
+          size={14}
           style={{
             transform: isTeamOpen ? 'rotate(180deg)' : 'rotate(0deg)',
             transition: 'transform 0.2s ease',
             color: '#9ca3af',
             flexShrink: 0,
           }}
-        >
-          <path d="M6 9l6 6 6-6" />
-        </svg>
+        />
       </div>
 
       {isTeamOpen && (
@@ -970,23 +943,14 @@ export function Settings() {
         }}
       >
         <h3 style={{ ...settingsStyles.title, fontSize: '15px', margin: 0 }}>Notion Integration</h3>
-        <svg
-          width="14"
-          height="14"
-          viewBox="0 0 24 24"
-          fill="none"
-          stroke="currentColor"
-          strokeWidth="2"
-          strokeLinecap="round"
-          strokeLinejoin="round"
+        <ChevronDown
+          size={14}
           style={{
             transform: isNotionOpen ? 'rotate(180deg)' : 'rotate(0deg)',
             transition: 'transform 0.2s ease',
             color: 'var(--color-ink-muted)',
           }}
-        >
-          <path d="M6 9l6 6 6-6" />
-        </svg>
+        />
       </div>
 
       {isNotionOpen && (
@@ -1038,23 +1002,14 @@ export function Settings() {
         }}
       >
         <h3 style={{ ...settingsStyles.title, fontSize: '15px', margin: 0 }}>Data Backup & Portability</h3>
-        <svg
-          width="14"
-          height="14"
-          viewBox="0 0 24 24"
-          fill="none"
-          stroke="currentColor"
-          strokeWidth="2"
-          strokeLinecap="round"
-          strokeLinejoin="round"
+        <ChevronDown
+          size={14}
           style={{
             transform: isBackupOpen ? 'rotate(180deg)' : 'rotate(0deg)',
             transition: 'transform 0.2s ease',
             color: 'var(--color-ink-muted)',
           }}
-        >
-          <path d="M6 9l6 6 6-6" />
-        </svg>
+        />
       </div>
 
       {isBackupOpen && (
@@ -1088,21 +1043,7 @@ export function Settings() {
                 boxSizing: 'border-box',
               }}
             >
-              <svg
-                width="12"
-                height="12"
-                viewBox="0 0 24 24"
-                fill="none"
-                stroke="currentColor"
-                strokeWidth="2"
-                strokeLinecap="round"
-                strokeLinejoin="round"
-                style={{ flexShrink: 0 }}
-              >
-                <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" />
-                <polyline points="17 8 12 3 7 8" />
-                <line x1="12" y1="3" x2="12" y2="15" />
-              </svg>
+              <Upload size={12} style={{ flexShrink: 0 }} />
               <span>Export (.json)</span>
             </button>
 
@@ -1130,21 +1071,7 @@ export function Settings() {
                 textOverflow: 'ellipsis',
               }}
             >
-              <svg
-                width="12"
-                height="12"
-                viewBox="0 0 24 24"
-                fill="none"
-                stroke="currentColor"
-                strokeWidth="2"
-                strokeLinecap="round"
-                strokeLinejoin="round"
-                style={{ flexShrink: 0 }}
-              >
-                <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" />
-                <polyline points="7 10 12 15 17 10" />
-                <line x1="12" y1="15" x2="12" y2="3" />
-              </svg>
+              <Download size={12} style={{ flexShrink: 0 }} />
               <span>Import (.json)</span>
               <input
                 type="file"
@@ -1186,11 +1113,7 @@ export function Settings() {
               }
             }}
           >
-            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-              <circle cx="12" cy="12" r="10" />
-              <line x1="2" y1="12" x2="22" y2="12" />
-              <path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z" />
-            </svg>
+            <Globe size={12} />
             Landing
           </button>
           <button
@@ -1204,9 +1127,7 @@ export function Settings() {
               }
             }}
           >
-            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-              <polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2" />
-            </svg>
+            <Zap size={12} />
             Sandbox
           </button>
           <button
@@ -1220,10 +1141,7 @@ export function Settings() {
               }
             }}
           >
-            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-              <rect x="3" y="11" width="18" height="11" rx="2" ry="2" />
-              <path d="M7 11V7a5 5 0 0 1 10 0v4" />
-            </svg>
+            <Lock size={12} />
             Privacy
           </button>
         </div>

@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'preact/hooks';
+import { Lightbulb, Upload, Download, Settings as SettingsIcon, ExternalLink } from 'lucide-preact';
 import type { StickleNote, Workspace, UserProfile } from '../../lib/types';
 import { getAllNotes } from '../../lib/db';
 import { NoteSidebar } from '../../components/NoteSidebar';
@@ -291,11 +292,7 @@ export function App() {
           </button>
 
           <div style={{ fontSize: '10px', color: '#6b7280', textAlign: 'center', marginTop: '5px', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '4px' }}>
-            <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-              <path d="M9 18h6" />
-              <path d="M10 22h4" />
-              <path d="M15.09 14c.18-.98.65-1.74 1.41-2.5A4.65 4.65 0 0 0 18 8 6 6 0 0 0 6 8c0 1.55.63 2.84 1.5 3.5.76.76 1.23 1.52 1.41 2.5" />
-            </svg>
+            <Lightbulb size={11} />
             Press <strong>Alt + Click</strong> (Option + Click on Mac) anywhere on page
           </div>
         </div>
@@ -351,19 +348,11 @@ export function App() {
             {/* Quick Export/Import Bar at bottom of All Notes */}
             <div style={popupStyles.backupActionBar}>
               <button onClick={handleExportJson} style={popupStyles.backupBtn}>
-                <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                  <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" />
-                  <polyline points="17 8 12 3 7 8" />
-                  <line x1="12" y1="3" x2="12" y2="15" />
-                </svg>
+                <Upload size={11} />
                 Export Backup
               </button>
               <label style={popupStyles.backupBtn}>
-                <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                  <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" />
-                  <polyline points="7 10 12 15 17 10" />
-                  <line x1="12" y1="15" x2="12" y2="3" />
-                </svg>
+                <Download size={11} />
                 Import Backup
                 <input type="file" accept=".json" onChange={handleImportFileChange} style={{ display: 'none' }} />
               </label>
@@ -391,10 +380,7 @@ export function App() {
             title="Open Extension Options & Settings"
             style={popupStyles.footerIconButton}
           >
-            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-              <circle cx="12" cy="12" r="3" />
-              <path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z" />
-            </svg>
+            <SettingsIcon size={14} />
           </button>
 
           {ENABLE_CLOUD_AUTH && profile && (
@@ -403,11 +389,7 @@ export function App() {
               title="Open Web Dashboard"
               style={popupStyles.footerIconButton}
             >
-              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                <path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6" />
-                <polyline points="15 3 21 3 21 9" />
-                <line x1="10" y1="14" x2="21" y2="3" />
-              </svg>
+              <ExternalLink size={14} />
             </button>
           )}
         </div>
