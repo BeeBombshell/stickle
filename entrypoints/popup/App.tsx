@@ -110,19 +110,56 @@ export function App() {
     if (typeof chrome !== 'undefined' && chrome.tabs) {
       chrome.tabs.query({ active: true, currentWindow: true }, (tabs) => {
         if (tabs[0]?.id && tabs[0]?.url) {
+          const tabId = tabs[0].id;
           const tabUrl = tabs[0].url;
           if (tabUrl.startsWith('chrome://') || tabUrl.startsWith('chrome-extension://') || tabUrl.startsWith('about:')) {
             setStatusMsg('ℹ Stickles pin to web pages (e.g. github.com), not system pages.');
             setTimeout(() => setStatusMsg(null), 3500);
             return;
           }
-          chrome.tabs.sendMessage(tabs[0].id, { type: 'TRIGGER_CREATE_NOTE' }, (res) => {
+
+          // First try sending a message to the already-running content script.
+          // If the content script is not yet active (e.g. tab was open before install),
+          // inject it dynamically via chrome.scripting then retry.
+          chrome.tabs.sendMessage(tabId, { type: 'TRIGGER_CREATE_NOTE' }, (res) => {
             if (chrome.runtime.lastError || !res) {
-              setStatusMsg('Reload tab or press Alt + Click on webpage to pin note');
+              // Content script not active — inject it now
+              if (typeof chrome !== 'undefined' && chrome.scripting) {
+                chrome.scripting.executeScript(
+                  { target: { tabId }, files: ['content-scripts/content.js'] },
+                  () => {
+                    if (chrome.runtime.lastError) {
+                      setStatusMsg('Cannot inject on this page. Try Alt + Click instead.');
+                      setTimeout(() => setStatusMsg(null), 3500);
+                      return;
+                    }
+                    // Also inject the CSS
+                    chrome.scripting.insertCSS(
+                      { target: { tabId }, files: ['content-scripts/content.css'] },
+                      () => {
+                        // Retry message after a brief init delay
+                        setTimeout(() => {
+                          chrome.tabs.sendMessage(tabId, { type: 'TRIGGER_CREATE_NOTE' }, (res2) => {
+                            if (chrome.runtime.lastError || !res2) {
+                              setStatusMsg('Press Alt + Click anywhere on the page to add a note.');
+                            } else {
+                              setStatusMsg('✓ Stickle created on webpage!');
+                            }
+                            setTimeout(() => setStatusMsg(null), 3500);
+                          });
+                        }, 300);
+                      }
+                    );
+                  }
+                );
+              } else {
+                setStatusMsg('Press Alt + Click anywhere on the page to add a note.');
+                setTimeout(() => setStatusMsg(null), 3500);
+              }
             } else {
               setStatusMsg('✓ Stickle created on webpage!');
+              setTimeout(() => setStatusMsg(null), 3500);
             }
-            setTimeout(() => setStatusMsg(null), 3500);
           });
         }
       });
@@ -140,10 +177,14 @@ export function App() {
   };
 
   const handleOpenDashboard = () => {
+    // In the OSS build the cloud dashboard is not available.
+    // Open the extension's settings / options page instead.
     if (typeof chrome !== 'undefined' && chrome.tabs) {
-      chrome.tabs.create({ url: STICKLE_LINKS.dashboard });
+      chrome.tabs.create({ url: chrome.runtime.getURL('options.html') });
+    } else if (typeof chrome !== 'undefined' && chrome.runtime?.openOptionsPage) {
+      chrome.runtime.openOptionsPage();
     } else {
-      window.open(STICKLE_LINKS.dashboard, '_blank');
+      window.open(STICKLE_LINKS.landing, '_blank');
     }
   };
 

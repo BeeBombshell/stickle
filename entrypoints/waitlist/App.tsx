@@ -27,7 +27,7 @@ export default function WaitlistApp() {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [demoNote, setDemoNote] = useState<StickleNote>({
     id: 'waitlist-hero-note',
-    url: 'https://stickle.app/waitlist',
+    url: 'https://stickle.beebombshell.com/waitlist',
     pageTitle: 'Be first in line when Stickle launches',
     content: 'Alt + Click pinned this note directly to the DOM element. Notes survive reloads, re-renders, and revisits.',
     anchor: {
@@ -50,7 +50,35 @@ export default function WaitlistApp() {
   };
 
   const goHome = () => {
-    window.location.href = '/';
+    if (typeof chrome !== 'undefined' && chrome.tabs) {
+      chrome.tabs.create({ url: chrome.runtime.getURL('index.html') });
+    } else {
+      window.location.href = '/';
+    }
+  };
+
+  const goDocs = () => {
+    if (typeof chrome !== 'undefined' && chrome.tabs) {
+      chrome.tabs.create({ url: chrome.runtime.getURL('docs.html') });
+    } else {
+      window.open('/docs', '_blank');
+    }
+  };
+
+  const goSandbox = () => {
+    if (typeof chrome !== 'undefined' && chrome.tabs) {
+      chrome.tabs.create({ url: chrome.runtime.getURL('onboarding.html') });
+    } else {
+      window.open('/onboarding', '_blank');
+    }
+  };
+
+  const goPrivacy = () => {
+    if (typeof chrome !== 'undefined' && chrome.tabs) {
+      chrome.tabs.create({ url: chrome.runtime.getURL('privacy.html') });
+    } else {
+      window.open('/privacy', '_blank');
+    }
   };
 
   return (
@@ -70,11 +98,11 @@ export default function WaitlistApp() {
           </div>
 
           <div className="nav-desktop-links" style={s.navLinks}>
-            <a href="/" style={s.navLink}>Home</a>
-            <a href="/#features" style={s.navLink}>Features</a>
-            <a href="/docs" style={s.navLink}>Docs</a>
-            <a href="/onboarding" style={s.navLink}>Sandbox</a>
-            <a href="/privacy" style={s.navLink}>Privacy</a>
+            <button onClick={goHome} style={{ ...s.navLink, background: 'none', border: 'none', cursor: 'pointer', padding: 0 }}>Home</button>
+            <button onClick={goHome} style={{ ...s.navLink, background: 'none', border: 'none', cursor: 'pointer', padding: 0 }}>Features</button>
+            <button onClick={goDocs} style={{ ...s.navLink, background: 'none', border: 'none', cursor: 'pointer', padding: 0 }}>Docs</button>
+            <button onClick={goSandbox} style={{ ...s.navLink, background: 'none', border: 'none', cursor: 'pointer', padding: 0 }}>Sandbox</button>
+            <button onClick={goPrivacy} style={{ ...s.navLink, background: 'none', border: 'none', cursor: 'pointer', padding: 0 }}>Privacy</button>
           </div>
 
           <div className="nav-desktop-actions" style={s.navActions}>
@@ -115,21 +143,21 @@ export default function WaitlistApp() {
         {/* Mobile Slide-down Drawer */}
         {mobileMenuOpen && (
           <div className="mobile-menu-drawer">
-            <a href="/" style={s.mobileNavLink} onClick={() => setMobileMenuOpen(false)}>
+            <button onClick={() => { setMobileMenuOpen(false); goHome(); }} style={s.mobileNavLink}>
               Home
-            </a>
-            <a href="/#features" style={s.mobileNavLink} onClick={() => setMobileMenuOpen(false)}>
+            </button>
+            <button onClick={() => { setMobileMenuOpen(false); goHome(); }} style={s.mobileNavLink}>
               Features
-            </a>
-            <a href="/docs" style={s.mobileNavLink} onClick={() => setMobileMenuOpen(false)}>
+            </button>
+            <button onClick={() => { setMobileMenuOpen(false); goDocs(); }} style={s.mobileNavLink}>
               Documentation
-            </a>
-            <a href="/onboarding" style={s.mobileNavLink} onClick={() => setMobileMenuOpen(false)}>
+            </button>
+            <button onClick={() => { setMobileMenuOpen(false); goSandbox(); }} style={s.mobileNavLink}>
               Interactive Sandbox
-            </a>
-            <a href="/privacy" style={s.mobileNavLink} onClick={() => setMobileMenuOpen(false)}>
+            </button>
+            <button onClick={() => { setMobileMenuOpen(false); goPrivacy(); }} style={s.mobileNavLink}>
               Privacy Policy
-            </a>
+            </button>
             <a
               href="https://github.com/BeeBombshell/stickle"
               target="_blank"

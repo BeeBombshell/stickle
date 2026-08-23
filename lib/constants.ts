@@ -5,9 +5,12 @@ export const SITE_BASE_URL =
   (import.meta.env.WXT_PUBLIC_SITE_URL as string | undefined) ||
   'https://stickle.beebombshell.com';
 
+// In the open-source build, the web dashboard (cloud sync) is not available.
+// DASHBOARD_URL falls back to the main site landing page.
+// stickle-app (commercial) overrides this via WXT_PUBLIC_DASHBOARD_URL env var.
 export const DASHBOARD_URL =
   (import.meta.env.WXT_PUBLIC_DASHBOARD_URL as string | undefined) ||
-  `${SITE_BASE_URL}/notes`;
+  SITE_BASE_URL;
 
 export const STICKLE_LINKS = {
   landing: SITE_BASE_URL,

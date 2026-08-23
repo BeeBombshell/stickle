@@ -149,6 +149,14 @@ export default function LandingApp() {
     }
   };
 
+  const openWaitlist = () => {
+    if (typeof chrome !== 'undefined' && chrome.tabs) {
+      chrome.tabs.create({ url: chrome.runtime.getURL('waitlist.html') });
+    } else {
+      window.open('/waitlist', '_blank');
+    }
+  };
+
   const openSandbox = () => {
     openOnboarding();
   };
@@ -174,10 +182,10 @@ export default function LandingApp() {
           <div style={s.navLinks}>
             <a href="#features" style={s.navLink}>Features</a>
             <a href="#anchoring" style={s.navLink}>Anchoring</a>
-            <a href="/docs#mcp-server" style={s.navLink}>MCP Setup</a>
-            <a href="/docs" style={s.navLink}>Docs</a>
+            <button onClick={openDocs} style={{ ...s.navLink, background: 'none', border: 'none', cursor: 'pointer', padding: 0 }}>MCP Setup</button>
+            <button onClick={openDocs} style={{ ...s.navLink, background: 'none', border: 'none', cursor: 'pointer', padding: 0 }}>Docs</button>
             <a href="#faq" style={s.navLink}>FAQ</a>
-            <a href="/waitlist" style={s.navLink}>Waitlist</a>
+            <button onClick={openWaitlist} style={{ ...s.navLink, background: 'none', border: 'none', cursor: 'pointer', padding: 0 }}>Waitlist</button>
           </div>
 
           {/* Right: CTAs */}
@@ -216,12 +224,12 @@ export default function LandingApp() {
             </p>
 
             <div style={s.ctaRow}>
-              <a
-                href="/waitlist"
-                style={{ ...s.btnPrimary, fontSize: 16, padding: '12px 28px', textDecoration: 'none' }}
+              <button
+                onClick={openWaitlist}
+                style={{ ...s.btnPrimary, fontSize: 16, padding: '12px 28px' }}
               >
                 Join Launch Waitlist ↗
-              </a>
+              </button>
               <button style={{ ...s.btnSecondary, fontSize: 16, padding: '12px 24px' }} onClick={openOnboarding}>
                 Try Sandbox
               </button>
@@ -1345,12 +1353,12 @@ export default function LandingApp() {
                 We are preparing the extension for public release. Join the waitlist to receive an email notification the exact moment early access builds are live.
               </p>
               <div>
-                <a
-                  href="/waitlist"
-                  style={{ ...s.btnPrimary, backgroundColor: '#e4f579', color: '#111111', fontSize: 16, padding: '14px 32px', textDecoration: 'none', display: 'inline-block' }}
+                <button
+                  onClick={openWaitlist}
+                  style={{ ...s.btnPrimary, backgroundColor: '#e4f579', color: '#111111', fontSize: 16, padding: '14px 32px' }}
                 >
                   Join Rollout Waitlist ↗
-                </a>
+                </button>
               </div>
               <div style={{ marginTop: 20 }}>
                 <span style={{ ...s.eyebrow, fontSize: 11, color: '#a1a1aa', letterSpacing: '0.8px' }}>
@@ -1447,9 +1455,9 @@ export default function LandingApp() {
                 links: [
                   { label: 'Features', href: '#features' },
                   { label: 'Anchoring Tech', href: '#anchoring' },
-                  { label: 'Local MCP Server', href: '/docs#mcp-server' },
-                  { label: 'Documentation', href: '/docs' },
-                  { label: 'Launch Waitlist', href: '/waitlist' },
+                  { label: 'Local MCP Server', href: '#', onClick: openDocs },
+                  { label: 'Documentation', href: '#', onClick: openDocs },
+                  { label: 'Launch Waitlist', href: '#', onClick: openWaitlist },
                 ],
               },
               {
@@ -1468,7 +1476,7 @@ export default function LandingApp() {
                   { label: 'Issues & Bug Reports', href: 'https://github.com/BeeBombshell/stickle/issues' },
                   { label: 'GitHub Discussions', href: 'https://github.com/BeeBombshell/stickle/discussions' },
                   { label: 'Pull Requests', href: 'https://github.com/BeeBombshell/stickle/pulls' },
-                  { label: 'Contributing Guide', href: '/docs#contributing' },
+                  { label: 'Contributing Guide', href: '#', onClick: openDocs },
                 ],
               },
             ].map(col => (

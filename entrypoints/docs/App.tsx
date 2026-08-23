@@ -423,7 +423,16 @@ export default function DocsApp() {
               </svg>
             </button>
 
-            <a href="/" style={nextStyles.logoLockup}>
+            <button
+              onClick={() => {
+                if (typeof chrome !== 'undefined' && chrome.tabs) {
+                  chrome.tabs.create({ url: chrome.runtime.getURL('index.html') });
+                } else {
+                  window.location.href = '/';
+                }
+              }}
+              style={{ ...nextStyles.logoLockup, background: 'none', border: 'none', cursor: 'pointer', padding: 0 }}
+            >
               <div style={nextStyles.logoMark}>
                 <svg width="16" height="16" viewBox="0 0 18 18" fill="none">
                   <circle cx="13" cy="13" r="5" fill="white" opacity="0.9" />
@@ -434,7 +443,7 @@ export default function DocsApp() {
               <span style={nextStyles.docsSlash}>/</span>
               <span style={nextStyles.docsLabel}>docs</span>
               <span style={nextStyles.versionPill}>v1.0</span>
-            </a>
+            </button>
           </div>
 
           <div style={nextStyles.headerCenter}>
@@ -474,9 +483,18 @@ export default function DocsApp() {
               >
                 Contributing
               </button>
-              <a href="/onboarding" target="_blank" rel="noreferrer" style={nextStyles.topNavLink}>
+              <button
+                onClick={() => {
+                  if (typeof chrome !== 'undefined' && chrome.tabs) {
+                    chrome.tabs.create({ url: chrome.runtime.getURL('onboarding.html') });
+                  } else {
+                    window.open('/onboarding', '_blank');
+                  }
+                }}
+                style={nextStyles.topNavLink}
+              >
                 Sandbox ↗
-              </a>
+              </button>
             </nav>
 
             <div style={nextStyles.divider} />

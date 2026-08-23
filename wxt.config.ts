@@ -1,12 +1,46 @@
 import { defineConfig } from 'wxt';
 import preact from '@preact/preset-vite';
+import { readFileSync, writeFileSync } from 'node:fs';
+import { glob } from 'node:fs/promises';
+
+/**
+ * Vite plugin: escape Unicode non-characters from built JS bundles.
+ *
+ * Chrome's content script loader rejects files containing literal U+FFFF or U+FFFE
+ * even though they are technically valid UTF-8. Dexie.js uses "\uffff" as an
+ * internal sentinel key, which Vite bundles as a literal byte sequence.
+ * We replace them with JS unicode escapes (\uffff / \ufffe) — identical at runtime.
+ */
+function escapeUnicodeNonCharacters() {
+  return {
+    name: 'escape-unicode-non-characters',
+    closeBundle: async () => {
+      // Collect all .js output files (works for both dev and prod)
+      const pattern = '.output/**/*.js';
+      try {
+        for await (const file of glob(pattern)) {
+          const content = readFileSync(file, 'utf-8');
+          if (content.includes('\uffff') || content.includes('\ufffe')) {
+            const fixed = content
+              .replace(/\uffff/g, '\\uffff')
+              .replace(/\ufffe/g, '\\ufffe');
+            writeFileSync(file, fixed, 'utf-8');
+            console.log(`[stickle] Escaped U+FFFF/U+FFFE in ${file}`);
+          }
+        }
+      } catch {
+        // glob may not be available in all environments; silently skip
+      }
+    },
+  };
+}
 
 // See https://wxt.dev/api/config.html
 export default defineConfig({
   extensionApi: 'chrome',
   modules: [],
   vite: () => ({
-    plugins: [preact() as any],
+    plugins: [preact() as any, escapeUnicodeNonCharacters()],
   }),
 
   manifest: {

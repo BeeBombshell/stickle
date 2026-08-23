@@ -7,7 +7,7 @@ export default function OnboardingApp() {
   const [sandboxNotes, setSandboxNotes] = useState<StickleNote[]>([
     {
       id: 'sandbox-1',
-      url: 'https://stickle.app/onboarding',
+      url: 'https://stickle.beebombshell.com/onboarding',
       pageTitle: 'Interactive Sandbox',
       content: 'Hold Alt and click any element on a webpage. Your note attaches right there.',
       color: 'lime',
@@ -19,7 +19,7 @@ export default function OnboardingApp() {
     },
     {
       id: 'sandbox-2',
-      url: 'https://stickle.app/onboarding',
+      url: 'https://stickle.beebombshell.com/onboarding',
       pageTitle: 'Interactive Sandbox',
       content: 'Notes survive React re-renders, page reloads, and tab closes. 5-tier anchoring keeps them in the right spot.',
       color: 'lilac',
@@ -60,7 +60,7 @@ export default function OnboardingApp() {
   // Authentic Stickle Notes for Hero Section (matching actual extension NoteBubble)
   const [heroNote1, setHeroNote1] = useState<StickleNote>({
     id: 'hero-note-1',
-    url: 'https://stickle.app/onboarding',
+    url: 'https://stickle.beebombshell.com/onboarding',
     pageTitle: 'Stickle Onboarding',
     content: 'Hold Alt and click anywhere on any webpage: a heading, code block, or image. Your note pins right there!',
     color: 'lime',
@@ -78,7 +78,7 @@ export default function OnboardingApp() {
 
   const [heroNote2, setHeroNote2] = useState<StickleNote>({
     id: 'hero-note-2',
-    url: 'https://stickle.app/onboarding',
+    url: 'https://stickle.beebombshell.com/onboarding',
     pageTitle: 'Stickle Onboarding',
     content: 'Notes survive React re-renders, reloads, and Wikipedia DOM shifts. 5-tier anchoring keeps them pinned to the right spot.',
     color: 'lilac',
@@ -129,7 +129,7 @@ export default function OnboardingApp() {
     const newId = `sandbox-${Date.now()}`;
     const newNote: StickleNote = {
       id: newId,
-      url: 'https://stickle.app/onboarding',
+      url: 'https://stickle.beebombshell.com/onboarding',
       pageTitle: 'Interactive Sandbox',
       content: 'Edit or drag this note — it stays right where you drop it!',
       color,

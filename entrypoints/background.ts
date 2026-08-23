@@ -65,9 +65,34 @@ export default defineBackground(() => {
         return;
       }
 
-      chrome.tabs.sendMessage(tab.id, { type: 'TRIGGER_CREATE_NOTE' }, () => {
+      const tabId = tab.id;
+
+      // Try to send message first (content script already active).
+      // If it fails (tab was open before the extension was installed), inject dynamically.
+      chrome.tabs.sendMessage(tabId, { type: 'TRIGGER_CREATE_NOTE' }, () => {
         if (chrome.runtime.lastError) {
-          console.warn('[Stickle] Could not send message to tab:', chrome.runtime.lastError.message);
+          // Content script not active — inject it now and retry
+          chrome.scripting.executeScript(
+            { target: { tabId }, files: ['content-scripts/content.js'] },
+            () => {
+              if (chrome.runtime.lastError) {
+                console.warn('[Stickle] Could not inject content script:', chrome.runtime.lastError.message);
+                return;
+              }
+              chrome.scripting.insertCSS(
+                { target: { tabId }, files: ['content-scripts/content.css'] },
+                () => {
+                  setTimeout(() => {
+                    chrome.tabs.sendMessage(tabId, { type: 'TRIGGER_CREATE_NOTE' }, () => {
+                      if (chrome.runtime.lastError) {
+                        console.warn('[Stickle] Could not send message after injection:', chrome.runtime.lastError.message);
+                      }
+                    });
+                  }, 300);
+                }
+              );
+            }
+          );
         }
       });
     }
