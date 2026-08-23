@@ -39,7 +39,7 @@ export default defineConfig({
         resources: ['auth-callback.html', 'options.html'],
         // Restrict to Supabase OAuth redirect and the Stickle dashboard only.
         // This prevents arbitrary websites from fetching extension HTML pages.
-        matches: ['https://*.supabase.co/*', 'https://app.stickle.app/*'],
+        matches: ['https://*.supabase.co/*', 'https://stickle.beebombshell.com/*', 'https://app.stickle.app/*'],
       },
     ],
   },

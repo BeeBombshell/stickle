@@ -55,6 +55,7 @@ export default defineContentScript({
 
     // Trusted origins for postMessage communication
     const TRUSTED_ORIGINS = [
+      'https://stickle.beebombshell.com',
       'https://app.stickle.app',
       'http://localhost:3001',
       'http://localhost:3333',

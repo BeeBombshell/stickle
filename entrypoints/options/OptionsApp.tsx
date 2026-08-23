@@ -11,6 +11,7 @@ import { isEnabled, FEATURE_NAMES, ENABLE_CLOUD_AUTH, type FeatureFlag } from '.
 import { fullSync } from '../../lib/sync';
 import type { NoteColorBlock, NoteBorderStyle, UserProfile } from '../../lib/types';
 import { LocalizedPricing } from '../../components/LocalizedPricing';
+import { STICKLE_LINKS } from '../../lib/constants';
 import posthog from '../../lib/posthog';
 
 type NavTab = 'account' | 'notion' | 'defaults' | 'mcp' | 'about';
@@ -230,11 +231,10 @@ export function OptionsApp() {
   };
 
   const handleOpenDashboard = () => {
-    const dashboardUrl = (import.meta.env.WXT_PUBLIC_DASHBOARD_URL as string | undefined) || 'https://app.stickle.app/notes';
     if (typeof chrome !== 'undefined' && chrome.tabs) {
-      chrome.tabs.create({ url: dashboardUrl });
+      chrome.tabs.create({ url: STICKLE_LINKS.dashboard });
     } else {
-      window.open(dashboardUrl, '_blank');
+      window.open(STICKLE_LINKS.dashboard, '_blank');
     }
   };
 
@@ -246,17 +246,17 @@ export function OptionsApp() {
 
   const handleOpenLanding = () => {
     if (typeof chrome !== 'undefined' && chrome.tabs) {
-      chrome.tabs.create({ url: chrome.runtime.getURL('index.html') });
+      chrome.tabs.create({ url: STICKLE_LINKS.landing });
     } else {
-      window.open('/', '_blank');
+      window.open(STICKLE_LINKS.landing, '_blank');
     }
   };
 
   const handleOpenDocs = () => {
     if (typeof chrome !== 'undefined' && chrome.tabs) {
-      chrome.tabs.create({ url: chrome.runtime.getURL('docs.html') });
+      chrome.tabs.create({ url: STICKLE_LINKS.docs });
     } else {
-      window.open('/docs.html', '_blank');
+      window.open(STICKLE_LINKS.docs, '_blank');
     }
   };
 
@@ -634,7 +634,7 @@ export function OptionsApp() {
                     onInput={(e) => setApiKey((e.target as HTMLInputElement).value)}
                   />
                   <span style={styles.helpText}>
-                    Obtain a secret token from <a href="https://www.notion.so/my-integrations" target="_blank" rel="noreferrer" style={{ color: '#111', fontWeight: '600' }}>notion.so/my-integrations</a>.
+                    Obtain a secret token from <a href={STICKLE_LINKS.notionIntegrations} target="_blank" rel="noreferrer" style={{ color: '#111', fontWeight: '600' }}>notion.so/my-integrations</a>.
                   </span>
                 </div>
 
@@ -913,7 +913,7 @@ export function OptionsApp() {
 
               <div style={styles.resourceGrid}>
                 <a
-                  href="/docs"
+                  href={STICKLE_LINKS.docs}
                   target="_blank"
                   rel="noreferrer"
                   style={{ ...styles.resourceCard, backgroundColor: '#111111', color: '#ffffff', borderColor: '#e4f579' }}
@@ -928,7 +928,7 @@ export function OptionsApp() {
                 </a>
 
                 <a
-                  href="https://github.com/BeeBombshell/stickle"
+                  href={STICKLE_LINKS.github}
                   target="_blank"
                   rel="noreferrer"
                   style={styles.resourceCard}
@@ -943,24 +943,22 @@ export function OptionsApp() {
                 </a>
 
                 <a
-                  href="#"
-                  onClick={(e) => {
-                    e.preventDefault();
-                    handleOpenLanding();
-                  }}
+                  href={STICKLE_LINKS.landing}
+                  target="_blank"
+                  rel="noreferrer"
                   style={styles.resourceCard}
                 >
                   <div style={styles.resourceIcon}>
                     <Globe size={18} />
                   </div>
                   <div>
-                    <div style={styles.resourceTitle}>Landing Page</div>
+                    <div style={styles.resourceTitle}>Landing Page ↗</div>
                     <div style={styles.resourceDesc}>Overview of features, architecture, and extension capabilities.</div>
                   </div>
                 </a>
 
                 <a
-                  href="/onboarding"
+                  href={STICKLE_LINKS.onboarding}
                   target="_blank"
                   rel="noreferrer"
                   style={styles.resourceCard}
@@ -969,13 +967,13 @@ export function OptionsApp() {
                     <Zap size={18} />
                   </div>
                   <div>
-                    <div style={styles.resourceTitle}>Interactive Sandbox</div>
+                    <div style={styles.resourceTitle}>Interactive Sandbox ↗</div>
                     <div style={styles.resourceDesc}>Practice anchoring stickles and testing shortcuts in a live tutorial environment.</div>
                   </div>
                 </a>
 
                 <a
-                  href="/privacy"
+                  href={STICKLE_LINKS.privacy}
                   target="_blank"
                   rel="noreferrer"
                   style={styles.resourceCard}
@@ -984,7 +982,7 @@ export function OptionsApp() {
                     <Lock size={18} />
                   </div>
                   <div>
-                    <div style={styles.resourceTitle}>Privacy Policy</div>
+                    <div style={styles.resourceTitle}>Privacy Policy ↗</div>
                     <div style={styles.resourceDesc}>Learn about local-first storage, permissions, and zero tracking commitments.</div>
                   </div>
                 </a>

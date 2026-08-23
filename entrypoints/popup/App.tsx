@@ -8,6 +8,7 @@ import { exportNotesToJson, importNotesFromJson } from '../../lib/export-import'
 import { getActiveWorkspaceId, setActiveWorkspaceId, getUserWorkspaces } from '../../lib/workspace';
 import { getProfile } from '../../lib/auth';
 import { ENABLE_CLOUD_AUTH } from '../../lib/flags';
+import { STICKLE_LINKS } from '../../lib/constants';
 import posthog from '../../lib/posthog';
 import { normalizeUrl } from '../../lib/anchoring';
 
@@ -139,11 +140,10 @@ export function App() {
   };
 
   const handleOpenDashboard = () => {
-    const dashboardUrl = (import.meta.env.WXT_PUBLIC_DASHBOARD_URL as string | undefined) || 'https://app.stickle.app/notes';
     if (typeof chrome !== 'undefined' && chrome.tabs) {
-      chrome.tabs.create({ url: dashboardUrl });
+      chrome.tabs.create({ url: STICKLE_LINKS.dashboard });
     } else {
-      window.open(dashboardUrl, '_blank');
+      window.open(STICKLE_LINKS.dashboard, '_blank');
     }
   };
 
