@@ -986,6 +986,21 @@ export function OptionsApp() {
                     <div style={styles.resourceDesc}>Learn about local-first storage, permissions, and zero tracking commitments.</div>
                   </div>
                 </a>
+
+                <a
+                  href={STICKLE_LINKS.chromeWebStore}
+                  target="_blank"
+                  rel="noreferrer"
+                  style={styles.resourceCard}
+                >
+                  <div style={styles.resourceIcon}>
+                    <Globe size={18} />
+                  </div>
+                  <div>
+                    <div style={styles.resourceTitle}>Chrome Web Store ↗</div>
+                    <div style={styles.resourceDesc}>View the extension listing, share Stickle with friends, or leave a review.</div>
+                  </div>
+                </a>
               </div>
             </section>
           )}

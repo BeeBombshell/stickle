@@ -2,6 +2,7 @@ import { useState, useRef } from 'preact/hooks';
 import { NoteBubble } from '../../components/NoteBubble';
 import type { StickleNote, NoteColorBlock } from '../../lib/types';
 import { WaitlistForm } from './WaitlistForm';
+import { STICKLE_LINKS } from '../../lib/constants';
 
 type FaqItem = { q: string; a: string };
 
@@ -200,7 +201,14 @@ export default function LandingApp() {
             </a>
             <button style={s.btnSecondary} onClick={openDocs}>Docs</button>
             <button style={s.btnSecondary} onClick={openSandbox}>Sandbox</button>
-            <button style={s.btnPrimary} onClick={openSandbox}>Add to Chrome - Free</button>
+            <a
+              href={STICKLE_LINKS.chromeWebStore}
+              target="_blank"
+              rel="noreferrer"
+              style={{ ...s.btnPrimary, textDecoration: 'none' }}
+            >
+              Add to Chrome - Free
+            </a>
           </div>
         </div>
       </nav>
@@ -224,12 +232,14 @@ export default function LandingApp() {
             </p>
 
             <div style={s.ctaRow}>
-              <button
-                onClick={openWaitlist}
-                style={{ ...s.btnPrimary, fontSize: 16, padding: '12px 28px' }}
+              <a
+                href={STICKLE_LINKS.chromeWebStore}
+                target="_blank"
+                rel="noreferrer"
+                style={{ ...s.btnPrimary, fontSize: 16, padding: '12px 28px', textDecoration: 'none' }}
               >
-                Join Launch Waitlist ↗
-              </button>
+                Add to Chrome - Free ↗
+              </a>
               <button style={{ ...s.btnSecondary, fontSize: 16, padding: '12px 24px' }} onClick={openOnboarding}>
                 Try Sandbox
               </button>
@@ -1406,9 +1416,14 @@ export default function LandingApp() {
             Install the extension. No account, no setup, no friction.
           </p>
           <div style={{ ...s.ctaRow, justifyContent: 'center' }}>
-            <button style={{ ...s.btnPrimary, fontSize: 16, padding: '14px 32px' }} onClick={openOnboarding}>
+            <a
+              href={STICKLE_LINKS.chromeWebStore}
+              target="_blank"
+              rel="noreferrer"
+              style={{ ...s.btnPrimary, fontSize: 16, padding: '14px 32px', textDecoration: 'none', display: 'inline-block' }}
+            >
               Add to Chrome - Free
-            </button>
+            </a>
             <button style={{ ...s.btnSecondary, fontSize: 16, padding: '14px 28px' }} onClick={openDocs}>
               Explore Docs
             </button>
@@ -1453,6 +1468,7 @@ export default function LandingApp() {
               {
                 head: 'PRODUCT',
                 links: [
+                  { label: 'Chrome Web Store', href: STICKLE_LINKS.chromeWebStore },
                   { label: 'Features', href: '#features' },
                   { label: 'Anchoring Tech', href: '#anchoring' },
                   { label: 'Local MCP Server', href: '#', onClick: openDocs },

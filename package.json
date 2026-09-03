@@ -18,6 +18,7 @@
     "mcp": "tsx mcp-server/index.ts",
     "db:setup": "node scripts/apply-schema.js",
     "db:clear-waitlist": "node scripts/clear-waitlist.js",
+    "bump:app": "bash -c 'cd ../stickle-app && pnpm core:bump \"$@\"' --",
     "postinstall": "wxt prepare"
   },
   "dependencies": {

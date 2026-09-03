@@ -1,4 +1,5 @@
 import { useState } from 'preact/hooks';
+import { STICKLE_LINKS } from '../../lib/constants';
 
 interface DocArticle {
   id: string;
@@ -668,6 +669,51 @@ export default function DocsApp() {
 
             {activeDocId === 'installation' && (
               <div>
+                {/* Official Chrome Web Store Release Banner */}
+                <div style={{
+                  backgroundColor: '#f8f8f6',
+                  border: '1px solid #111111',
+                  borderRadius: 12,
+                  padding: '20px 24px',
+                  marginBottom: 32,
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'space-between',
+                  gap: 16,
+                  flexWrap: 'wrap',
+                }}>
+                  <div>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 4 }}>
+                      <span style={{ width: 8, height: 8, borderRadius: '50%', backgroundColor: '#22c55e' }} />
+                      <span style={{ fontSize: 11, fontWeight: 700, letterSpacing: '0.8px', color: '#111111' }}>OFFICIAL RELEASE</span>
+                    </div>
+                    <h3 style={{ margin: '0 0 4px', fontSize: 17, fontWeight: 700, color: '#111111' }}>Install from Chrome Web Store</h3>
+                    <p style={{ margin: 0, fontSize: 14, color: '#52514e', lineHeight: 1.4 }}>
+                      The easiest way to get Stickle. One-click install with automatic updates for Chrome, Brave, Arc, and Edge.
+                    </p>
+                  </div>
+                  <a
+                    href={STICKLE_LINKS.chromeWebStore}
+                    target="_blank"
+                    rel="noreferrer"
+                    style={{
+                      backgroundColor: '#111111',
+                      color: '#ffffff',
+                      padding: '10px 22px',
+                      borderRadius: 8,
+                      fontSize: 14,
+                      fontWeight: 600,
+                      textDecoration: 'none',
+                      whiteSpace: 'nowrap',
+                      display: 'inline-flex',
+                      alignItems: 'center',
+                      gap: 6,
+                    }}
+                  >
+                    Add to Chrome ↗
+                  </a>
+                </div>
+
                 <h2 id="from-source" style={nextStyles.docH2}>Building from Source</h2>
                 <p style={nextStyles.paragraph}>
                   Stickle is built with TypeScript, Preact, Vite, and WXT. You can clone and build the extension locally in seconds:

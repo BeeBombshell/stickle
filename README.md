@@ -3,6 +3,9 @@
 ![Stickle Header Banner](./assets/banner.svg)
 
 <p align="center">
+  <a href="https://chromewebstore.google.com/detail/stickle-%E2%80%94-web-note-anchor/ddahkjckhmgjkjgmmgbpmblogbioneok?hl=en-US&utm_source=ext_sidebar">
+    <img src="https://img.shields.io/badge/Chrome_Web_Store-Add_to_Chrome-4285F4?style=flat-square&logo=googlechrome&logoColor=white" alt="Chrome Web Store" />
+  </a>
   <img src="https://img.shields.io/badge/Manifest-MV3-black?style=flat-square&logo=googlechrome" alt="Manifest V3" />
   <img src="https://img.shields.io/badge/Language-TypeScript-3178C6?style=flat-square&logo=typescript&logoColor=white" alt="TypeScript" />
   <img src="https://img.shields.io/badge/UI-Preact-673AB8?style=flat-square&logo=preact&logoColor=white" alt="Preact" />
@@ -13,6 +16,8 @@
 </p>
 
 > A local-first Chrome Extension (MV3) and Next.js Web Dashboard (`http://localhost:3001`) that lets you pin persistent floating sticky notes to dynamic web content using a resilient **5-Tier DOM Anchoring System**.
+>
+> 🚀 **[Add to Chrome (Free on Chrome Web Store)](https://chromewebstore.google.com/detail/stickle-%E2%80%94-web-note-anchor/ddahkjckhmgjkjgmmgbpmblogbioneok?hl=en-US&utm_source=ext_sidebar)**
 
 ---
 
