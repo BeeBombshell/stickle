@@ -1,6 +1,6 @@
 {
   "name": "stickle",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "description": "Local-first browser extension for anchoring floating sticky notes to dynamic web content.",
   "private": true,
   "type": "module",
