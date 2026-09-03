@@ -377,6 +377,27 @@
   border-bottom: 2px solid var(--color-block-navy);
 }
 
+/* Disabled Extension State (On/Off Toggle) */
+html.stickle-disabled #stickle-notes-root,
+.stickle-disabled #stickle-notes-root {
+  display: none !important;
+}
+
+html.stickle-disabled .stickle-selection-pill,
+.stickle-disabled .stickle-selection-pill {
+  display: none !important;
+}
+
+html.stickle-disabled mark.stickle-highlight-mark,
+.stickle-disabled mark.stickle-highlight-mark {
+  background-color: transparent !important;
+  box-shadow: none !important;
+  border: none !important;
+  cursor: inherit !important;
+  pointer-events: none !important;
+}
+
+
 /* Linked Note Pulse Glow Animation */
 .stickle-note-pulse {
   animation: stickle-note-glow 1.2s ease-in-out 2;

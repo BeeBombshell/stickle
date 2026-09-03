@@ -88,6 +88,16 @@ export function App() {
     await saveSettings({ ...config, enabled: next });
     setStatusMsg(next ? 'Stickles enabled' : 'Stickles disabled');
     setTimeout(() => setStatusMsg(null), 3000);
+
+    if (typeof chrome !== 'undefined' && chrome.tabs?.query) {
+      chrome.tabs.query({}, (tabs) => {
+        for (const tab of tabs) {
+          if (tab.id) {
+            chrome.tabs.sendMessage(tab.id, { type: 'STICKLE_TOGGLE_ENABLED', enabled: next }).catch(() => {});
+          }
+        }
+      });
+    }
   };
 
   useEffect(() => {

@@ -25,9 +25,28 @@ export default defineContentScript({
     const hostContainer = getOrCreateHostContainer();
     const mountedNotes = new Map<string, HTMLElement>();
     let refreshInFlight = false;
+    let isSticklesEnabled = true;
+
+    function applyEnabledState(enabled: boolean) {
+      isSticklesEnabled = enabled;
+      const rootContainer = getOrCreateHostContainer();
+      if (!enabled) {
+        rootContainer.style.setProperty('display', 'none', 'important');
+        document.documentElement.classList.add('stickle-disabled');
+        hideSelectionPill();
+      } else {
+        rootContainer.style.removeProperty('display');
+        rootContainer.style.display = 'block';
+        document.documentElement.classList.remove('stickle-disabled');
+      }
+    }
 
     // Defer initial load until DOM is painted to avoid (0,0) accumulation
-    const scheduleInitialRefresh = () => {
+    const scheduleInitialRefresh = async () => {
+      try {
+        const s = await loadSettings();
+        applyEnabledState(s.enabled !== false);
+      } catch {}
       if (document.readyState === 'complete') {
         refreshNotes();
       } else {
@@ -43,9 +62,18 @@ export default defineContentScript({
     let storageChangeTimeout: ReturnType<typeof setTimeout> | null = null;
     if (typeof chrome !== 'undefined' && chrome.storage?.onChanged) {
       chrome.storage.onChanged.addListener((changes, areaName) => {
-        if (areaName === 'local' && (changes.stickle_notes || changes.stickle_active_workspace_id)) {
-          if (storageChangeTimeout) clearTimeout(storageChangeTimeout);
-          storageChangeTimeout = setTimeout(() => refreshNotes(), 150);
+        if (areaName === 'local') {
+          if (changes.sticklesEnabled) {
+            const isNowEnabled = Boolean(changes.sticklesEnabled.newValue ?? true);
+            applyEnabledState(isNowEnabled);
+            if (isNowEnabled) {
+              refreshNotes();
+            }
+          }
+          if (changes.stickle_notes || changes.stickle_active_workspace_id || changes.sticklesEnabled) {
+            if (storageChangeTimeout) clearTimeout(storageChangeTimeout);
+            storageChangeTimeout = setTimeout(() => refreshNotes(), 150);
+          }
         }
       });
     }
@@ -111,7 +139,25 @@ export default defineContentScript({
 
     if (typeof chrome !== 'undefined' && chrome.runtime?.onMessage) {
       chrome.runtime.onMessage.addListener(async (msg, _sender, sendResponse) => {
+        if (msg?.type === 'STICKLE_TOGGLE_ENABLED') {
+          const isNowEnabled = Boolean(msg.enabled);
+          applyEnabledState(isNowEnabled);
+          if (isNowEnabled) {
+            refreshNotes();
+          }
+          sendResponse?.({ success: true });
+          return;
+        }
+        if (msg?.type === 'TRIGGER_REANCHOR') {
+          refreshNotes();
+          sendResponse?.({ success: true });
+          return;
+        }
         if (msg?.type === 'TRIGGER_CREATE_NOTE') {
+          if (!isSticklesEnabled) {
+            sendResponse?.({ success: false, reason: 'disabled' });
+            return;
+          }
           const target = document.body;
           if (!target) return;
           const rect = target.getBoundingClientRect();
@@ -155,6 +201,7 @@ export default defineContentScript({
     // TOC highlight updates and causes constant erroneous re-anchoring mid-scroll.
     let reanchorTimeout: any = null;
     const debouncedReanchor = () => {
+      if (!isSticklesEnabled) return;
       if (reanchorTimeout) clearTimeout(reanchorTimeout);
       reanchorTimeout = setTimeout(() => {
         refreshNotes();
@@ -189,7 +236,7 @@ export default defineContentScript({
     window.addEventListener(
       'click',
       async (e: MouseEvent) => {
-        if (!e.altKey) return;
+        if (!e.altKey || !isSticklesEnabled) return;
 
         const target = e.target as HTMLElement;
         const container = getOrCreateHostContainer();
@@ -248,6 +295,10 @@ export default defineContentScript({
     };
 
     const handleSelectionCheck = async () => {
+      if (!isSticklesEnabled) {
+        hideSelectionPill();
+        return;
+      }
       if (typeof window === 'undefined') return;
       const selection = window.getSelection();
       if (!selection || selection.isCollapsed || selection.rangeCount === 0) {
@@ -375,6 +426,7 @@ export default defineContentScript({
 
     // Delegated click handler on <mark class="stickle-highlight-mark"> elements
     document.addEventListener('click', async (e: MouseEvent) => {
+      if (!isSticklesEnabled) return;
       const target = e.target as HTMLElement;
       if (target && target.classList && target.classList.contains('stickle-highlight-mark')) {
         const noteId = target.getAttribute('data-stickle-id');
@@ -425,11 +477,12 @@ export default defineContentScript({
       refreshInFlight = true;
       try {
         const settings = await loadSettings();
-        const rootContainer = getOrCreateHostContainer();
-        if (settings.enabled === false) {
-          rootContainer.style.display = 'none';
+        const enabled = settings.enabled !== false;
+        applyEnabledState(enabled);
+        if (!enabled) {
           return;
         }
+        const rootContainer = getOrCreateHostContainer();
         rootContainer.style.display = 'block';
 
         const currentUrl = normalizeUrl(window.location.href);

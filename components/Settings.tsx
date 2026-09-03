@@ -86,7 +86,21 @@ export function saveSettings(settings: NotionSettings): Promise<void> {
           defaultBorderStyle: borderStyle,
           sticklesEnabled: enabled,
         },
-        () => resolve()
+        () => {
+          if (typeof chrome !== 'undefined' && chrome.tabs?.query) {
+            chrome.tabs.query({}, (tabs) => {
+              for (const tab of tabs) {
+                if (tab.id) {
+                  chrome.tabs.sendMessage(tab.id, {
+                    type: 'STICKLE_TOGGLE_ENABLED',
+                    enabled,
+                  }).catch(() => {});
+                }
+              }
+            });
+          }
+          resolve();
+        }
       );
     } else {
       try {
