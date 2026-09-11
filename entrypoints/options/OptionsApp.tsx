@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'preact/hooks';
+import { useState, useEffect, useMemo } from 'preact/hooks';
 import { LayoutDashboard, Cloud, FileText, Palette, Bot, Globe, RefreshCw, Info, BookOpen, Zap, Lock } from 'lucide-preact';
 import { Github } from '../../components/icons/Github';
 import { loadSettings, saveSettings, type NotionSettings } from '../../components/Settings';
@@ -9,15 +9,361 @@ import { exportNotesToJson, importNotesFromJson } from '../../lib/export-import'
 import { getProfile, signInWithOAuth, signOut } from '../../lib/auth';
 import { isEnabled, FEATURE_NAMES, ENABLE_CLOUD_AUTH, type FeatureFlag } from '../../lib/flags';
 import { fullSync } from '../../lib/sync';
-import type { NoteColorBlock, NoteBorderStyle, UserProfile } from '../../lib/types';
+import type { NoteColorBlock, NoteBorderStyle, UserProfile, StickleNote } from '../../lib/types';
 import { LocalizedPricing } from '../../components/LocalizedPricing';
 import { STICKLE_LINKS } from '../../lib/constants';
 import posthog from '../../lib/posthog';
 
-type NavTab = 'account' | 'notion' | 'defaults' | 'mcp' | 'about';
+type NavTab = 'dashboard' | 'account' | 'notion' | 'defaults' | 'mcp' | 'about';
+type SortKey = 'newest' | 'oldest' | 'domain';
+
+function relativeTime(ts: number): string {
+  const diff = Date.now() - ts;
+  const mins = Math.floor(diff / 60000);
+  if (mins < 1) return 'just now';
+  if (mins < 60) return `${mins}m ago`;
+  const hrs = Math.floor(mins / 60);
+  if (hrs < 24) return `${hrs}h ago`;
+  return `${Math.floor(hrs / 24)}d ago`;
+}
+
+// ─── DashboardTab component ───────────────────────────────────────────────────
+
+interface DashboardTabProps {
+  allNotes: StickleNote[];
+  loading: boolean;
+  search: string;
+  setSearch: (v: string) => void;
+  domain: string;
+  setDomain: (v: string) => void;
+  color: string;
+  setColor: (v: string) => void;
+  tag: string;
+  setTag: (v: string) => void;
+  sort: SortKey;
+  setSort: (v: SortKey) => void;
+  expandedId: string | null;
+  setExpandedId: (v: string | null) => void;
+  onRefresh: () => void;
+  onExport: () => void;
+  onImport: (e: Event) => void;
+  totalNotesCount: number;
+}
+
+function DashboardTab({
+  allNotes, loading,
+  search, setSearch,
+  domain, setDomain,
+  color, setColor,
+  tag, setTag,
+  sort, setSort,
+  expandedId, setExpandedId,
+  onRefresh, onExport, onImport, totalNotesCount,
+}: DashboardTabProps) {
+  // Derived
+  const domains = useMemo(() => {
+    const map = new Map<string, number>();
+    allNotes.forEach((n) => {
+      try {
+        const host = new URL(n.url).hostname;
+        map.set(host, (map.get(host) || 0) + 1);
+      } catch {}
+    });
+    return Array.from(map.entries()).sort((a, b) => b[1] - a[1]);
+  }, [allNotes]);
+
+  const allTags = useMemo(() => {
+    const set = new Set<string>();
+    allNotes.forEach((n) => n.tags?.forEach((t) => set.add(t)));
+    return Array.from(set).sort();
+  }, [allNotes]);
+
+  const colorCounts = useMemo(() => {
+    const counts: Record<string, number> = { lime: 0, blue: 0, lilac: 0, cream: 0, mint: 0, pink: 0, coral: 0 };
+    allNotes.forEach((n) => { if (n.color && counts[n.color] !== undefined) counts[n.color]++; });
+    return counts;
+  }, [allNotes]);
+
+  const syncedCount = useMemo(() => allNotes.filter((n) => n.syncedToNotion).length, [allNotes]);
+
+  const filtered = useMemo(() => {
+    const q = search.toLowerCase();
+    const result = allNotes.filter((n) => {
+      const host = (() => { try { return new URL(n.url).hostname; } catch { return ''; } })();
+      const matchSearch = q === '' || n.content.toLowerCase().includes(q) || n.pageTitle.toLowerCase().includes(q) || host.includes(q) || n.tags?.some((t) => t.toLowerCase().includes(q));
+      const matchDomain = domain === 'all' || host === domain;
+      const matchColor  = color === 'all' || n.color === color;
+      const matchTag    = tag === 'all' || n.tags?.includes(tag);
+      return matchSearch && matchDomain && matchColor && matchTag;
+    });
+    if (sort === 'newest') return [...result].sort((a, b) => b.createdAt - a.createdAt);
+    if (sort === 'oldest') return [...result].sort((a, b) => a.createdAt - b.createdAt);
+    if (sort === 'domain') return [...result].sort((a, b) => {
+      const ha = (() => { try { return new URL(a.url).hostname; } catch { return ''; } })();
+      const hb = (() => { try { return new URL(b.url).hostname; } catch { return ''; } })();
+      return ha.localeCompare(hb);
+    });
+    return result;
+  }, [allNotes, search, domain, color, tag, sort]);
+
+  const clearFilters = () => { setSearch(''); setDomain('all'); setColor('all'); setTag('all'); };
+
+  const NOTE_COLORS: Record<string, { bg: string; border: string }> = {
+    lime:  { bg: '#e4f579', border: '#c8d94a' },
+    lilac: { bg: '#e8d5ff', border: '#c4a8e8' },
+    cream: { bg: '#fff7db', border: '#e8d68a' },
+    mint:  { bg: '#d1f7c4', border: '#8fd67a' },
+    pink:  { bg: '#ffd6e8', border: '#f4a0c0' },
+    coral: { bg: '#ffdbcc', border: '#f0a882' },
+    blue:  { bg: '#bfdbfe', border: '#7ab4f0' },
+  };
+
+  const getNoteBg = (c?: string) => NOTE_COLORS[c || 'cream']?.bg || '#fff7db';
+  const getNoteBorder = (c?: string, bs?: string) => {
+    const col = NOTE_COLORS[c || 'cream']?.border || '#e8d68a';
+    if (bs === 'none') return 'none';
+    return `2px ${bs === 'dashed' ? 'dashed' : 'solid'} ${col}`;
+  };
+
+  return (
+    <div style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
+      {/* Header */}
+      <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', flexWrap: 'wrap', gap: '10px' }}>
+        <div>
+          <span style={{ ...styles.eyebrow, marginBottom: '4px' }}>MY STICKLES</span>
+          <h2 style={{ ...styles.cardTitle, marginTop: '2px', marginBottom: '4px' }}>Notes Dashboard</h2>
+          <p style={{ ...styles.cardDesc, margin: 0 }}>
+            Search, filter, and browse all {allNotes.length} notes saved locally.
+          </p>
+        </div>
+        {/* Action row: Export / Import / Refresh */}
+        <div style={{ display: 'flex', gap: '6px', alignItems: 'center', flexWrap: 'wrap' }}>
+          <button
+            onClick={onExport}
+            className="btn-pill btn-secondary"
+            style={{ fontSize: '11px', padding: '6px 13px', display: 'inline-flex', alignItems: 'center', gap: '5px' }}
+            title={`Export ${totalNotesCount} notes as JSON`}
+          >
+            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+            Export
+          </button>
+          <label
+            className="btn-pill btn-secondary"
+            style={{ fontSize: '11px', padding: '6px 13px', display: 'inline-flex', alignItems: 'center', gap: '5px', cursor: 'pointer' }}
+            title="Import notes from JSON backup"
+          >
+            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
+            Import
+            <input type="file" accept=".json" onChange={onImport} style={{ display: 'none' }} />
+          </label>
+          <button onClick={onRefresh} style={{ fontSize: '11px', padding: '6px 8px', display: 'inline-flex', alignItems: 'center', gap: '4px', background: 'transparent', border: 'none', cursor: 'pointer', color: '#9ca3af', borderRadius: '8px' }} title="Refresh notes">
+            <RefreshCw size={13} />
+          </button>
+        </div>
+      </div>
+
+      {/* Stat cards */}
+      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: '10px' }}>
+        {[
+          { label: 'TOTAL NOTES', value: allNotes.length, bg: '#e4f579' },
+          { label: 'DOMAINS',     value: domains.length,  bg: '#e8d5ff' },
+          { label: 'UNIQUE TAGS', value: allTags.length,  bg: '#d1f7c4' },
+          { label: 'NOTION SYNCED', value: syncedCount,   bg: '#fff7db' },
+        ].map(({ label, value, bg }) => (
+          <div key={label} style={{ backgroundColor: bg, borderRadius: '14px', padding: '14px 16px', border: '1px solid rgba(0,0,0,0.08)' }}>
+            <div style={{ fontSize: '24px', fontWeight: '800', letterSpacing: '-1px', color: '#111' }}>{value}</div>
+            <div style={{ fontSize: '10px', fontFamily: "'JetBrains Mono', monospace", fontWeight: '700', textTransform: 'uppercase', letterSpacing: '0.5px', color: '#52514e', marginTop: '2px' }}>{label}</div>
+          </div>
+        ))}
+      </div>
+
+      {/* Loading skeleton */}
+      {loading ? (
+        <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
+          {[1, 2, 3].map((i) => (
+            <div key={i} style={{ height: '80px', borderRadius: '14px', backgroundColor: '#f0f0eb', opacity: 0.7 }} />
+          ))}
+        </div>
+      ) : allNotes.length === 0 ? (
+        /* Empty state */
+        <div style={{ backgroundColor: '#e4f579', borderRadius: '20px', padding: '48px 32px', textAlign: 'center' }}>
+          <div style={{ fontSize: '32px', marginBottom: '12px' }}>📌</div>
+          <h3 style={{ ...styles.cardTitle, marginBottom: '8px', fontSize: '18px' }}>No stickles yet</h3>
+          <p style={{ ...styles.cardDesc, margin: '0 auto', maxWidth: '340px' }}>
+            Alt+Click or select text on any webpage to drop your first sticky note.
+          </p>
+        </div>
+      ) : (
+        /* Filter + notes grid */
+        <div style={{ display: 'grid', gridTemplateColumns: '160px 1fr', gap: '16px', alignItems: 'start' }}>
+
+          {/* ── Left filter panel ── */}
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
+
+            {/* Colors */}
+            <div style={{ backgroundColor: '#ffffff', border: '1px solid #e5e5e0', borderRadius: '14px', padding: '12px' }}>
+              <div style={{ ...styles.eyebrow, marginBottom: '8px' }}>Colors</div>
+              <div style={{ display: 'flex', flexWrap: 'wrap', gap: '4px' }}>
+                <button onClick={() => setColor('all')} style={{ fontSize: '10px', fontFamily: "'JetBrains Mono', monospace", padding: '2px 8px', borderRadius: '50px', border: '1px solid #e5e5e0', background: color === 'all' ? '#111' : 'transparent', color: color === 'all' ? '#fff' : '#52514e', cursor: 'pointer', fontWeight: color === 'all' ? 700 : 400 }}>all</button>
+                {(Object.keys(NOTE_COLORS) as NoteColorBlock[]).map((c) => (
+                  <button key={c} onClick={() => setColor(c)} title={`${c} (${colorCounts[c] ?? 0})`} style={{ fontSize: '10px', fontFamily: "'JetBrains Mono', monospace", padding: '2px 8px', borderRadius: '50px', background: NOTE_COLORS[c].bg, color: '#111', border: color === c ? '2px solid #111' : '1px solid rgba(0,0,0,0.15)', cursor: 'pointer', fontWeight: color === c ? 700 : 400 }}>{c}</button>
+                ))}
+              </div>
+            </div>
+
+            {/* Domains */}
+            <div style={{ backgroundColor: '#ffffff', border: '1px solid #e5e5e0', borderRadius: '14px', padding: '12px' }}>
+              <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '8px' }}>
+                <span style={styles.eyebrow}>Domains</span>
+                <span style={{ fontSize: '9px', fontFamily: "'JetBrains Mono', monospace", fontWeight: '700', backgroundColor: '#e4f579', padding: '1px 6px', borderRadius: '50px' }}>{allNotes.length}</span>
+              </div>
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '2px' }}>
+                <button onClick={() => setDomain('all')} style={{ ...styles.navItem, fontSize: '11px', padding: '5px 8px', ...(domain === 'all' ? styles.navItemActive : {}) }}>
+                  <span style={{ flex: 1, textAlign: 'left' }}>All</span>
+                  <span style={{ fontSize: '10px', fontFamily: "'JetBrains Mono', monospace", backgroundColor: 'rgba(0,0,0,0.08)', padding: '0 5px', borderRadius: '9999px' }}>{allNotes.length}</span>
+                </button>
+                {domains.map(([d, cnt]) => (
+                  <button key={d} onClick={() => setDomain(d)} style={{ ...styles.navItem, fontSize: '11px', padding: '5px 8px', ...(domain === d ? styles.navItemActive : {}) }}>
+                    <span style={{ flex: 1, textAlign: 'left', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{d}</span>
+                    <span style={{ fontSize: '10px', fontFamily: "'JetBrains Mono', monospace", backgroundColor: 'rgba(0,0,0,0.08)', padding: '0 5px', borderRadius: '9999px', flexShrink: 0 }}>{cnt}</span>
+                  </button>
+                ))}
+              </div>
+            </div>
+
+            {/* Tags */}
+            {allTags.length > 0 && (
+              <div style={{ backgroundColor: '#ffffff', border: '1px solid #e5e5e0', borderRadius: '14px', padding: '12px' }}>
+                <div style={{ ...styles.eyebrow, marginBottom: '8px' }}>Tags</div>
+                <div style={{ display: 'flex', flexWrap: 'wrap', gap: '4px' }}>
+                  <button onClick={() => setTag('all')} style={{ fontSize: '10px', fontFamily: "'JetBrains Mono', monospace", padding: '2px 8px', borderRadius: '50px', border: '1px solid #e5e5e0', background: tag === 'all' ? '#111' : 'transparent', color: tag === 'all' ? '#fff' : '#52514e', cursor: 'pointer', fontWeight: tag === 'all' ? 700 : 400 }}>#all</button>
+                  {allTags.map((t) => (
+                    <button key={t} onClick={() => setTag(t)} style={{ fontSize: '10px', fontFamily: "'JetBrains Mono', monospace", padding: '2px 8px', borderRadius: '50px', background: tag === t ? '#e4f579' : '#f0f0eb', color: '#111', border: tag === t ? '1px solid #c8d94a' : '1px solid transparent', cursor: 'pointer', fontWeight: tag === t ? 700 : 400 }}>#{t}</button>
+                  ))}
+                </div>
+              </div>
+            )}
+          </div>
+
+          {/* ── Notes area ── */}
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
+            {/* Search + sort */}
+            <div style={{ display: 'flex', gap: '8px', alignItems: 'center' }}>
+              <div style={{ flex: 1, display: 'flex', alignItems: 'center', gap: '8px', padding: '0 12px', height: '38px', borderRadius: '50px', border: '1px solid #e5e5e0', backgroundColor: '#ffffff', boxShadow: '0 2px 8px rgba(0,0,0,0.04)' }}>
+                <span style={{ color: '#9ca3af', flexShrink: 0, display: 'flex' }}>
+                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+                </span>
+                <input
+                  type="text"
+                  placeholder="Search notes…"
+                  value={search}
+                  onInput={(e) => setSearch((e.target as HTMLInputElement).value)}
+                  style={{ flex: 1, background: 'transparent', border: 'none', outline: 'none', fontSize: '12px', color: '#111', fontFamily: 'Inter, sans-serif' }}
+                />
+                {search && (
+                  <button onClick={() => setSearch('')} style={{ background: 'none', border: 'none', cursor: 'pointer', color: '#9ca3af', padding: 0, display: 'flex' }}>
+                    <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+                  </button>
+                )}
+              </div>
+              <select value={sort} onChange={(e) => setSort((e.target as HTMLSelectElement).value as SortKey)} style={{ height: '38px', padding: '0 10px', borderRadius: '50px', border: '1px solid #e5e5e0', background: '#ffffff', fontSize: '11px', fontFamily: "'JetBrains Mono', monospace", color: '#111', cursor: 'pointer', outline: 'none' }}>
+                <option value="newest">Newest</option>
+                <option value="oldest">Oldest</option>
+                <option value="domain">Domain</option>
+              </select>
+            </div>
+
+            {/* Result count */}
+            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+              <span style={{ fontSize: '11px', fontFamily: "'JetBrains Mono', monospace", color: '#6b7280', textTransform: 'uppercase', letterSpacing: '0.4px' }}>
+                Showing <strong style={{ color: '#111' }}>{filtered.length}</strong> of {allNotes.length}
+              </span>
+              {(domain !== 'all' || color !== 'all' || tag !== 'all' || search) && (
+                <button onClick={clearFilters} style={{ fontSize: '11px', fontFamily: "'JetBrains Mono', monospace", background: 'none', border: 'none', cursor: 'pointer', color: '#6b7280', textDecoration: 'underline', padding: 0 }}>
+                  Clear filters
+                </button>
+              )}
+            </div>
+
+            {/* Filtered empty state */}
+            {filtered.length === 0 ? (
+              <div style={{ ...styles.card, textAlign: 'center', padding: '32px 20px' }}>
+                <p style={{ ...styles.cardTitle, fontSize: '15px', marginBottom: '6px' }}>No matching notes</p>
+                <p style={{ ...styles.cardDesc, margin: '0 0 16px 0' }}>Try a different keyword or clear your filters.</p>
+                <button onClick={clearFilters} className="btn-pill btn-secondary" style={{ fontSize: '12px', padding: '7px 16px' }}>Clear all filters</button>
+              </div>
+            ) : (
+              /* Note cards */
+              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: '10px' }}>
+                {filtered.map((note) => {
+                  const host = (() => { try { return new URL(note.url).hostname; } catch { return note.url; } })();
+                  const isExpanded = expandedId === note.id;
+                  return (
+                    <div key={note.id} style={{ backgroundColor: getNoteBg(note.color), border: getNoteBorder(note.color, note.borderStyle), borderRadius: '16px', padding: '16px', display: 'flex', flexDirection: 'column', justifyContent: 'space-between', minHeight: '175px', transition: 'transform 0.15s ease, box-shadow 0.15s ease' }}>
+                      <div>
+                        {/* Top meta row */}
+                        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: '6px', marginBottom: '8px' }}>
+                          <span style={{ fontFamily: "'JetBrains Mono', monospace", fontSize: '9px', textTransform: 'uppercase', letterSpacing: '0.4px', padding: '2px 7px', borderRadius: '50px', background: 'rgba(0,0,0,0.1)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', maxWidth: '120px' }}>{host}</span>
+                          <div style={{ display: 'flex', alignItems: 'center', gap: '5px', flexShrink: 0 }}>
+                            {note.syncedToNotion && (
+                              <span style={{ fontSize: '9px', fontFamily: "'JetBrains Mono', monospace", fontWeight: '700', padding: '2px 6px', borderRadius: '50px', background: 'rgba(0,0,0,0.12)', display: 'flex', alignItems: 'center', gap: '3px' }}>
+                                <svg width="9" height="9" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round"><polyline points="20 6 9 17 4 12"/></svg> N
+                              </span>
+                            )}
+                            <span style={{ fontFamily: "'JetBrains Mono', monospace", fontSize: '9px', opacity: 0.55 }}>{relativeTime(note.createdAt)}</span>
+                          </div>
+                        </div>
+
+                        {/* Page title */}
+                        <h3 style={{ fontSize: '13px', fontWeight: '700', lineHeight: 1.3, marginBottom: '7px', display: '-webkit-box', WebkitLineClamp: 2, WebkitBoxOrient: 'vertical', overflow: 'hidden' } as any}>{note.pageTitle}</h3>
+
+                        {/* Content */}
+                        <p style={{ fontSize: '12px', lineHeight: 1.55, opacity: 0.82, marginBottom: '6px', display: isExpanded ? 'block' : '-webkit-box', WebkitLineClamp: isExpanded ? undefined : 3, WebkitBoxOrient: isExpanded ? undefined : 'vertical', overflow: isExpanded ? 'visible' : 'hidden' } as any}>
+                          &ldquo;{note.content}&rdquo;
+                        </p>
+                        {note.content.length > 120 && (
+                          <button onClick={() => setExpandedId(isExpanded ? null : note.id)} style={{ background: 'none', border: 'none', padding: '0 0 6px', fontSize: '10px', fontFamily: "'JetBrains Mono', monospace", fontWeight: 700, cursor: 'pointer', opacity: 0.6 }}>
+                            {isExpanded ? 'Show less ↑' : 'Read more ↓'}
+                          </button>
+                        )}
+                      </div>
+
+                      <div>
+                        {/* Tags */}
+                        {note.tags && note.tags.length > 0 && (
+                          <div style={{ display: 'flex', flexWrap: 'wrap', gap: '3px', marginBottom: '8px' }}>
+                            {note.tags.map((t) => (
+                              <span key={t} style={{ fontFamily: "'JetBrains Mono', monospace", fontSize: '9px', padding: '2px 7px', borderRadius: '50px', background: 'rgba(0,0,0,0.1)' }}>#{t}</span>
+                            ))}
+                          </div>
+                        )}
+
+                        {/* Footer */}
+                        <div style={{ paddingTop: '8px', borderTop: '1px solid rgba(0,0,0,0.1)', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+                          <span style={{ display: 'flex', alignItems: 'center', gap: '4px', fontFamily: "'JetBrains Mono', monospace", fontSize: '9px', opacity: 0.55, textTransform: 'uppercase', letterSpacing: '0.3px' }}>
+                            <svg width="9" height="9" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="5" r="3"/><line x1="12" y1="22" x2="12" y2="8"/><path d="M5 12H2a10 10 0 0 0 20 0h-3"/></svg>
+                            {note.anchor?.tier || 'dom-index'}
+                          </span>
+                          <a href={note.url} target="_blank" rel="noopener noreferrer" className="btn-pill btn-primary" style={{ fontSize: '10px', padding: '4px 11px', gap: '4px', display: 'inline-flex', alignItems: 'center' }}>
+                            Jump
+                            <svg width="9" height="9" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/><polyline points="15 3 21 3 21 9"/><line x1="10" y1="14" x2="21" y2="3"/></svg>
+                          </a>
+                        </div>
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
+            )}
+          </div>
+        </div>
+      )}
+    </div>
+  );
+}
 
 export function OptionsApp() {
-  const [activeTab, setActiveTab] = useState<NavTab>(ENABLE_CLOUD_AUTH ? 'account' : 'notion');
+  const [activeTab, setActiveTab] = useState<NavTab>('dashboard');
 
   // Auth & Cloud Sync
   const [profile, setProfile] = useState<UserProfile | null>(null);
@@ -37,12 +383,38 @@ export function OptionsApp() {
   const [totalNotesCount, setTotalNotesCount] = useState<number>(0);
   const [copiedSnippet, setCopiedSnippet] = useState<string | null>(null);
 
+  // Dashboard state
+  const [allNotes, setAllNotes] = useState<StickleNote[]>([]);
+  const [dashSearch, setDashSearch] = useState('');
+  const [dashDomain, setDashDomain] = useState('all');
+  const [dashColor, setDashColor] = useState('all');
+  const [dashTag, setDashTag] = useState('all');
+  const [dashSort, setDashSort] = useState<SortKey>('newest');
+  const [dashExpandedId, setDashExpandedId] = useState<string | null>(null);
+  const [dashLoading, setDashLoading] = useState(false);
+
+  // Sidebar
+  const [navCollapsed, setNavCollapsed] = useState(true);
+
   const refreshNotesCount = async () => {
     try {
       const notes = await getAllNotes();
       setTotalNotesCount(notes.length);
     } catch {
       setTotalNotesCount(0);
+    }
+  };
+
+  const loadDashboardNotes = async () => {
+    setDashLoading(true);
+    try {
+      const notes = await getAllNotes();
+      setAllNotes(notes);
+      setTotalNotesCount(notes.length);
+    } catch {
+      setAllNotes([]);
+    } finally {
+      setDashLoading(false);
     }
   };
 
@@ -63,12 +435,12 @@ export function OptionsApp() {
       if (s.defaultBorderStyle) setDefaultBorderStyle(s.defaultBorderStyle);
       if (s.enabled !== undefined) setEnabled(s.enabled);
     });
-    refreshNotesCount();
+    loadDashboardNotes();
     refreshProfile();
 
     const handleFocus = () => {
       refreshProfile();
-      refreshNotesCount();
+      loadDashboardNotes();
     };
 
     window.addEventListener('focus', handleFocus);
@@ -222,6 +594,7 @@ export function OptionsApp() {
           message: `Import complete: ${res.imported} imported, ${res.updated} updated (${res.skipped} skipped).`,
         });
         refreshNotesCount();
+        loadDashboardNotes();
       } else {
         setStatus({ type: 'error', message: `Import failed: ${res.error}` });
       }
@@ -329,72 +702,125 @@ export function OptionsApp() {
       </header>
 
       {/* Main Content Layout with Sidebar */}
-      <div className="options-grid" style={styles.bodyContainer}>
+      <div className="options-grid" style={{ ...styles.bodyContainer, gridTemplateColumns: navCollapsed ? '52px 1fr' : '220px 1fr', transition: 'grid-template-columns 0.22s ease' }}>
         {/* Left Nav Sidebar */}
-        <aside style={styles.sidebar}>
+        <aside style={{ ...styles.sidebar, width: navCollapsed ? '52px' : '220px', minWidth: navCollapsed ? '52px' : '220px', overflow: 'hidden', transition: 'width 0.22s ease, min-width 0.22s ease' }}>
+          {/* Collapse toggle */}
+          <button
+            onClick={() => setNavCollapsed((v) => !v)}
+            title={navCollapsed ? 'Expand navigation' : 'Collapse navigation'}
+            style={{
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: navCollapsed ? 'center' : 'flex-end',
+              gap: '6px',
+              width: '100%',
+              padding: navCollapsed ? '8px' : '6px 10px 6px 14px',
+              marginBottom: '4px',
+              border: 'none',
+              background: 'transparent',
+              cursor: 'pointer',
+              borderRadius: '10px',
+              color: '#9ca3af',
+              fontSize: '11px',
+              fontFamily: "'JetBrains Mono', monospace",
+              fontWeight: '600',
+              transition: 'all 0.15s ease',
+            }}
+          >
+            {!navCollapsed && <span style={{ flex: 1, textAlign: 'left' }}>MENU</span>}
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" style={{ transition: 'transform 0.2s ease', transform: navCollapsed ? 'rotate(0deg)' : 'rotate(180deg)', flexShrink: 0 }}>
+              <polyline points="15 18 9 12 15 6" />
+            </svg>
+          </button>
+
           <nav className="options-nav" style={styles.navStack}>
+            <button
+              onClick={() => setActiveTab('dashboard')}
+              title="My Stickles"
+              style={navCollapsed
+                ? { ...styles.navItem, justifyContent: 'center', padding: '10px', gap: 0, ...(activeTab === 'dashboard' ? { backgroundColor: '#111', color: '#fff' } : {}) }
+                : (activeTab === 'dashboard' ? styles.navItemActive : styles.navItem)
+              }
+            >
+              <span style={{ ...styles.navIcon, flexShrink: 0 }}><LayoutDashboard size={15} /></span>
+              <span style={{ overflow: 'hidden', whiteSpace: 'nowrap', maxWidth: navCollapsed ? 0 : '200px', opacity: navCollapsed ? 0 : 1, transition: 'max-width 0.22s ease, opacity 0.15s ease', flex: 'none' }}>My Stickles</span>
+            </button>
+
             {ENABLE_CLOUD_AUTH && (
               <button
                 onClick={() => setActiveTab('account')}
-                style={activeTab === 'account' ? styles.navItemActive : styles.navItem}
+                title="Account & Tier"
+                style={navCollapsed
+                  ? { ...styles.navItem, justifyContent: 'center', padding: '10px', gap: 0, ...(activeTab === 'account' ? { backgroundColor: '#111', color: '#fff' } : {}) }
+                  : (activeTab === 'account' ? styles.navItemActive : styles.navItem)
+                }
               >
-                <span style={styles.navIcon}>
-                  <Cloud size={15} />
-                </span>
-                <span style={styles.navLabel}>Account &amp; Tier</span>
+                <span style={{ ...styles.navIcon, flexShrink: 0 }}><Cloud size={15} /></span>
+                <span style={{ overflow: 'hidden', whiteSpace: 'nowrap', maxWidth: navCollapsed ? 0 : '200px', opacity: navCollapsed ? 0 : 1, transition: 'max-width 0.22s ease, opacity 0.15s ease', flex: 'none' }}>Account &amp; Tier</span>
               </button>
             )}
 
             <button
               onClick={() => setActiveTab('notion')}
-              style={activeTab === 'notion' ? styles.navItemActive : styles.navItem}
+              title="Notion Integration"
+              style={navCollapsed
+                ? { ...styles.navItem, justifyContent: 'center', padding: '10px', gap: 0, ...(activeTab === 'notion' ? { backgroundColor: '#111', color: '#fff' } : {}) }
+                : (activeTab === 'notion' ? styles.navItemActive : styles.navItem)
+              }
             >
-              <span style={styles.navIcon}>
-                <FileText size={15} />
-              </span>
-              <span style={styles.navLabel}>Notion Integration</span>
+              <span style={{ ...styles.navIcon, flexShrink: 0 }}><FileText size={15} /></span>
+              <span style={{ overflow: 'hidden', whiteSpace: 'nowrap', maxWidth: navCollapsed ? 0 : '200px', opacity: navCollapsed ? 0 : 1, transition: 'max-width 0.22s ease, opacity 0.15s ease', flex: 'none' }}>Notion Integration</span>
             </button>
 
             <button
               onClick={() => setActiveTab('defaults')}
-              style={activeTab === 'defaults' ? styles.navItemActive : styles.navItem}
+              title="Note Defaults"
+              style={navCollapsed
+                ? { ...styles.navItem, justifyContent: 'center', padding: '10px', gap: 0, ...(activeTab === 'defaults' ? { backgroundColor: '#111', color: '#fff' } : {}) }
+                : (activeTab === 'defaults' ? styles.navItemActive : styles.navItem)
+              }
             >
-              <span style={styles.navIcon}>
-                <Palette size={15} />
-              </span>
-              <span style={styles.navLabel}>Note Defaults</span>
+              <span style={{ ...styles.navIcon, flexShrink: 0 }}><Palette size={15} /></span>
+              <span style={{ overflow: 'hidden', whiteSpace: 'nowrap', maxWidth: navCollapsed ? 0 : '200px', opacity: navCollapsed ? 0 : 1, transition: 'max-width 0.22s ease, opacity 0.15s ease', flex: 'none' }}>Note Defaults</span>
             </button>
 
             <button
               onClick={() => setActiveTab('mcp')}
-              style={activeTab === 'mcp' ? styles.navItemActive : styles.navItem}
+              title="Data & MCP Setup"
+              style={navCollapsed
+                ? { ...styles.navItem, justifyContent: 'center', padding: '10px', gap: 0, ...(activeTab === 'mcp' ? { backgroundColor: '#111', color: '#fff' } : {}) }
+                : (activeTab === 'mcp' ? styles.navItemActive : styles.navItem)
+              }
             >
-              <span style={styles.navIcon}>
-                <Bot size={15} />
-              </span>
-              <span style={styles.navLabel}>Data &amp; MCP Setup</span>
+              <span style={{ ...styles.navIcon, flexShrink: 0 }}><Bot size={15} /></span>
+              <span style={{ overflow: 'hidden', whiteSpace: 'nowrap', maxWidth: navCollapsed ? 0 : '200px', opacity: navCollapsed ? 0 : 1, transition: 'max-width 0.22s ease, opacity 0.15s ease', flex: 'none' }}>Data &amp; MCP Setup</span>
             </button>
 
             <button
               onClick={() => setActiveTab('about')}
-              style={activeTab === 'about' ? styles.navItemActive : styles.navItem}
+              title="Product & Links"
+              style={navCollapsed
+                ? { ...styles.navItem, justifyContent: 'center', padding: '10px', gap: 0, ...(activeTab === 'about' ? { backgroundColor: '#111', color: '#fff' } : {}) }
+                : (activeTab === 'about' ? styles.navItemActive : styles.navItem)
+              }
             >
-              <span style={styles.navIcon}>
-                <Globe size={15} />
-              </span>
-              <span style={styles.navLabel}>Product &amp; Links</span>
+              <span style={{ ...styles.navIcon, flexShrink: 0 }}><Globe size={15} /></span>
+              <span style={{ overflow: 'hidden', whiteSpace: 'nowrap', maxWidth: navCollapsed ? 0 : '200px', opacity: navCollapsed ? 0 : 1, transition: 'max-width 0.22s ease, opacity 0.15s ease', flex: 'none' }}>Product &amp; Links</span>
             </button>
           </nav>
 
-          <div style={styles.sidebarFooter}>
-            <div style={styles.eyebrow}>LOCAL STORAGE</div>
-            <div style={styles.sidebarStatValue}>{totalNotesCount} Notes Saved</div>
-            {ENABLE_CLOUD_AUTH && (
-              <div style={{ fontSize: '11px', color: '#6b7280', marginTop: '4px' }}>
-                Tier: <strong style={{ color: '#111' }}>{userTier.toUpperCase()}</strong>
-              </div>
-            )}
-          </div>
+          {!navCollapsed && (
+            <div style={styles.sidebarFooter}>
+              <div style={styles.eyebrow}>LOCAL STORAGE</div>
+              <div style={styles.sidebarStatValue}>{totalNotesCount} Notes Saved</div>
+              {ENABLE_CLOUD_AUTH && (
+                <div style={{ fontSize: '11px', color: '#6b7280', marginTop: '4px' }}>
+                  Tier: <strong style={{ color: '#111' }}>{userTier.toUpperCase()}</strong>
+                </div>
+              )}
+            </div>
+          )}
         </aside>
 
         {/* Right Main Pane */}
@@ -410,6 +836,30 @@ export function OptionsApp() {
               <span>{status.message}</span>
               <button onClick={() => setStatus(null)} style={styles.statusCloseBtn}>✕</button>
             </div>
+          )}
+
+          {/* TAB 0: My Stickles Dashboard */}
+          {activeTab === 'dashboard' && (
+            <DashboardTab
+              allNotes={allNotes}
+              loading={dashLoading}
+              search={dashSearch}
+              setSearch={setDashSearch}
+              domain={dashDomain}
+              setDomain={setDashDomain}
+              color={dashColor}
+              setColor={setDashColor}
+              tag={dashTag}
+              setTag={setDashTag}
+              sort={dashSort}
+              setSort={setDashSort}
+              expandedId={dashExpandedId}
+              setExpandedId={setDashExpandedId}
+              onRefresh={loadDashboardNotes}
+              onExport={handleExportJson}
+              onImport={handleImportJsonFile}
+              totalNotesCount={totalNotesCount}
+            />
           )}
 
           {/* TAB 1: Account & Cloud Sync */}
