@@ -15,26 +15,34 @@
   <img src="https://img.shields.io/badge/License-MIT-blue?style=flat-square" alt="MIT License" />
 </p>
 
-> A local-first Chrome Extension (MV3) and Next.js Web Dashboard (`http://localhost:3001`) that lets you pin persistent floating sticky notes to dynamic web content using a resilient **5-Tier DOM Anchoring System**.
+> A free, open-source, local-first Chrome Extension (MV3) that lets you pin persistent floating sticky notes to dynamic web content using a resilient **5-Tier DOM Anchoring System**.
 >
 > 🚀 **[Add to Chrome (Free on Chrome Web Store)](https://chromewebstore.google.com/detail/stickle-%E2%80%94-web-note-anchor/ddahkjckhmgjkjgmmgbpmblogbioneok?hl=en-US&utm_source=ext_sidebar)**
 
+The Chrome Web Store release is the complete free edition in this repository. It works without an account and keeps notes on your device. A separate commercial wrapper with cloud sync, a hosted dashboard, remote MCP, and team workspaces is in development; none of those paid services are required by or included in the current public release.
+
 ---
 
-## 📌 Features Overview
+## 📌 What Ships Today
 
 - 🎯 **Robust 5-Tier DOM Anchoring**: Notes stay pinned across page refreshes, SPA re-renders, Wikipedia DOM shifts, layout refactors, and minor copy edits. Dragged sticky notes and highlighted text notes preserve pixel-accurate offsets.
 - 🎨 **Figma-Inspired Color System**: Crisp monochrome frame paired with 7 signature color-block surfaces (`lime`, `lilac`, `cream`, `mint`, `pink`, `coral`, `blue`).
-- 🏢 **Active Workspace Filtering**: Selecting a workspace (Personal Only, Team Workspace, or All) automatically filters rendered notes on webpages in real-time.
-- 📐 **Collapsible Dashboard Sidebar**: Next.js 16 Web Dashboard features a collapsible side nav (64px collapsed strip with tooltips / 240px expanded) with state persisted across page reloads.
 - ✍️ **Text Selection Highlighting**: Highlight text ranges on any webpage with sticky notes attached directly to `<mark>` text elements with exact offset retention.
-- 🤖 **Model Context Protocol (MCP) Integration**: Stdio CLI server (`npx stickle mcp`) and Remote HTTP/SSE server on port `3001` allowing AI assistants (Claude Desktop, Cursor, Windsurf, ChatGPT) to query, search, create, and summarize notes.
+- 🤖 **Local Model Context Protocol (MCP)**: The stdio server lets local AI clients query, search, create, and summarize exported Stickle notes without a hosted Stickle account.
 - 🔒 **Local-First & Private**: Stored in Chrome Local Storage + IndexedDB via Dexie.js. Zero mandatory tracking or telemetry.
-- 📦 **JSON Backup & Portable Import/Export**: Export full offline JSON backups (`stickle_export_YYYY-MM-DD.json`) and import/merge backup files via dashboard or extension.
-- 🚀 **Notion Sync Integration**: Push web notes and highlighted snippets directly to a Notion database.
-- 👥 **Team Shared In-Page Annotations**: Real-time shared team annotations overlaid on web pages with author avatar badges, read-only permissions enforcement, 0ms local IndexedDB caching, and background delta syncing.
-- 💳 **Monetization & Localized Display Pricing**: Multi-currency pricing engine (auto-detecting USD, EUR, GBP, INR, CAD, AUD, BRL, JPY) with Dodo Payments checkout integration.
-- 🌐 **Web Dashboard & Settings App**: Built-in Next.js App Router dashboard (`http://localhost:3001`) with Notes Explorer, Timeline Feed, Account Settings, Import/Export, Notion Setup, Connected MCPs, API Tokens, and Billing.
+- 📦 **JSON Backup & Portable Import/Export**: Export full offline JSON backups (`stickle_export_YYYY-MM-DD.json`) and import/merge them from the extension.
+- 🚀 **Manual Notion Export**: Push web notes and highlighted snippets directly from the browser to a Notion database.
+
+## ☁️ Commercial Edition — In Development
+
+The future paid edition is maintained separately in the private `stickle-app` wrapper. Planned commercial capabilities are:
+
+| Plan | Planned additions |
+| :--- | :--- |
+| **Pro Supporter** | Cross-device cloud sync, hosted notes dashboard, cloud backup, and remote MCP over HTTPS |
+| **Teams** | Everything in Pro plus shared workspaces, member roles, author badges, team annotations, and activity history |
+
+These capabilities are not live in the free Chrome Web Store build. Pricing, plan contents, and release timing may change before launch. The local extension, local MCP, manual Notion export, and portable backups remain part of the free open-source edition.
 
 ---
 
@@ -55,7 +63,7 @@ Stickle solves the problem of brittle web annotations on dynamic modern web apps
 
 ---
 
-## 💻 Running Locally & Dashboard
+## 💻 Running Locally
 
 ```bash
 # Install dependencies
@@ -63,9 +71,6 @@ pnpm install
 
 # Start Extension Dev Server (WXT on http://localhost:3000)
 pnpm dev
-
-# Start Web Dashboard Dev Server (Next.js on http://localhost:3001)
-pnpm dev:dashboard
 
 # Run Type Checks & Unit Test Suite
 pnpm compile && pnpm test
@@ -75,12 +80,11 @@ pnpm compile && pnpm test
 
 ## 🤖 Model Context Protocol (MCP) Integration
 
-Stickle exposes a **6-Tool Suite** via Model Context Protocol, available in two modes:
+The free edition exposes its notes through a local stdio MCP server:
 
 | Mode | Transport | Best for |
 | :--- | :--- | :--- |
 | **Local stdio** | `npx stickle mcp` | Claude Desktop, Cursor, Windsurf, VS Code, Zed |
-| **Remote SSE** | `http://localhost:3001/sse` | Cloud agents, team-shared notes |
 
 | Tool Name | Description |
 | :--- | :--- |
@@ -89,7 +93,6 @@ Stickle exposes a **6-Tool Suite** via Model Context Protocol, available in two 
 | `get_notes_for_url` | Retrieve all notes anchored to a specific webpage URL |
 | `add_stickle_note` | Create and attach a new sticky note to a target webpage URL |
 | `export_stickle_summary` | Generate a structured Markdown report grouped by site domain |
-| `get_team_activity_timeline` | Retrieve activity timeline for shared workspace notes |
 
 ### Quick setup — Claude Desktop (local stdio)
 Location: `~/Library/Application Support/Claude/claude_desktop_config.json`
@@ -108,19 +111,7 @@ Location: `~/Library/Application Support/Claude/claude_desktop_config.json`
 }
 ```
 
-### Quick setup — Remote SSE (port `3001`)
-```json
-{
-  "mcpServers": {
-    "stickle-remote": {
-      "url": "http://localhost:3001/sse",
-      "headers": {
-        "Authorization": "Bearer YOUR_STICKLE_API_TOKEN"
-      }
-    }
-  }
-}
-```
+Remote MCP is planned for the commercial edition and is not part of the current public release.
 
 📖 **Full step-by-step setup guide for all clients (Claude Desktop, Cursor, Windsurf, VS Code, Zed) and Cloudflare Workers deployment:** [MCP.md](./MCP.md)
 

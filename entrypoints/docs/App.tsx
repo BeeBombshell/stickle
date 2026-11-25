@@ -1419,7 +1419,7 @@ pnpm build`}
                 href="/waitlist"
                 style={nextStyles.tocCommunityLink}
               >
-                Join rollout waitlist ↗
+                Join paid plan waitlist ↗
               </a>
             </div>
 

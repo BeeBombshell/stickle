@@ -69,9 +69,9 @@ export function WaitlistForm({ source = 'homepage', variant = 'standalone', defa
           </svg>
           <span>YOU'RE ON THE LIST!</span>
         </div>
-        <h3 style={styles.successHeadline}>You're on the rollout waitlist!</h3>
+        <h3 style={styles.successHeadline}>You're on the paid plan waitlist!</h3>
         <p style={styles.successSub}>
-          We'll notify <strong>{state.email}</strong> as soon as Stickle is released on the Chrome Web Store.
+          We'll notify <strong>{state.email}</strong> when paid cloud and team plans are ready for early access. The free extension is available now.
         </p>
         <div style={styles.successMeta}>
           <span>Joined: {state.joinedAt ? new Date(state.joinedAt).toLocaleDateString() : 'Recently'}</span>

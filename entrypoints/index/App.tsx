@@ -186,7 +186,7 @@ export default function LandingApp() {
             <button onClick={openDocs} style={{ ...s.navLink, background: 'none', border: 'none', cursor: 'pointer', padding: 0 }}>MCP Setup</button>
             <button onClick={openDocs} style={{ ...s.navLink, background: 'none', border: 'none', cursor: 'pointer', padding: 0 }}>Docs</button>
             <a href="#faq" style={s.navLink}>FAQ</a>
-            <button onClick={openWaitlist} style={{ ...s.navLink, background: 'none', border: 'none', cursor: 'pointer', padding: 0 }}>Waitlist</button>
+            <button onClick={openWaitlist} style={{ ...s.navLink, background: 'none', border: 'none', cursor: 'pointer', padding: 0 }}>Paid plans</button>
           </div>
 
           {/* Right: CTAs */}
@@ -997,10 +997,10 @@ export default function LandingApp() {
           <div style={{ ...s.colorBlock, backgroundColor: '#f8f8f6', border: '1px solid #e5e5e0', padding: '48px 48px' }}>
             <span style={{ ...s.eyebrow, color: '#52514e', marginBottom: 12 }}>PRODUCT ROADMAP</span>
             <h2 style={{ ...s.displayLg, color: '#111111', maxWidth: 700 }}>
-              The cloud &amp; AI layer<br />is being built next.
+              Free today.<br />Cloud plans come next.
             </h2>
             <p style={{ fontSize: 18, fontWeight: 330, lineHeight: 1.45, letterSpacing: '-0.26px', color: '#52514e', maxWidth: 620, margin: '0 0 32px' }}>
-              v1.0 is live as a 100% local-first tool. Here is our roadmap for cross-device syncing, team collaboration, and AI context:
+              The extension on the Chrome Web Store is the free, open-source edition. Cloud sync, a hosted dashboard, remote MCP, and team collaboration are being built separately for future paid plans.
             </p>
 
             {/* ── Cute Animated Road Track Graphic ── */}
@@ -1076,8 +1076,8 @@ export default function LandingApp() {
                 {/* Milestone Markers on the road */}
                 {[
                   { pos: '6%', label: '🏁 V1.0 LIVE', active: true },
-                  { pos: '32%', label: '☁️ Q3 2026', active: false },
-                  { pos: '62%', label: '👥 Q4 2026', active: false },
+                  { pos: '32%', label: '☁️ PRO BETA', active: false },
+                  { pos: '62%', label: '👥 TEAMS BETA', active: false },
                   { pos: '88%', label: '🚀 FUTURE', active: false },
                 ].map((m) => (
                   <div
@@ -1126,7 +1126,7 @@ export default function LandingApp() {
                   ),
                 },
                 {
-                  badge: 'NEXT • Q3 2026',
+                  badge: 'PAID • IN DEVELOPMENT',
                   title: 'Cross-Device Sync',
                   desc: 'Access your web notes automatically across all your devices and Chromium browsers with cloud backup.',
                   badgeBg: '#27272a',
@@ -1141,7 +1141,7 @@ export default function LandingApp() {
                   ),
                 },
                 {
-                  badge: 'SOON • Q4 2026',
+                  badge: 'TEAMS • PLANNED',
                   title: 'Team Workspaces',
                   desc: 'Share annotated web pages with your team. Discuss articles, documentation, and PRs right where they live.',
                   badgeBg: '#27272a',
@@ -1244,7 +1244,7 @@ export default function LandingApp() {
                   <tbody>
                     {[
                       ['Free-form placement (no text selection)', '✓', '✕', '✕', '✕'],
-                      ['Resilient 3-tier DOM anchoring', '✓ 3-Tier', '⚠ Basic', '✕', '✕'],
+                      ['Resilient 5-tier DOM anchoring', '✓ 5-Tier', '⚠ Basic', '✕', '✕'],
                       ['Works offline / local-first', '✓', '✕', '✕', '✕'],
                       ['Direct 1-click Notion export', '✓', '✕', '⚠ Full page', '⚠ Highlights'],
                       ['No account to start', '✓', '✕', '✕', '✕'],
@@ -1355,24 +1355,24 @@ export default function LandingApp() {
         <div style={s.wrap}>
           <div style={{ ...s.colorBlock, backgroundColor: '#111111', padding: '56px 48px', textAlign: 'center' as const, color: '#ffffff' }}>
             <div style={{ maxWidth: 680, margin: '0 auto' }}>
-              <span style={{ ...s.eyebrow, color: '#e4f579', marginBottom: 12 }}>EXTENSION ROLLOUT</span>
+              <span style={{ ...s.eyebrow, color: '#e4f579', marginBottom: 12 }}>PAID PLAN WAITLIST</span>
               <h2 style={{ ...s.displayLg, color: '#ffffff', margin: '0 0 16px' }}>
-                Be first in line when Stickle launches.
+                The free extension is live. Join the cloud waitlist.
               </h2>
               <p style={{ fontSize: 18, fontWeight: 330, lineHeight: 1.5, color: '#a1a1aa', margin: '0 0 28px' }}>
-                We are preparing the extension for public release. Join the waitlist to receive an email notification the exact moment early access builds are live.
+                Keep using Stickle locally for free. Join the waitlist for updates when Pro cloud sync, the hosted dashboard, remote MCP, and Teams are ready for early access.
               </p>
               <div>
                 <button
                   onClick={openWaitlist}
                   style={{ ...s.btnPrimary, backgroundColor: '#e4f579', color: '#111111', fontSize: 16, padding: '14px 32px' }}
                 >
-                  Join Rollout Waitlist ↗
+                  Join Paid Plan Waitlist ↗
                 </button>
               </div>
               <div style={{ marginTop: 20 }}>
                 <span style={{ ...s.eyebrow, fontSize: 11, color: '#a1a1aa', letterSpacing: '0.8px' }}>
-                  JOIN 500+ RESEARCHERS &amp; DEVELOPERS ALREADY WAITING FOR LAUNCH
+                  PRODUCT DETAILS AND PRICING MAY CHANGE BEFORE RELEASE
                 </span>
               </div>
             </div>
@@ -1473,7 +1473,7 @@ export default function LandingApp() {
                   { label: 'Anchoring Tech', href: '#anchoring' },
                   { label: 'Local MCP Server', href: '#', onClick: openDocs },
                   { label: 'Documentation', href: '#', onClick: openDocs },
-                  { label: 'Launch Waitlist', href: '#', onClick: openWaitlist },
+                  { label: 'Paid Plan Waitlist', href: '#', onClick: openWaitlist },
                 ],
               },
               {
