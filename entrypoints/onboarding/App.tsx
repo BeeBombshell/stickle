@@ -499,15 +499,15 @@ export default function OnboardingApp() {
           <div style={{ ...s.colorBlock, backgroundColor: '#f8f8f6', border: '1px solid #e5e5e0' }}>
             <span style={{ ...s.eyebrow, color: '#111111' }}>PRODUCT ROADMAP</span>
             <h2 style={{ ...s.displayLg, color: '#111111', maxWidth: 620 }}>
-              The cloud &amp; AI layer is being built next.
+              The free edition is live. Paid cloud plans come next.
             </h2>
             <p style={{ ...s.bodyText, color: '#52514e', maxWidth: 560, marginBottom: 40 }}>
-              v1.0 is 100% local-first and ships today. Here is what we're building next:
+              Everything in this onboarding flow ships today in the free, open-source extension. Cloud sync, remote MCP, a hosted dashboard, and team collaboration are being developed separately for future paid plans.
             </p>
             <div style={s.roadmapGrid}>
               {[
                 {
-                  badge: 'COMING SOON',
+                  badge: 'PAID • IN DEVELOPMENT',
                   title: 'Cross-Device Cloud Sync',
                   body: 'Access your web sticky notes automatically across all your devices and Chromium browsers.',
                   icon: (
@@ -518,7 +518,7 @@ export default function OnboardingApp() {
                   ),
                 },
                 {
-                  badge: 'IN DEVELOPMENT',
+                  badge: 'TEAMS • PLANNED',
                   title: 'Team Shared Annotations',
                   body: 'Share annotated web pages with teammates. Discuss documentation, GitHub issues, and PRs in context.',
                   icon: (

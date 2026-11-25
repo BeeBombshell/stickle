@@ -5,12 +5,12 @@ import type { StickleNote, NoteColorBlock } from '../../lib/types';
 
 const WAITLIST_FAQS = [
   {
-    q: 'When will Stickle launch on Chrome Web Store?',
-    a: "We are preparing for public release. Joining the waitlist guarantees you'll receive an email notification the exact moment early access builds are live.",
+    q: 'Is Stickle already available?',
+    a: 'Yes. The free, local-first extension is live on the Chrome Web Store. This waitlist is for future paid cloud and team plans.',
   },
   {
     q: 'Is Stickle free and open source?',
-    a: 'Yes, 100%! Stickle is local-first and open source under the MIT license. Core web notes, 3-tier anchoring, and Notion sync remain free forever.',
+    a: 'Yes. The live edition is local-first and open source under the MIT license. Web notes, resilient anchoring, local MCP, portable backups, and manual Notion export are free.',
   },
   {
     q: 'Which browsers are supported?',
@@ -28,11 +28,11 @@ export default function WaitlistApp() {
   const [demoNote, setDemoNote] = useState<StickleNote>({
     id: 'waitlist-hero-note',
     url: 'https://stickle.beebombshell.com/waitlist',
-    pageTitle: 'Be first in line when Stickle launches',
+    pageTitle: 'Join the Stickle paid plan waitlist',
     content: 'Alt + Click pinned this note directly to the DOM element. Notes survive reloads, re-renders, and revisits.',
     anchor: {
       cssSelector: 'h1.hero-title',
-      exactText: 'Be first in line when Stickle launches',
+      exactText: 'Join the Stickle paid plan waitlist',
       tier: 'selector',
       offsetX: 0,
       offsetY: 0,
@@ -194,15 +194,15 @@ export default function WaitlistApp() {
               <div>
                 <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 16 }}>
                   <span style={{ width: 8, height: 8, borderRadius: '50%', backgroundColor: '#e4f579', display: 'inline-block' }} />
-                  <span style={{ ...s.eyebrow, color: '#e4f579' }}>STICKLE • LAUNCH WAITLIST</span>
+                  <span style={{ ...s.eyebrow, color: '#e4f579' }}>STICKLE • PAID PLAN WAITLIST</span>
                 </div>
                 
                 <h1 style={{ ...s.displayXL, color: '#ffffff', margin: '0 0 20px' }}>
-                  Be first in line<br />when Stickle launches.
+                  Free is live.<br />Cloud comes next.
                 </h1>
                 
                 <p style={{ ...s.heroSub, color: '#ffffff', marginBottom: 28 }}>
-                  Leave persistent sticky notes in the margins of the web. Enter your email to get notified the exact moment early access builds drop.
+                  Use the local-first extension today. Enter your email for updates on Pro cloud sync, the hosted dashboard, remote MCP, and Teams early access.
                 </p>
 
                 {/* Standalone Waitlist Form Component */}
@@ -218,7 +218,7 @@ export default function WaitlistApp() {
                     ))}
                   </div>
                   <span style={{ fontFamily: "'JetBrains Mono', monospace", fontSize: 11, fontWeight: 700, color: '#e4f579', letterSpacing: '0.4px' }}>
-                    500+ RESEARCHERS &amp; DEVS WAITING
+                    FREE EDITION AVAILABLE NOW
                   </span>
                 </div>
               </div>
@@ -324,8 +324,8 @@ export default function WaitlistApp() {
             {[
               {
                 eyebrow: 'ROBUST ANCHORING',
-                title: '3-Tier DOM Anchoring',
-                desc: 'Notes stay pinned through reloads, ad reflows, and layout shifts using structural XPath, fingerprinting & trigram matching.',
+                title: '5-Tier DOM Anchoring',
+                desc: 'Notes stay pinned through reloads, re-renders, and layout shifts using fingerprints, selectors, text matching, fuzzy recovery, and position fallback.',
                 badge: 'CORE TECH',
               },
               {
